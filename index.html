@@ -4,6 +4,7 @@
   <title>LUXURY HEAVEN</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+  <!-- CLOUDINARY -->
   <script src="https://widget.cloudinary.com/v2.0/global/all.js"></script>
 
   <style>
@@ -14,7 +15,6 @@ body{
   padding-top:80px;
 }
 
-/* HEADER */
 .top-marquee{
   background:#111;
   position:fixed;
@@ -23,20 +23,10 @@ body{
   height:45px;
   display:flex;
   align-items:center;
-  overflow:hidden;
   z-index:3000;
 }
 
-.logo{
-  height:45px;
-  object-fit:contain;
-}
-
-.marquee-wrapper{
-  position:absolute;
-  width:100%;
-  overflow:hidden;
-}
+.logo{height:45px;}
 
 .marquee-text{
   white-space:nowrap;
@@ -50,7 +40,6 @@ body{
   100%{transform:translateX(-100%);}
 }
 
-/* CATEGORY */
 .category-bar{
   position:fixed;
   top:45px;
@@ -59,7 +48,6 @@ body{
   background:#222;
   display:flex;
   overflow-x:auto;
-  z-index:2000;
 }
 
 .category-btn{
@@ -67,36 +55,25 @@ body{
   padding:6px 14px;
   margin:5px;
   border-radius:20px;
-  white-space:nowrap;
   cursor:pointer;
 }
 
 .category-btn.active{background:#25D366;}
 
-/* CARD */
 .card{
   background:white;
-  border-radius:14px;
+  margin:10px;
+  border-radius:12px;
   padding:10px;
-  margin-bottom:15px;
-}
-
-.img-wrap{border-radius:12px;overflow:hidden;}
-
-.carousel{
-  display:flex;
-  overflow-x:auto;
-  scroll-snap-type:x mandatory;
 }
 
 .carousel img{
-  min-width:100%;
-  height:380px;
+  width:100%;
+  height:350px;
   object-fit:cover;
-  scroll-snap-align:center;
+  border-radius:10px;
 }
 
-/* PRICE */
 .price{
   background:#111;
   color:white;
@@ -106,7 +83,6 @@ body{
   border-radius:8px;
 }
 
-/* BUY BUTTON */
 .buy-btn{
   background:#25D366;
   color:white;
@@ -114,12 +90,9 @@ body{
   width:100%;
   padding:12px;
   margin-top:10px;
-  border-radius:12px;
-  font-weight:bold;
-  cursor:pointer;
+  border-radius:10px;
 }
 
-/* ADMIN */
 .admin{
   display:none;
   position:fixed;
@@ -131,19 +104,6 @@ body{
   z-index:5000;
   padding:10px;
   overflow:auto;
-}
-
-.admin-icon{
-  position:absolute;
-  right:0;
-  width:45px;
-  height:45px;
-  background:#222;
-  color:white;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  cursor:pointer;
 }
 
 input,select{
@@ -158,15 +118,6 @@ input,select{
   background:green;
   color:white;
   border:none;
-  margin-top:5px;
-  cursor:pointer;
-}
-
-.delete-btn{
-  background:red;
-  color:white;
-  border:none;
-  padding:6px;
 }
   </style>
 </head>
@@ -176,24 +127,13 @@ input,select{
 <!-- HEADER -->
 <div class="top-marquee">
   <img src="logo1.png" class="logo">
-
-  <div class="marquee-wrapper">
-    <div class="marquee-text">✨ LUXURY HEAVEN ✨ Premium Fashion Store ✨</div>
-  </div>
-
-  <div class="admin-icon" onclick="openAdmin()">🔒</div>
+  <div class="marquee-text">✨ LUXURY HEAVEN ✨ Premium Fashion Store ✨</div>
 </div>
 
 <!-- CATEGORY -->
 <div class="category-bar" id="categoryBar"></div>
 
-<!-- ABOUT -->
-<div id="aboutView" class="card">
-  <h2>Welcome to Luxury Heaven</h2>
-  <p>Premium fashion store for quality products.</p>
-</div>
-
-<!-- PRODUCT VIEW -->
+<!-- PRODUCTS -->
 <div id="productView"></div>
 
 <!-- ADMIN -->
@@ -208,43 +148,40 @@ input,select{
   <button class="btn" onclick="uploadImage()">Upload Images</button>
   <button class="btn" onclick="addProduct()">Save Product</button>
 
-  <hr>
-
-  <h3>Delete Product</h3>
-  <select id="delCat" onchange="loadDelete()"></select>
-  <div id="delList"></div>
-
-  <hr>
-
-  <h3>Add Category</h3>
-  <input id="newCat">
-  <button class="btn" onclick="addCategory()">Add</button>
-
   <button class="btn" style="background:red" onclick="closeAdmin()">Close</button>
 </div>
 
 <script type="module">
 
+/* ================= FIREBASE ================= */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc } 
+import { getFirestore, collection, getDocs, addDoc } 
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+/* YOUR FIREBASE DETAILS */
 const firebaseConfig = {
-  apiKey: "YOUR_KEY",
-  authDomain: "YOUR_DOMAIN",
-  projectId: "YOUR_ID"
+  apiKey: "AIzaSyD40daowTCCVrKr1kWI6krf9nB7OHp8mWU",
+  authDomain: "luxury-heaven-c24df.firebaseapp.com",
+  projectId: "luxury-heaven-c24df",
+  storageBucket: "luxury-heaven-c24df.firebasestorage.app",
+  messagingSenderId: "277279766368",
+  appId: "1:277279766368:web:2f5858b54f58d1df629005"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-/* GLOBAL DATA */
+/* ================= CLOUDINARY ================= */
+const cloudName = "db92r6j9z";
+const uploadPreset = "ummuhalti";
+
+/* DATA */
 let categories = [];
 let products = [];
 let uploadedImages = [];
 
 /* LOAD CATEGORIES */
-window.loadCategoriesFromFirebase = async function () {
+window.loadCategories = async function(){
   const snap = await getDocs(collection(db,"categories"));
   categories = [];
 
@@ -255,15 +192,12 @@ window.loadCategoriesFromFirebase = async function () {
   renderCategories();
 };
 
-/* RENDER */
 function renderCategories(){
   let bar = document.getElementById("categoryBar");
   let sel = document.getElementById("aCategory");
-  let del = document.getElementById("delCat");
 
-  bar.innerHTML = "";
-  sel.innerHTML = "";
-  del.innerHTML = "";
+  bar.innerHTML="";
+  sel.innerHTML="";
 
   categories.forEach(cat=>{
     let btn = document.createElement("div");
@@ -273,20 +207,8 @@ function renderCategories(){
     bar.appendChild(btn);
 
     sel.innerHTML += `<option>${cat}</option>`;
-    del.innerHTML += `<option>${cat}</option>`;
   });
 }
-
-/* ADD CATEGORY */
-window.addCategory = async function(){
-  let name = document.getElementById("newCat").value.toLowerCase();
-  if(!name) return;
-
-  if(categories.includes(name)) return alert("Exists");
-
-  await addDoc(collection(db,"categories"),{name});
-  loadCategoriesFromFirebase();
-};
 
 /* LOAD PRODUCTS */
 window.loadProducts = async function(cat=""){
@@ -294,14 +216,13 @@ window.loadProducts = async function(cat=""){
   products = [];
 
   snap.forEach(d=>{
-    let data = d.data();
-    products.push({...data,id:d.id});
+    products.push({...d.data(), id:d.id});
   });
 
   renderProducts(cat);
 };
 
-/* RENDER PRODUCTS */
+/* SHOW PRODUCTS */
 function renderProducts(cat){
   let view = document.getElementById("productView");
   view.innerHTML="";
@@ -319,7 +240,7 @@ function renderProducts(cat){
 
         <button class="buy-btn"
         onclick="window.open('https://wa.me/234911473893?text=I want ${p.name}')">
-        BUY
+        BUY NOW
         </button>
       </div>
     `;
@@ -340,22 +261,17 @@ window.addProduct = async function(){
   loadProducts();
 };
 
-/* DELETE PRODUCT */
-window.deleteProduct = async function(id){
-  await deleteDoc(doc(db,"products",id));
-  loadProducts();
-};
-
-/* UPLOAD */
+/* CLOUDINARY UPLOAD */
 window.uploadImage = function(){
   cloudinary.openUploadWidget({
-    cloudName:"db92r6j9z",
-    uploadPreset:"ummuhalti",
+    cloudName: cloudName,
+    uploadPreset: uploadPreset,
     multiple:true
-  },(err,res)=>{
-    if(res?.event==="success"){
-      uploadedImages.push(res.info.secure_url);
-      alert("Uploaded");
+  }, (error,result)=>{
+
+    if(result && result.event==="success"){
+      uploadedImages.push(result.info.secure_url);
+      alert("Image uploaded ✔");
     }
   });
 };
@@ -365,7 +281,7 @@ window.openAdmin=()=>adminPanel.style.display="block";
 window.closeAdmin=()=>adminPanel.style.display="none";
 
 /* INIT */
-loadCategoriesFromFirebase();
+loadCategories();
 loadProducts();
 
 </script>
