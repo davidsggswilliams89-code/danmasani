@@ -49,14 +49,17 @@ button{width:100%;padding:10px;margin-top:5px;border:none;border-radius:8px}
 
 <body>
 
+<!-- HEADER -->
 <div class="top">
   <img src="logo1.png" class="logo">
   <div class="marquee">✨ LUXURY HEAVEN ✨</div>
   <div onclick="openAdmin()" style="margin-left:auto;padding:10px;cursor:pointer">🔒</div>
 </div>
 
+<!-- CATEGORY -->
 <div class="bar" id="bar"></div>
 
+<!-- PRODUCTS -->
 <div id="view"></div>
 
 <!-- ADMIN -->
@@ -64,7 +67,6 @@ button{width:100%;padding:10px;margin-top:5px;border:none;border-radius:8px}
 
 <h2>Admin Dashboard</h2>
 
-<!-- ADD PRODUCT -->
 <input id="name" placeholder="Product Name">
 <input id="price" placeholder="Price">
 <select id="cat"></select>
@@ -74,7 +76,6 @@ button{width:100%;padding:10px;margin-top:5px;border:none;border-radius:8px}
 
 <hr>
 
-<!-- CATEGORY -->
 <h3>Category Management</h3>
 <input id="newCat" placeholder="New Category">
 <button class="green" onclick="addCategory()">Add Category</button>
@@ -84,11 +85,8 @@ button{width:100%;padding:10px;margin-top:5px;border:none;border-radius:8px}
 
 <hr>
 
-<!-- DELETE PRODUCTS -->
 <h3>Delete Products by Category</h3>
-<select id="deleteCat"></select>
 <button class="green" onclick="showDeleteList()">Load Products</button>
-
 <div id="list"></div>
 
 <button class="red" onclick="closeAdmin()">Close</button>
@@ -178,8 +176,7 @@ function render(list){
 
         <div class="price">₦ ${p.price}</div>
 
-        <button class="buy"
-        onclick="window.open('https://wa.me/2349114738932?text=I want ${p.name}')">
+        <button class="buy" onclick="buyNow(${i})">
         BUY NOW
         </button>
 
@@ -215,6 +212,30 @@ function setupCarousel(){
     });
   });
 }
+
+/* BUY WITH ACTIVE IMAGE */
+window.buyNow = function(index){
+  let p = products[index];
+
+  let car = document.getElementById("car" + index);
+  let currentIndex = Math.round(car.scrollLeft / car.clientWidth);
+  let selectedImage = p.images[currentIndex] || p.images[0];
+
+  let msg = `Hello 👋,
+
+I want to order this Product:
+
+🧵 Category: ${p.category.toUpperCase()}
+🛍️ Product: ${p.name}
+💰 Price: ₦${p.price}
+
+🖼️ Selected Image:
+${selectedImage}
+
+Is this available? I want to buy.`;
+
+  window.open("https://wa.me/234911473893?text=" + encodeURIComponent(msg));
+};
 
 /* FILTER */
 window.filter = c=>{
@@ -252,7 +273,6 @@ window.save = async ()=>{
 /* DELETE LIST */
 window.showDeleteList = ()=>{
   let selected = document.getElementById("deleteCat").value;
-
   let box = document.getElementById("list");
   box.innerHTML="";
 
@@ -325,7 +345,7 @@ window.upload = ()=>{
 /* ADMIN */
 window.openAdmin = ()=>{
   let pass = prompt("Password:");
-  if(pass==="4133") admin.style.display="block";
+  if(pass==="1234") admin.style.display="block";
 };
 
 window.closeAdmin = ()=>admin.style.display="none";
