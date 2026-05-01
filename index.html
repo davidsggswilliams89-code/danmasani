@@ -17,7 +17,7 @@ body{margin:0;font-family:Arial;background:#f5f5f5;padding-top:80px}
 
 /* CATEGORY */
 .bar{position:fixed;top:45px;width:100%;background:#222;display:flex;overflow-x:auto}
-.cat{color:white;padding:8px 12px;margin:5px;cursor:pointer;border-radius:20px}
+.cat{color:white;padding:8px 12px;margin:5px;border-radius:20px;cursor:pointer}
 .cat.active{background:#25D366}
 
 /* VIEW */
@@ -27,18 +27,10 @@ body{margin:0;font-family:Arial;background:#f5f5f5;padding-top:80px}
 /* CARD */
 .card{background:white;margin:10px;padding:10px;border-radius:12px}
 
-/* CAROUSEL */
+/* PRODUCT CAROUSEL */
 .carousel{display:flex;overflow-x:auto;scroll-snap-type:x mandatory}
 .carousel img{min-width:100%;height:320px;object-fit:cover;scroll-snap-align:center}
 .carousel::-webkit-scrollbar{display:none}
-
-/* TESTIMONIAL */
-.testimonial-carousel img{
-min-width:100%;
-height:300px;
-object-fit:contain;
-background:#fff;
-}
 
 /* DOTS */
 .dots{text-align:center;margin-top:5px}
@@ -46,7 +38,7 @@ background:#fff;
 .dot.active{background:#25D366}
 
 /* PRICE */
-.price{background:#111;color:white;padding:10px;text-align:center;margin-top:10px;border-radius:8px}
+.price{background:#111;color:white;text-align:center;padding:10px;margin-top:10px;border-radius:8px}
 
 /* BUY */
 .buy{width:100%;padding:10px;background:#25D366;color:white;border:none;margin-top:10px;border-radius:10px}
@@ -59,13 +51,54 @@ color:white;font-size:13px;text-decoration:none
 }
 .wa{background:#25D366}
 .ig{background:#E1306C}
-
 .social-btn img{width:18px;height:18px}
+
+/* ===== TESTIMONIAL (PREMIUM) ===== */
+.testimonial-carousel{
+display:flex;
+overflow-x:auto;
+scroll-snap-type:x mandatory;
+scroll-behavior:smooth;
+}
+
+.testimonial-card{
+min-width:100%;
+background:white;
+border-radius:12px;
+padding:15px;
+text-align:center;
+box-sizing:border-box;
+scroll-snap-align:center;
+}
+
+.testimonial-card img{
+width:70px;
+height:70px;
+border-radius:50%;
+object-fit:cover;
+margin-bottom:8px;
+}
+
+.stars{
+color:#FFD700;
+margin:5px 0;
+}
+
+.testimonial-name{
+font-weight:bold;
+margin-top:5px;
+}
+
+.testimonial-carousel img{
+width:100%;
+height:300px;
+object-fit:contain;
+}
 
 /* ADMIN */
 .admin{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:white;z-index:99999;padding:10px;overflow:auto}
 input,select{width:100%;padding:10px;margin:5px 0}
-button{width:100%;padding:10px;margin-top:5px;border:none;border-radius:8px}
+button{width:100%;padding:10px;border:none;border-radius:8px}
 .green{background:green;color:white}
 .red{background:red;color:white}
 </style>
@@ -73,12 +106,14 @@ button{width:100%;padding:10px;margin-top:5px;border:none;border-radius:8px}
 
 <body>
 
+<!-- HEADER -->
 <div class="top">
 <img src="logo1.png" class="logo">
 <div class="marquee">✨ LUXURY HEAVEN ✨</div>
-<div onclick="openAdmin()" style="margin-left:auto;padding:10px;cursor:pointer">🔒</div>
+<div onclick="openAdmin()" style="margin-left:auto;padding:10px">🔒</div>
 </div>
 
+<!-- CATEGORY -->
 <div class="bar" id="bar"></div>
 
 <!-- ABOUT -->
@@ -86,18 +121,18 @@ button{width:100%;padding:10px;margin-top:5px;border:none;border-radius:8px}
 <div class="card">
 
 <h3 style="text-align:center;">What Our Customers Say 💬</h3>
-<div class="carousel testimonial-carousel" id="testimonialCarousel"></div>
+<div class="testimonial-carousel" id="testimonialCarousel"></div>
 <div class="dots" id="testimonialDots"></div>
 
 <hr>
 
 <h3>Our Mission</h3>
-<p>To provide stylish, affordable and quality fashion for women.</p>
+<p>We bring affordable luxury fashion to your doorstep.</p>
 
 <hr>
 
 <h3>About Us</h3>
-<p>Luxury Heaven by Aleesha is an online store delivering premium fashion products.</p>
+<p>Luxury Heaven by Aleesha is a fashion store for modern women in Nigeria.</p>
 
 <hr>
 
@@ -111,16 +146,16 @@ button{width:100%;padding:10px;margin-top:5px;border:none;border-radius:8px}
 
 <hr>
 
-<h3>Connect With Us</h3>
+<h3>Connect</h3>
 
 <div style="display:flex;gap:10px">
 
-<a href="https://wa.me/234911473893" target="_blank" class="social-btn wa">
+<a class="social-btn wa" href="https://wa.me/234911473893">
 <img src="https://cdn-icons-png.flaticon.com/512/733/733585.png">
 WhatsApp
 </a>
 
-<a href="#" target="_blank" class="social-btn ig">
+<a class="social-btn ig" href="#">
 <img src="https://cdn-icons-png.flaticon.com/512/733/733558.png">
 Instagram
 </a>
@@ -151,7 +186,7 @@ Instagram
 <button class="green" onclick="addCategory()">Add</button>
 
 <select id="deleteCat"></select>
-<button class="red" onclick="deleteCategory()">Delete Category</button>
+<button class="red" onclick="deleteCategory()">Delete</button>
 
 <hr>
 
@@ -168,22 +203,23 @@ Instagram
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-const firebaseConfig={
-apiKey:"AIzaSyD40...",
-authDomain:"luxury-heaven-c24df.firebaseapp.com",
-projectId:"luxury-heaven-c24df",
-storageBucket:"luxury-heaven-c24df.firebasestorage.app",
-messagingSenderId:"277279766368",
-appId:"1:277279766368:web:2f5858b54f58d1df629005"
+const firebaseConfig = {
+apiKey: "AIzaSyD40daowTCCVrKr1kWI6krf9nB7OHp8mWU",
+authDomain: "luxury-heaven-c24df.firebaseapp.com",
+projectId: "luxury-heaven-c24df",
+storageBucket: "luxury-heaven-c24df.firebasestorage.app",
+messagingSenderId: "277279766368",
+appId: "1:277279766368:web:2f5858b54f58d1df629005"
 };
 
-const app=initializeApp(firebaseConfig);
-const db=getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
 const cloudName="db92r6j9z";
 const uploadPreset="ummuhalti";
 
-let products=[],categories=[],images=[],testimonials=[];
+let products=[],categories=[],images=[];
+let testimonials=[];
 
 /* INIT */
 window.onload=async()=>{
@@ -206,7 +242,7 @@ bar.innerHTML+=`<div class="cat" onclick="filter('${c}',this)">${c}</div>`;
 });
 }
 
-/* ACTIVE TAB */
+/* ACTIVE */
 function setActive(el){
 document.querySelectorAll(".cat").forEach(b=>b.classList.remove("active"));
 el.classList.add("active");
@@ -268,29 +304,10 @@ I want to order this Product:
 💰 Price: ₦${p.price}
 
 🖼️ Selected Image:
-${img}
-
-Is this available?`;
+${img}`;
 
 window.open("https://wa.me/234911473893?text="+encodeURIComponent(msg));
 };
-
-/* CAROUSEL */
-function setupCarousel(){
-products.forEach((p,i)=>{
-let car=document.getElementById("car"+i);
-let box=document.getElementById("dot"+i);
-if(!car)return;
-
-let imgs=car.querySelectorAll("img");
-box.innerHTML="";
-imgs.forEach((_,x)=>{
-let d=document.createElement("span");
-d.className="dot"+(x===0?" active":"");
-box.appendChild(d);
-});
-});
-}
 
 /* TESTIMONIAL */
 function loadTestimonials(){
@@ -299,8 +316,15 @@ let dots=document.getElementById("testimonialDots");
 
 box.innerHTML="";dots.innerHTML="";
 
-testimonials.forEach((img,i)=>{
-box.innerHTML+=`<img src="${img}">`;
+testimonials.forEach((t,i)=>{
+box.innerHTML+=`
+<div class="testimonial-card">
+<img src="${t.image}">
+<div class="stars">${"⭐".repeat(t.rating||5)}</div>
+<p>${t.message}</p>
+<div class="testimonial-name">— ${t.name}</div>
+</div>`;
+
 let d=document.createElement("span");
 d.className="dot"+(i===0?" active":"");
 dots.appendChild(d);
@@ -309,35 +333,29 @@ dots.appendChild(d);
 
 /* ADMIN TESTIMONIAL */
 window.uploadTestimonial=()=>{
-cloudinary.openUploadWidget({cloudName,uploadPreset},(e,r)=>{
+let name=prompt("Name");
+let message=prompt("Message");
+let rating=prompt("Rating 1-5");
+
+cloudinary.openUploadWidget({
+cloudName,uploadPreset
+},async(e,r)=>{
 if(r?.event==="success"){
-testimonials.push(r.info.secure_url);
+
+await addDoc(collection(db,"testimonials"),{
+name,message,
+rating:Number(rating||5),
+image:r.info.secure_url,
+date:Date.now()
+});
+
 loadTestimonials();
-renderTestimonialAdmin();
+loadTestimonialAdmin();
 }
 });
 };
 
-function renderTestimonialAdmin(){
-let box=document.getElementById("testimonialList");
-box.innerHTML="";
-testimonials.forEach((img,i)=>{
-box.innerHTML+=`
-<div style="display:flex;gap:10px">
-<img src="${img}" width="40">
-<button class="red" onclick="deleteTestimonial(${i})">Delete</button>
-</div>`;
-});
-}
-
-window.deleteTestimonial=(i)=>{
-testimonials.splice(i,1);
-loadTestimonials();
-renderTestimonialAdmin();
-};
-
-/* ADMIN */
-window.openAdmin=()=>{if(prompt("Password")==="1234"){admin.style.display="block";renderTestimonialAdmin();}};
+window.openAdmin=()=>{if(prompt("Password")==="1234")admin.style.display="block";}
 window.closeAdmin=()=>admin.style.display="none";
 
 </script>
