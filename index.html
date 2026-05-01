@@ -4,7 +4,6 @@
   <title>LUXURY HEAVEN</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- CLOUDINARY -->
   <script src="https://widget.cloudinary.com/v2.0/global/all.js"></script>
 
   <style>
@@ -15,24 +14,25 @@ body{
   padding-top:80px;
 }
 
-.top-marquee{
-  background:#111;
+/* HEADER */
+.top{
   position:fixed;
   top:0;
   width:100%;
   height:45px;
+  background:#111;
   display:flex;
   align-items:center;
+  color:white;
   z-index:3000;
 }
 
 .logo{height:45px;}
 
-.marquee-text{
+.marquee{
   white-space:nowrap;
   animation:move 12s linear infinite;
-  color:white;
-  margin-left:120px;
+  margin-left:100px;
 }
 
 @keyframes move{
@@ -40,36 +40,37 @@ body{
   100%{transform:translateX(-100%);}
 }
 
-.category-bar{
+/* CATEGORY */
+.bar{
   position:fixed;
   top:45px;
   width:100%;
-  height:40px;
   background:#222;
   display:flex;
   overflow-x:auto;
 }
 
-.category-btn{
+.btn-cat{
   color:white;
-  padding:6px 14px;
+  padding:6px 12px;
   margin:5px;
   border-radius:20px;
   cursor:pointer;
 }
 
-.category-btn.active{background:#25D366;}
+.btn-cat.active{background:#25D366;}
 
+/* PRODUCT */
 .card{
   background:white;
   margin:10px;
-  border-radius:12px;
   padding:10px;
+  border-radius:12px;
 }
 
 .carousel img{
   width:100%;
-  height:350px;
+  height:320px;
   object-fit:cover;
   border-radius:10px;
 }
@@ -83,16 +84,16 @@ body{
   border-radius:8px;
 }
 
-.buy-btn{
+.buy{
   background:#25D366;
   color:white;
   border:none;
   width:100%;
-  padding:12px;
-  margin-top:10px;
+  padding:10px;
   border-radius:10px;
 }
 
+/* ADMIN */
 .admin{
   display:none;
   position:fixed;
@@ -112,179 +113,9 @@ input,select{
   margin:5px 0;
 }
 
-.btn{
+button{
   width:100%;
   padding:10px;
-  background:green;
-  color:white;
+  margin-top:5px;
   border:none;
-}
-  </style>
-</head>
-
-<body>
-
-<!-- HEADER -->
-<div class="top-marquee">
-  <img src="logo1.png" class="logo">
-  <div class="marquee-text">✨ LUXURY HEAVEN ✨ Premium Fashion Store ✨</div>
-</div>
-
-<!-- CATEGORY -->
-<div class="category-bar" id="categoryBar"></div>
-
-<!-- PRODUCTS -->
-<div id="productView"></div>
-
-<!-- ADMIN -->
-<div class="admin" id="adminPanel">
-
-  <h3>Admin Panel</h3>
-
-  <input id="aName" placeholder="Product Name">
-  <input id="aPrice" placeholder="Price">
-  <select id="aCategory"></select>
-
-  <button class="btn" onclick="uploadImage()">Upload Images</button>
-  <button class="btn" onclick="addProduct()">Save Product</button>
-
-  <button class="btn" style="background:red" onclick="closeAdmin()">Close</button>
-</div>
-
-<script type="module">
-
-/* ================= FIREBASE ================= */
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, getDocs, addDoc } 
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-/* YOUR FIREBASE DETAILS */
-const firebaseConfig = {
-  apiKey: "AIzaSyD40daowTCCVrKr1kWI6krf9nB7OHp8mWU",
-  authDomain: "luxury-heaven-c24df.firebaseapp.com",
-  projectId: "luxury-heaven-c24df",
-  storageBucket: "luxury-heaven-c24df.firebasestorage.app",
-  messagingSenderId: "277279766368",
-  appId: "1:277279766368:web:2f5858b54f58d1df629005"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-/* ================= CLOUDINARY ================= */
-const cloudName = "db92r6j9z";
-const uploadPreset = "ummuhalti";
-
-/* DATA */
-let categories = [];
-let products = [];
-let uploadedImages = [];
-
-/* LOAD CATEGORIES */
-window.loadCategories = async function(){
-  const snap = await getDocs(collection(db,"categories"));
-  categories = [];
-
-  snap.forEach(d=>{
-    categories.push(d.data().name);
-  });
-
-  renderCategories();
-};
-
-function renderCategories(){
-  let bar = document.getElementById("categoryBar");
-  let sel = document.getElementById("aCategory");
-
-  bar.innerHTML="";
-  sel.innerHTML="";
-
-  categories.forEach(cat=>{
-    let btn = document.createElement("div");
-    btn.className="category-btn";
-    btn.innerText=cat;
-    btn.onclick=()=>loadProducts(cat);
-    bar.appendChild(btn);
-
-    sel.innerHTML += `<option>${cat}</option>`;
-  });
-}
-
-/* LOAD PRODUCTS */
-window.loadProducts = async function(cat=""){
-  const snap = await getDocs(collection(db,"products"));
-  products = [];
-
-  snap.forEach(d=>{
-    products.push({...d.data(), id:d.id});
-  });
-
-  renderProducts(cat);
-};
-
-/* SHOW PRODUCTS */
-function renderProducts(cat){
-  let view = document.getElementById("productView");
-  view.innerHTML="";
-
-  let list = cat ? products.filter(p=>p.category===cat) : products;
-
-  list.forEach(p=>{
-    view.innerHTML += `
-      <div class="card">
-        <div class="carousel">
-          ${(p.images||[]).map(i=>`<img src="${i}">`).join("")}
-        </div>
-
-        <div class="price">₦ ${p.price}</div>
-
-        <button class="buy-btn"
-        onclick="window.open('https://wa.me/234911473893?text=I want ${p.name}')">
-        BUY NOW
-        </button>
-      </div>
-    `;
-  });
-}
-
-/* ADD PRODUCT */
-window.addProduct = async function(){
-  await addDoc(collection(db,"products"),{
-    name:aName.value,
-    price:aPrice.value,
-    category:aCategory.value,
-    images:[...uploadedImages],
-    date:Date.now()
-  });
-
-  uploadedImages=[];
-  loadProducts();
-};
-
-/* CLOUDINARY UPLOAD */
-window.uploadImage = function(){
-  cloudinary.openUploadWidget({
-    cloudName: cloudName,
-    uploadPreset: uploadPreset,
-    multiple:true
-  }, (error,result)=>{
-
-    if(result && result.event==="success"){
-      uploadedImages.push(result.info.secure_url);
-      alert("Image uploaded ✔");
-    }
-  });
-};
-
-/* ADMIN */
-window.openAdmin=()=>adminPanel.style.display="block";
-window.closeAdmin=()=>adminPanel.style.display="none";
-
-/* INIT */
-loadCategories();
-loadProducts();
-
-</script>
-
-</body>
-</html>
+  border
