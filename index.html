@@ -7,169 +7,56 @@
   <script src="https://widget.cloudinary.com/v2.0/global/all.js"></script>
 
   <style>
-body{
-  margin:0;
-  font-family:Arial;
-  background:#f5f5f5;
-  padding-top:80px;
-}
+body{margin:0;font-family:Arial;background:#f5f5f5;padding-top:80px}
 
 /* HEADER */
-.top{
-  position:fixed;
-  top:0;
-  width:100%;
-  height:45px;
-  background:#111;
-  color:white;
-  display:flex;
-  align-items:center;
-  z-index:9999;
-}
+.top{position:fixed;top:0;width:100%;height:45px;background:#111;color:white;display:flex;align-items:center;z-index:9999}
+.logo{height:45px}
+.marquee{margin-left:100px;white-space:nowrap;animation:move 12s linear infinite}
+@keyframes move{0%{transform:translateX(100%)}100%{transform:translateX(-100%)}}
 
-.logo{height:45px;}
-
-.marquee{
-  margin-left:100px;
-  white-space:nowrap;
-  animation:move 12s linear infinite;
-}
-
-@keyframes move{
-  0%{transform:translateX(100%)}
-  100%{transform:translateX(-100%)}
-}
-
-/* CATEGORY */
-.bar{
-  position:fixed;
-  top:45px;
-  width:100%;
-  background:#222;
-  display:flex;
-  overflow-x:auto;
-}
-
-.cat{
-  color:white;
-  padding:8px 12px;
-  margin:5px;
-  cursor:pointer;
-}
+/* CATEGORY BAR */
+.bar{position:fixed;top:45px;width:100%;background:#222;display:flex;overflow-x:auto}
+.cat{color:white;padding:8px 12px;margin:5px;cursor:pointer;border-radius:20px}
 
 /* CARD */
-.card{
-  background:white;
-  margin:10px;
-  padding:10px;
-  border-radius:12px;
-}
+.card{background:white;margin:10px;padding:10px;border-radius:12px}
 
 /* CAROUSEL */
-.carousel{
-  display:flex;
-  overflow-x:auto;
-  scroll-snap-type:x mandatory;
-  scroll-behavior:smooth;
-  border-radius:10px;
-}
-
-.carousel img{
-  min-width:100%;
-  height:320px;
-  object-fit:cover;
-  scroll-snap-align:center;
-}
-
-.carousel::-webkit-scrollbar{display:none;}
+.carousel{display:flex;overflow-x:auto;scroll-snap-type:x mandatory}
+.carousel img{min-width:100%;height:320px;object-fit:cover;scroll-snap-align:center}
+.carousel::-webkit-scrollbar{display:none}
 
 /* DOTS */
-.dots{
-  text-align:center;
-  margin-top:5px;
-}
-
-.dot{
-  display:inline-block;
-  width:8px;
-  height:8px;
-  margin:3px;
-  border-radius:50%;
-  background:#bbb;
-}
-
-.dot.active{
-  background:#25D366;
-}
+.dots{text-align:center;margin-top:5px}
+.dot{display:inline-block;width:8px;height:8px;margin:3px;border-radius:50%;background:#bbb}
+.dot.active{background:#25D366}
 
 /* PRICE */
-.price{
-  background:#111;
-  color:white;
-  padding:10px;
-  text-align:center;
-  margin-top:10px;
-  border-radius:8px;
-}
+.price{background:#111;color:white;padding:10px;text-align:center;margin-top:10px;border-radius:8px}
 
-/* BUY */
-.buy{
-  width:100%;
-  padding:10px;
-  background:#25D366;
-  color:white;
-  border:none;
-  margin-top:10px;
-  border-radius:10px;
-}
+/* BUTTON */
+.buy{width:100%;padding:10px;background:#25D366;color:white;border:none;margin-top:10px;border-radius:10px}
 
 /* ADMIN */
-.admin{
-  display:none;
-  position:fixed;
-  top:0;
-  left:0;
-  width:100%;
-  height:100%;
-  background:white;
-  z-index:99999;
-  padding:10px;
-  overflow:auto;
-}
-
-input,select{
-  width:100%;
-  padding:10px;
-  margin:5px 0;
-}
-
-button{
-  width:100%;
-  padding:10px;
-  margin-top:5px;
-  border:none;
-  border-radius:8px;
-}
-
+.admin{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:white;z-index:99999;padding:10px;overflow:auto}
+input,select{width:100%;padding:10px;margin:5px 0}
+button{width:100%;padding:10px;margin-top:5px;border:none;border-radius:8px}
 .green{background:green;color:white}
 .red{background:red;color:white}
-
-</style>
+  </style>
 </head>
 
 <body>
 
-<!-- HEADER -->
 <div class="top">
   <img src="logo1.png" class="logo">
   <div class="marquee">✨ LUXURY HEAVEN ✨</div>
   <div onclick="openAdmin()" style="margin-left:auto;padding:10px;cursor:pointer">🔒</div>
 </div>
 
-<!-- CATEGORY -->
 <div class="bar" id="bar"></div>
 
-<!-- PRODUCTS -->
 <div id="view"></div>
 
 <!-- ADMIN -->
@@ -177,12 +64,24 @@ button{
 
 <h2>Admin Dashboard</h2>
 
-<input id="name" placeholder="Name">
+<!-- ADD PRODUCT -->
+<input id="name" placeholder="Product Name">
 <input id="price" placeholder="Price">
 <select id="cat"></select>
 
 <button class="green" onclick="upload()">Upload Images</button>
 <button class="green" onclick="save()">Save Product</button>
+
+<hr>
+
+<!-- CATEGORY MANAGEMENT -->
+<h3>Category Management</h3>
+
+<input id="newCat" placeholder="New Category">
+<button class="green" onclick="addCategory()">Add Category</button>
+
+<select id="deleteCat"></select>
+<button class="red" onclick="deleteCategory()">Delete Category</button>
 
 <hr>
 
@@ -222,12 +121,12 @@ let categories = [];
 let images = [];
 
 /* INIT */
-window.onload = async () => {
+window.onload = async ()=>{
   await loadCategories();
   await loadProducts();
 };
 
-/* CATEGORIES */
+/* LOAD CATEGORIES */
 async function loadCategories(){
   const snap = await getDocs(collection(db,"categories"));
   categories = [];
@@ -236,40 +135,71 @@ async function loadCategories(){
 
   let bar = document.getElementById("bar");
   let sel = document.getElementById("cat");
+  let del = document.getElementById("deleteCat");
 
   bar.innerHTML="";
   sel.innerHTML="";
+  del.innerHTML="";
 
   categories.forEach(c=>{
     bar.innerHTML += `<div class="cat" onclick="filter('${c}')">${c}</div>`;
     sel.innerHTML += `<option>${c}</option>`;
+    del.innerHTML += `<option>${c}</option>`;
   });
 }
 
-/* PRODUCTS */
+/* ADD CATEGORY */
+window.addCategory = async ()=>{
+  let newC = newCat.value.trim().toLowerCase();
+
+  if(!newC) return alert("Enter category");
+
+  if(categories.includes(newC)){
+    alert("Category exists");
+    return;
+  }
+
+  await addDoc(collection(db,"categories"),{name:newC});
+  newCat.value="";
+  loadCategories();
+};
+
+/* DELETE CATEGORY */
+window.deleteCategory = async ()=>{
+  let selected = deleteCat.value;
+
+  const snap = await getDocs(collection(db,"categories"));
+
+  snap.forEach(async d=>{
+    if(d.data().name === selected){
+      await deleteDoc(doc(db,"categories",d.id));
+    }
+  });
+
+  loadCategories();
+};
+
+/* LOAD PRODUCTS */
 async function loadProducts(){
   const snap = await getDocs(collection(db,"products"));
   products = [];
 
-  snap.forEach(d=>products.push({...d.data(), id:d.id}));
+  snap.forEach(d=>products.push({...d.data(),id:d.id}));
 
   render(products);
 }
 
-/* RENDER WITH CAROUSEL */
+/* RENDER */
 function render(list){
   let view = document.getElementById("view");
   view.innerHTML="";
 
   list.forEach((p,i)=>{
-
-    let imgs = p.images || [];
-
     view.innerHTML += `
       <div class="card">
 
         <div class="carousel" id="car${i}">
-          ${imgs.map(img=>`<img src="${img}">`).join("")}
+          ${(p.images||[]).map(img=>`<img src="${img}">`).join("")}
         </div>
 
         <div class="dots" id="dot${i}"></div>
@@ -277,9 +207,10 @@ function render(list){
         <div class="price">₦ ${p.price}</div>
 
         <button class="buy"
-        onclick="window.open('https://wa.me/234911473893?text=I want ${p.name}')">
+        onclick="window.open('https://wa.me/2349114738932?text=I want ${p.name}')">
         BUY NOW
         </button>
+
       </div>
     `;
   });
@@ -287,40 +218,35 @@ function render(list){
   setTimeout(setupCarousel,100);
 }
 
-/* DOT SYSTEM */
+/* CAROUSEL */
 function setupCarousel(){
-
   products.forEach((p,i)=>{
-
     let car = document.getElementById("car"+i);
-    let dotBox = document.getElementById("dot"+i);
+    let box = document.getElementById("dot"+i);
 
     if(!car) return;
 
     let imgs = car.querySelectorAll("img");
-
-    dotBox.innerHTML="";
+    box.innerHTML="";
 
     imgs.forEach((_,x)=>{
-      let d = document.createElement("span");
-      d.className="dot" + (x===0?" active":"");
-      dotBox.appendChild(d);
+      let d=document.createElement("span");
+      d.className="dot"+(x===0?" active":"");
+      box.appendChild(d);
     });
 
-    let dots = dotBox.querySelectorAll(".dot");
+    let dots = box.querySelectorAll(".dot");
 
     car.addEventListener("scroll",()=>{
-      let index = Math.round(car.scrollLeft / car.clientWidth);
-
+      let index = Math.round(car.scrollLeft/car.clientWidth);
       dots.forEach(d=>d.classList.remove("active"));
       if(dots[index]) dots[index].classList.add("active");
     });
-
   });
 }
 
 /* FILTER */
-window.filter = (c)=>{
+window.filter = c=>{
   render(products.filter(p=>p.category===c));
 };
 
@@ -341,8 +267,8 @@ window.save = async ()=>{
 /* CLOUDINARY */
 window.upload = ()=>{
   cloudinary.openUploadWidget({
-    cloudName: cloudName,
-    uploadPreset: uploadPreset,
+    cloudName,
+    uploadPreset,
     multiple:true
   },(e,r)=>{
     if(r?.event==="success"){
