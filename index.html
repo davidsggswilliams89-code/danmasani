@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>LUXURY HEAVEN</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LUXURY HEAVEN</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <script src="https://widget.cloudinary.com/v2.0/global/all.js"></script>
+<script src="https://widget.cloudinary.com/v2.0/global/all.js"></script>
 
 <style>
 body{margin:0;font-family:Arial;background:#f5f5f5;padding-top:80px}
@@ -17,7 +17,8 @@ body{margin:0;font-family:Arial;background:#f5f5f5;padding-top:80px}
 
 /* CATEGORY */
 .bar{position:fixed;top:45px;width:100%;background:#222;display:flex;overflow-x:auto}
-.cat{color:white;padding:8px 12px;margin:5px;cursor:pointer}
+.cat{color:white;padding:8px 12px;margin:5px;cursor:pointer;border-radius:20px}
+.cat.active{background:#25D366}
 
 /* VIEW */
 .view{display:none}
@@ -33,10 +34,10 @@ body{margin:0;font-family:Arial;background:#f5f5f5;padding-top:80px}
 
 /* TESTIMONIAL */
 .testimonial-carousel img{
-  min-width:100%;
-  height:300px;
-  object-fit:contain;
-  background:#fff;
+min-width:100%;
+height:300px;
+object-fit:contain;
+background:#fff;
 }
 
 /* DOTS */
@@ -53,10 +54,13 @@ body{margin:0;font-family:Arial;background:#f5f5f5;padding-top:80px}
 /* SOCIAL */
 .social-btn{
 display:flex;align-items:center;gap:6px;
-padding:8px 10px;border-radius:20px;color:#fff;font-size:12px;
+padding:8px 12px;border-radius:20px;
+color:white;font-size:13px;text-decoration:none
 }
 .wa{background:#25D366}
 .ig{background:#E1306C}
+
+.social-btn img{width:18px;height:18px}
 
 /* ADMIN */
 .admin{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:white;z-index:99999;padding:10px;overflow:auto}
@@ -69,17 +73,15 @@ button{width:100%;padding:10px;margin-top:5px;border:none;border-radius:8px}
 
 <body>
 
-<!-- HEADER -->
 <div class="top">
-  <img src="logo1.png" class="logo">
-  <div class="marquee">✨ LUXURY HEAVEN ✨</div>
-  <div onclick="openAdmin()" style="margin-left:auto;padding:10px;cursor:pointer">🔒</div>
+<img src="logo1.png" class="logo">
+<div class="marquee">✨ LUXURY HEAVEN ✨</div>
+<div onclick="openAdmin()" style="margin-left:auto;padding:10px;cursor:pointer">🔒</div>
 </div>
 
-<!-- CATEGORY -->
 <div class="bar" id="bar"></div>
 
-<!-- ABOUT PAGE -->
+<!-- ABOUT -->
 <div id="aboutView" class="view active-view">
 <div class="card">
 
@@ -90,15 +92,12 @@ button{width:100%;padding:10px;margin-top:5px;border:none;border-radius:8px}
 <hr>
 
 <h3>Our Mission</h3>
-<p>To provide high-quality fashion products with style and affordability across Nigeria.</p>
+<p>To provide stylish, affordable and quality fashion for women.</p>
 
 <hr>
 
 <h3>About Us</h3>
-<p>
-Luxury Heaven by Aleesha is an online fashion store for women in Northern Nigeria.
-We sell shoes, bags, abayas and fabrics with quality and trust.
-</p>
+<p>Luxury Heaven by Aleesha is an online store delivering premium fashion products.</p>
 
 <hr>
 
@@ -108,20 +107,29 @@ We sell shoes, bags, abayas and fabrics with quality and trust.
 <hr>
 
 <h3>Contact</h3>
-<p>📞 09114738932<br>🕒 9AM - 6PM</p>
+<p>📞 09114738932</p>
 
 <hr>
 
 <h3>Connect With Us</h3>
+
 <div style="display:flex;gap:10px">
-<a href="https://wa.me/234911473893"><div class="social-btn wa">WhatsApp</div></a>
-<a href="#"><div class="social-btn ig">Instagram</div></a>
+
+<a href="https://wa.me/234911473893" target="_blank" class="social-btn wa">
+<img src="https://cdn-icons-png.flaticon.com/512/733/733585.png">
+WhatsApp
+</a>
+
+<a href="#" target="_blank" class="social-btn ig">
+<img src="https://cdn-icons-png.flaticon.com/512/733/733558.png">
+Instagram
+</a>
+
 </div>
 
 </div>
 </div>
 
-<!-- PRODUCTS -->
 <div id="view"></div>
 
 <!-- ADMIN -->
@@ -138,7 +146,7 @@ We sell shoes, bags, abayas and fabrics with quality and trust.
 
 <hr>
 
-<h3>Category</h3>
+<h3>Categories</h3>
 <input id="newCat" placeholder="New Category">
 <button class="green" onclick="addCategory()">Add</button>
 
@@ -147,9 +155,9 @@ We sell shoes, bags, abayas and fabrics with quality and trust.
 
 <hr>
 
-<h3>Delete Products</h3>
-<button class="green" onclick="showDeleteList()">Load</button>
-<div id="list"></div>
+<h3>Testimonials</h3>
+<button class="green" onclick="uploadTestimonial()">Upload Testimonial</button>
+<div id="testimonialList"></div>
 
 <button class="red" onclick="closeAdmin()">Close</button>
 
@@ -160,25 +168,22 @@ We sell shoes, bags, abayas and fabrics with quality and trust.
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyD40daowTCCVrKr1kWI6krf9nB7OHp8mWU",
-  authDomain: "luxury-heaven-c24df.firebaseapp.com",
-  projectId: "luxury-heaven-c24df",
-  storageBucket: "luxury-heaven-c24df.firebasestorage.app",
-  messagingSenderId: "277279766368",
-  appId: "1:277279766368:web:2f5858b54f58d1df629005"
+const firebaseConfig={
+apiKey:"AIzaSyD40...",
+authDomain:"luxury-heaven-c24df.firebaseapp.com",
+projectId:"luxury-heaven-c24df",
+storageBucket:"luxury-heaven-c24df.firebasestorage.app",
+messagingSenderId:"277279766368",
+appId:"1:277279766368:web:2f5858b54f58d1df629005"
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
 
 const cloudName="db92r6j9z";
 const uploadPreset="ummuhalti";
 
-let products=[],categories=[],images=[];
-let testimonials=[
-"https://res.cloudinary.com/db92r6j9z/image/upload/v1777527776/yxtj768hxl4y8ow4shuj.jpg"
-];
+let products=[],categories=[],images=[],testimonials=[];
 
 /* INIT */
 window.onload=async()=>{
@@ -194,18 +199,32 @@ categories=[];
 snap.forEach(d=>categories.push(d.data().name));
 
 let bar=document.getElementById("bar");
-let sel=document.getElementById("cat");
-let del=document.getElementById("deleteCat");
-
-bar.innerHTML=`<div class="cat" onclick="showAbout()">ABOUT</div>`;
-sel.innerHTML=""; del.innerHTML="";
+bar.innerHTML=`<div class="cat active" onclick="showAbout(this)">ABOUT</div>`;
 
 categories.forEach(c=>{
-bar.innerHTML+=`<div class="cat" onclick="filter('${c}')">${c}</div>`;
-sel.innerHTML+=`<option>${c}</option>`;
-del.innerHTML+=`<option>${c}</option>`;
+bar.innerHTML+=`<div class="cat" onclick="filter('${c}',this)">${c}</div>`;
 });
 }
+
+/* ACTIVE TAB */
+function setActive(el){
+document.querySelectorAll(".cat").forEach(b=>b.classList.remove("active"));
+el.classList.add("active");
+}
+
+/* ABOUT */
+window.showAbout=(el)=>{
+setActive(el);
+document.getElementById("view").innerHTML="";
+document.getElementById("aboutView").classList.add("active-view");
+};
+
+/* FILTER */
+window.filter=(c,el)=>{
+setActive(el);
+document.getElementById("aboutView").classList.remove("active-view");
+render(products.filter(p=>p.category===c));
+};
 
 /* PRODUCTS */
 async function loadProducts(){
@@ -217,11 +236,8 @@ render(products);
 
 /* RENDER */
 function render(list){
-document.getElementById("aboutView").classList.remove("active-view");
-
 let view=document.getElementById("view");
 view.innerHTML="";
-
 list.forEach((p,i)=>{
 view.innerHTML+=`
 <div class="card">
@@ -233,34 +249,7 @@ ${(p.images||[]).map(img=>`<img src="${img}">`).join("")}
 <button class="buy" onclick="buyNow(${i})">BUY NOW</button>
 </div>`;
 });
-
 setTimeout(setupCarousel,100);
-}
-
-/* CAROUSEL */
-function setupCarousel(){
-products.forEach((p,i)=>{
-let car=document.getElementById("car"+i);
-let box=document.getElementById("dot"+i);
-if(!car)return;
-
-let imgs=car.querySelectorAll("img");
-box.innerHTML="";
-
-imgs.forEach((_,x)=>{
-let d=document.createElement("span");
-d.className="dot"+(x===0?" active":"");
-box.appendChild(d);
-});
-
-let dots=box.querySelectorAll(".dot");
-
-car.addEventListener("scroll",()=>{
-let index=Math.round(car.scrollLeft/car.clientWidth);
-dots.forEach(d=>d.classList.remove("active"));
-if(dots[index])dots[index].classList.add("active");
-});
-});
 }
 
 /* BUY */
@@ -274,127 +263,81 @@ let msg=`Hello 👋,
 
 I want to order this Product:
 
-🧵 Category: ${p.category.toUpperCase()}
+🧵 Category: ${p.category}
 🛍️ Product: ${p.name}
 💰 Price: ₦${p.price}
 
 🖼️ Selected Image:
 ${img}
 
-Is this available? I want to buy.`;
+Is this available?`;
 
 window.open("https://wa.me/234911473893?text="+encodeURIComponent(msg));
 };
 
-/* FILTER */
-window.filter=c=>render(products.filter(p=>p.category===c));
+/* CAROUSEL */
+function setupCarousel(){
+products.forEach((p,i)=>{
+let car=document.getElementById("car"+i);
+let box=document.getElementById("dot"+i);
+if(!car)return;
 
-/* ABOUT */
-window.showAbout=()=>{
-document.getElementById("view").innerHTML="";
-document.getElementById("aboutView").classList.add("active-view");
-};
-
-/* SAVE */
-window.save=async()=>{
-if(images.length===0)return alert("Upload image");
-await addDoc(collection(db,"products"),{
-name:name.value,
-price:price.value,
-category:cat.value,
-images:[...images],
-date:Date.now()
-});
-alert("Product uploaded successfully ✅");
-images=[]; name.value=""; price.value="";
-loadProducts();
-};
-
-/* DELETE */
-window.showDeleteList=()=>{
-let box=document.getElementById("list");
+let imgs=car.querySelectorAll("img");
 box.innerHTML="";
-products.filter(p=>p.category===deleteCat.value)
-.forEach(p=>{
-box.innerHTML+=`
-<div style="display:flex;gap:10px;background:#eee;padding:8px;margin:5px">
-<img src="${p.images[0]}" width="40">
-<div style="flex:1">${p.name}</div>
-<button class="red" onclick="del('${p.id}')">Delete</button>
-</div>`;
+imgs.forEach((_,x)=>{
+let d=document.createElement("span");
+d.className="dot"+(x===0?" active":"");
+box.appendChild(d);
 });
-};
-
-window.del=async(id)=>{
-await deleteDoc(doc(db,"products",id));
-loadProducts(); showDeleteList();
-};
-
-/* CATEGORY */
-window.addCategory=async()=>{
-await addDoc(collection(db,"categories"),{name:newCat.value});
-newCat.value=""; loadCategories();
-};
-
-window.deleteCategory=async()=>{
-const snap=await getDocs(collection(db,"categories"));
-snap.forEach(async d=>{
-if(d.data().name===deleteCat.value){
-await deleteDoc(doc(db,"categories",d.id));
+});
 }
-});
-loadCategories();
-};
-
-/* CLOUDINARY */
-window.upload=()=>{
-cloudinary.openUploadWidget({cloudName,uploadPreset,multiple:true},(e,r)=>{
-if(r?.event==="success"){
-images.push(r.info.secure_url);
-alert("Uploaded ✔");
-}
-});
-};
 
 /* TESTIMONIAL */
 function loadTestimonials(){
 let box=document.getElementById("testimonialCarousel");
 let dots=document.getElementById("testimonialDots");
 
-box.innerHTML=""; dots.innerHTML="";
+box.innerHTML="";dots.innerHTML="";
 
 testimonials.forEach((img,i)=>{
 box.innerHTML+=`<img src="${img}">`;
 let d=document.createElement("span");
 d.className="dot"+(i===0?" active":"");
-d.onclick=()=>scrollTestimonial(i);
 dots.appendChild(d);
 });
-startAuto();
 }
 
-let tIndex=0,tAuto;
+/* ADMIN TESTIMONIAL */
+window.uploadTestimonial=()=>{
+cloudinary.openUploadWidget({cloudName,uploadPreset},(e,r)=>{
+if(r?.event==="success"){
+testimonials.push(r.info.secure_url);
+loadTestimonials();
+renderTestimonialAdmin();
+}
+});
+};
 
-function scrollTestimonial(i){
-let box=document.getElementById("testimonialCarousel");
-let dots=document.querySelectorAll("#testimonialDots .dot");
-
-box.scrollTo({left:box.clientWidth*i,behavior:"smooth"});
-dots.forEach(d=>d.classList.remove("active"));
-if(dots[i])dots[i].classList.add("active");
-tIndex=i;
+function renderTestimonialAdmin(){
+let box=document.getElementById("testimonialList");
+box.innerHTML="";
+testimonials.forEach((img,i)=>{
+box.innerHTML+=`
+<div style="display:flex;gap:10px">
+<img src="${img}" width="40">
+<button class="red" onclick="deleteTestimonial(${i})">Delete</button>
+</div>`;
+});
 }
 
-function startAuto(){
-clearInterval(tAuto);
-tAuto=setInterval(()=>{
-tIndex=(tIndex+1)%testimonials.length;
-scrollTestimonial(tIndex);
-},4000);
-}
+window.deleteTestimonial=(i)=>{
+testimonials.splice(i,1);
+loadTestimonials();
+renderTestimonialAdmin();
+};
 
 /* ADMIN */
-window.openAdmin=()=>{if(prompt("Password")==="1234")admin.style.display="block";}
+window.openAdmin=()=>{if(prompt("Password")==="1234"){admin.style.display="block";renderTestimonialAdmin();}};
 window.closeAdmin=()=>admin.style.display="none";
 
 </script>
