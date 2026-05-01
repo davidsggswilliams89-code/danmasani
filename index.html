@@ -19,6 +19,10 @@ body{margin:0;font-family:Arial;background:#f5f5f5;padding-top:80px}
 .bar{position:fixed;top:45px;width:100%;background:#222;display:flex;overflow-x:auto}
 .cat{color:white;padding:8px 12px;margin:5px;cursor:pointer}
 
+/* VIEW */
+.view{display:none}
+.active-view{display:block}
+
 /* CARD */
 .card{background:white;margin:10px;padding:10px;border-radius:12px}
 
@@ -26,6 +30,14 @@ body{margin:0;font-family:Arial;background:#f5f5f5;padding-top:80px}
 .carousel{display:flex;overflow-x:auto;scroll-snap-type:x mandatory}
 .carousel img{min-width:100%;height:320px;object-fit:cover;scroll-snap-align:center}
 .carousel::-webkit-scrollbar{display:none}
+
+/* TESTIMONIAL */
+.testimonial-carousel img{
+  min-width:100%;
+  height:300px;
+  object-fit:contain;
+  background:#fff;
+}
 
 /* DOTS */
 .dots{text-align:center;margin-top:5px}
@@ -37,6 +49,14 @@ body{margin:0;font-family:Arial;background:#f5f5f5;padding-top:80px}
 
 /* BUY */
 .buy{width:100%;padding:10px;background:#25D366;color:white;border:none;margin-top:10px;border-radius:10px}
+
+/* SOCIAL */
+.social-btn{
+display:flex;align-items:center;gap:6px;
+padding:8px 10px;border-radius:20px;color:#fff;font-size:12px;
+}
+.wa{background:#25D366}
+.ig{background:#E1306C}
 
 /* ADMIN */
 .admin{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:white;z-index:99999;padding:10px;overflow:auto}
@@ -59,6 +79,48 @@ button{width:100%;padding:10px;margin-top:5px;border:none;border-radius:8px}
 <!-- CATEGORY -->
 <div class="bar" id="bar"></div>
 
+<!-- ABOUT PAGE -->
+<div id="aboutView" class="view active-view">
+<div class="card">
+
+<h3 style="text-align:center;">What Our Customers Say 💬</h3>
+<div class="carousel testimonial-carousel" id="testimonialCarousel"></div>
+<div class="dots" id="testimonialDots"></div>
+
+<hr>
+
+<h3>Our Mission</h3>
+<p>To provide high-quality fashion products with style and affordability across Nigeria.</p>
+
+<hr>
+
+<h3>About Us</h3>
+<p>
+Luxury Heaven by Aleesha is an online fashion store for women in Northern Nigeria.
+We sell shoes, bags, abayas and fabrics with quality and trust.
+</p>
+
+<hr>
+
+<h3>Address</h3>
+<p>📍 Gusau, Zamfara State</p>
+
+<hr>
+
+<h3>Contact</h3>
+<p>📞 09114738932<br>🕒 9AM - 6PM</p>
+
+<hr>
+
+<h3>Connect With Us</h3>
+<div style="display:flex;gap:10px">
+<a href="https://wa.me/234911473893"><div class="social-btn wa">WhatsApp</div></a>
+<a href="#"><div class="social-btn ig">Instagram</div></a>
+</div>
+
+</div>
+</div>
+
 <!-- PRODUCTS -->
 <div id="view"></div>
 
@@ -76,17 +138,17 @@ button{width:100%;padding:10px;margin-top:5px;border:none;border-radius:8px}
 
 <hr>
 
-<h3>Category Management</h3>
+<h3>Category</h3>
 <input id="newCat" placeholder="New Category">
-<button class="green" onclick="addCategory()">Add Category</button>
+<button class="green" onclick="addCategory()">Add</button>
 
 <select id="deleteCat"></select>
 <button class="red" onclick="deleteCategory()">Delete Category</button>
 
 <hr>
 
-<h3>Delete Products by Category</h3>
-<button class="green" onclick="showDeleteList()">Load Products</button>
+<h3>Delete Products</h3>
+<button class="green" onclick="showDeleteList()">Load</button>
 <div id="list"></div>
 
 <button class="red" onclick="closeAdmin()">Close</button>
@@ -96,10 +158,8 @@ button{width:100%;padding:10px;margin-top:5px;border:none;border-radius:8px}
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc } 
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-/* FIREBASE */
 const firebaseConfig = {
   apiKey: "AIzaSyD40daowTCCVrKr1kWI6krf9nB7OHp8mWU",
   authDomain: "luxury-heaven-c24df.firebaseapp.com",
@@ -112,116 +172,105 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-/* CLOUDINARY */
-const cloudName = "db92r6j9z";
-const uploadPreset = "ummuhalti";
+const cloudName="db92r6j9z";
+const uploadPreset="ummuhalti";
 
-/* DATA */
-let products = [];
-let categories = [];
-let images = [];
+let products=[],categories=[],images=[];
+let testimonials=[
+"https://res.cloudinary.com/db92r6j9z/image/upload/v1777527776/yxtj768hxl4y8ow4shuj.jpg"
+];
 
 /* INIT */
-window.onload = async ()=>{
-  await loadCategories();
-  await loadProducts();
+window.onload=async()=>{
+await loadCategories();
+await loadProducts();
+loadTestimonials();
 };
 
-/* LOAD CATEGORIES */
+/* CATEGORY */
 async function loadCategories(){
-  const snap = await getDocs(collection(db,"categories"));
-  categories = [];
+const snap=await getDocs(collection(db,"categories"));
+categories=[];
+snap.forEach(d=>categories.push(d.data().name));
 
-  snap.forEach(d=>categories.push(d.data().name));
+let bar=document.getElementById("bar");
+let sel=document.getElementById("cat");
+let del=document.getElementById("deleteCat");
 
-  let bar = document.getElementById("bar");
-  let sel = document.getElementById("cat");
-  let del = document.getElementById("deleteCat");
+bar.innerHTML=`<div class="cat" onclick="showAbout()">ABOUT</div>`;
+sel.innerHTML=""; del.innerHTML="";
 
-  bar.innerHTML="";
-  sel.innerHTML="";
-  del.innerHTML="";
-
-  categories.forEach(c=>{
-    bar.innerHTML += `<div class="cat" onclick="filter('${c}')">${c}</div>`;
-    sel.innerHTML += `<option>${c}</option>`;
-    del.innerHTML += `<option>${c}</option>`;
-  });
+categories.forEach(c=>{
+bar.innerHTML+=`<div class="cat" onclick="filter('${c}')">${c}</div>`;
+sel.innerHTML+=`<option>${c}</option>`;
+del.innerHTML+=`<option>${c}</option>`;
+});
 }
 
-/* LOAD PRODUCTS */
+/* PRODUCTS */
 async function loadProducts(){
-  const snap = await getDocs(collection(db,"products"));
-  products = [];
-
-  snap.forEach(d=>products.push({...d.data(),id:d.id}));
-
-  render(products);
+const snap=await getDocs(collection(db,"products"));
+products=[];
+snap.forEach(d=>products.push({...d.data(),id:d.id}));
+render(products);
 }
 
 /* RENDER */
 function render(list){
-  let view = document.getElementById("view");
-  view.innerHTML="";
+document.getElementById("aboutView").classList.remove("active-view");
 
-  list.forEach((p,i)=>{
-    view.innerHTML += `
-      <div class="card">
+let view=document.getElementById("view");
+view.innerHTML="";
 
-        <div class="carousel" id="car${i}">
-          ${(p.images||[]).map(img=>`<img src="${img}">`).join("")}
-        </div>
+list.forEach((p,i)=>{
+view.innerHTML+=`
+<div class="card">
+<div class="carousel" id="car${i}">
+${(p.images||[]).map(img=>`<img src="${img}">`).join("")}
+</div>
+<div class="dots" id="dot${i}"></div>
+<div class="price">₦ ${p.price}</div>
+<button class="buy" onclick="buyNow(${i})">BUY NOW</button>
+</div>`;
+});
 
-        <div class="dots" id="dot${i}"></div>
-
-        <div class="price">₦ ${p.price}</div>
-
-        <button class="buy" onclick="buyNow(${i})">
-        BUY NOW
-        </button>
-
-      </div>
-    `;
-  });
-
-  setTimeout(setupCarousel,100);
+setTimeout(setupCarousel,100);
 }
 
 /* CAROUSEL */
 function setupCarousel(){
-  products.forEach((p,i)=>{
-    let car=document.getElementById("car"+i);
-    let box=document.getElementById("dot"+i);
-    if(!car) return;
+products.forEach((p,i)=>{
+let car=document.getElementById("car"+i);
+let box=document.getElementById("dot"+i);
+if(!car)return;
 
-    let imgs=car.querySelectorAll("img");
-    box.innerHTML="";
+let imgs=car.querySelectorAll("img");
+box.innerHTML="";
 
-    imgs.forEach((_,x)=>{
-      let d=document.createElement("span");
-      d.className="dot"+(x===0?" active":"");
-      box.appendChild(d);
-    });
+imgs.forEach((_,x)=>{
+let d=document.createElement("span");
+d.className="dot"+(x===0?" active":"");
+box.appendChild(d);
+});
 
-    let dots=box.querySelectorAll(".dot");
+let dots=box.querySelectorAll(".dot");
 
-    car.addEventListener("scroll",()=>{
-      let index=Math.round(car.scrollLeft/car.clientWidth);
-      dots.forEach(d=>d.classList.remove("active"));
-      if(dots[index]) dots[index].classList.add("active");
-    });
-  });
+car.addEventListener("scroll",()=>{
+let index=Math.round(car.scrollLeft/car.clientWidth);
+dots.forEach(d=>d.classList.remove("active"));
+if(dots[index])dots[index].classList.add("active");
+});
+});
 }
 
-/* BUY WITH ACTIVE IMAGE */
-window.buyNow = function(index){
-  let p = products[index];
+/* BUY */
+window.buyNow=(i)=>{
+let p=products[i];
+let car=document.getElementById("car"+i);
+let index=Math.round(car.scrollLeft/car.clientWidth);
+let img=p.images[index]||p.images[0];
 
-  let car = document.getElementById("car" + index);
-  let currentIndex = Math.round(car.scrollLeft / car.clientWidth);
-  let selectedImage = p.images[currentIndex] || p.images[0];
-
-  let msg = `Hello 👋,
+let msg=`Hello 👋,
 
 I want to order this Product:
 
@@ -230,125 +279,123 @@ I want to order this Product:
 💰 Price: ₦${p.price}
 
 🖼️ Selected Image:
-${selectedImage}
+${img}
 
 Is this available? I want to buy.`;
 
-  window.open("https://wa.me/2349114738932?text=" + encodeURIComponent(msg));
+window.open("https://wa.me/234911473893?text="+encodeURIComponent(msg));
 };
 
 /* FILTER */
-window.filter = c=>{
-  render(products.filter(p=>p.category===c));
+window.filter=c=>render(products.filter(p=>p.category===c));
+
+/* ABOUT */
+window.showAbout=()=>{
+document.getElementById("view").innerHTML="";
+document.getElementById("aboutView").classList.add("active-view");
 };
 
-/* SAVE PRODUCT */
-window.save = async ()=>{
-  let nameVal = document.getElementById("name").value.trim();
-  let priceVal = document.getElementById("price").value.trim();
-  let catVal = document.getElementById("cat").value;
-
-  if(!nameVal || !priceVal || images.length === 0){
-    alert("Fill all fields + upload image");
-    return;
-  }
-
-  await addDoc(collection(db,"products"),{
-    name:nameVal,
-    price:priceVal,
-    category:catVal,
-    images:[...images],
-    date:Date.now()
-  });
-
-  alert("Product uploaded successfully ✅");
-
-  images=[];
-  document.getElementById("name").value="";
-  document.getElementById("price").value="";
-
-  loadProducts();
+/* SAVE */
+window.save=async()=>{
+if(images.length===0)return alert("Upload image");
+await addDoc(collection(db,"products"),{
+name:name.value,
+price:price.value,
+category:cat.value,
+images:[...images],
+date:Date.now()
+});
+alert("Product uploaded successfully ✅");
+images=[]; name.value=""; price.value="";
+loadProducts();
 };
 
-/* DELETE LIST */
-window.showDeleteList = ()=>{
-  let selected = document.getElementById("deleteCat").value;
-  let box = document.getElementById("list");
-  box.innerHTML="";
-
-  let filtered = products.filter(p=>p.category===selected);
-
-  filtered.forEach(p=>{
-    box.innerHTML += `
-      <div style="display:flex;gap:10px;background:#eee;padding:8px;margin:5px;border-radius:8px;">
-        <img src="${p.images?.[0]||''}" width="40">
-        <div style="flex:1">${p.name}</div>
-        <button class="red" onclick="del('${p.id}')">Delete</button>
-      </div>
-    `;
-  });
+/* DELETE */
+window.showDeleteList=()=>{
+let box=document.getElementById("list");
+box.innerHTML="";
+products.filter(p=>p.category===deleteCat.value)
+.forEach(p=>{
+box.innerHTML+=`
+<div style="display:flex;gap:10px;background:#eee;padding:8px;margin:5px">
+<img src="${p.images[0]}" width="40">
+<div style="flex:1">${p.name}</div>
+<button class="red" onclick="del('${p.id}')">Delete</button>
+</div>`;
+});
 };
 
-/* DELETE PRODUCT */
-window.del = async (id)=>{
-  await deleteDoc(doc(db,"products",id));
-  alert("Deleted ✅");
-  loadProducts();
-  showDeleteList();
+window.del=async(id)=>{
+await deleteDoc(doc(db,"products",id));
+loadProducts(); showDeleteList();
 };
 
-/* ADD CATEGORY */
-window.addCategory = async ()=>{
-  let newC = document.getElementById("newCat").value.trim().toLowerCase();
-
-  if(!newC) return;
-
-  if(categories.includes(newC)){
-    alert("Category exists");
-    return;
-  }
-
-  await addDoc(collection(db,"categories"),{name:newC});
-  document.getElementById("newCat").value="";
-  loadCategories();
+/* CATEGORY */
+window.addCategory=async()=>{
+await addDoc(collection(db,"categories"),{name:newCat.value});
+newCat.value=""; loadCategories();
 };
 
-/* DELETE CATEGORY */
-window.deleteCategory = async ()=>{
-  let selected = document.getElementById("deleteCat").value;
-
-  const snap = await getDocs(collection(db,"categories"));
-
-  snap.forEach(async d=>{
-    if(d.data().name === selected){
-      await deleteDoc(doc(db,"categories",d.id));
-    }
-  });
-
-  loadCategories();
+window.deleteCategory=async()=>{
+const snap=await getDocs(collection(db,"categories"));
+snap.forEach(async d=>{
+if(d.data().name===deleteCat.value){
+await deleteDoc(doc(db,"categories",d.id));
+}
+});
+loadCategories();
 };
 
 /* CLOUDINARY */
-window.upload = ()=>{
-  cloudinary.openUploadWidget({
-    cloudName,
-    uploadPreset,
-    multiple:true
-  },(e,r)=>{
-    if(r?.event==="success"){
-      images.push(r.info.secure_url);
-      alert("Image uploaded ✔");
-    }
-  });
+window.upload=()=>{
+cloudinary.openUploadWidget({cloudName,uploadPreset,multiple:true},(e,r)=>{
+if(r?.event==="success"){
+images.push(r.info.secure_url);
+alert("Uploaded ✔");
+}
+});
 };
+
+/* TESTIMONIAL */
+function loadTestimonials(){
+let box=document.getElementById("testimonialCarousel");
+let dots=document.getElementById("testimonialDots");
+
+box.innerHTML=""; dots.innerHTML="";
+
+testimonials.forEach((img,i)=>{
+box.innerHTML+=`<img src="${img}">`;
+let d=document.createElement("span");
+d.className="dot"+(i===0?" active":"");
+d.onclick=()=>scrollTestimonial(i);
+dots.appendChild(d);
+});
+startAuto();
+}
+
+let tIndex=0,tAuto;
+
+function scrollTestimonial(i){
+let box=document.getElementById("testimonialCarousel");
+let dots=document.querySelectorAll("#testimonialDots .dot");
+
+box.scrollTo({left:box.clientWidth*i,behavior:"smooth"});
+dots.forEach(d=>d.classList.remove("active"));
+if(dots[i])dots[i].classList.add("active");
+tIndex=i;
+}
+
+function startAuto(){
+clearInterval(tAuto);
+tAuto=setInterval(()=>{
+tIndex=(tIndex+1)%testimonials.length;
+scrollTestimonial(tIndex);
+},4000);
+}
 
 /* ADMIN */
-window.openAdmin = ()=>{
-  let pass = prompt("Password:");
-  if(pass==="1234") admin.style.display="block";
-};
-
-window.closeAdmin = ()=>admin.style.display="none";
+window.openAdmin=()=>{if(prompt("Password")==="1234")admin.style.display="block";}
+window.closeAdmin=()=>admin.style.display="none";
 
 </script>
 
