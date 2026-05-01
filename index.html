@@ -1,174 +1,373 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Luxury Heaven Ecommerce</title>
+  <title>LUXURY HEAVEN</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="https://widget.cloudinary.com/v2.0/global/all.js"></script>
 
   <style>
-    body {
-      font-family: Arial;
-      margin: 0;
-      background: #f4f4f4;
-    }
+body{
+  margin:0;
+  font-family:Arial;
+  background:#f5f5f5;
+  padding-top:80px;
+}
 
-    header {
-      background: #111;
-      color: white;
-      padding: 15px;
-      text-align: center;
-      font-size: 20px;
-    }
+/* HEADER */
+.top-marquee{
+  background:#111;
+  position:fixed;
+  top:0;
+  width:100%;
+  height:45px;
+  display:flex;
+  align-items:center;
+  overflow:hidden;
+  z-index:3000;
+}
 
-    .container {
-      padding: 15px;
-      max-width: 900px;
-      margin: auto;
-    }
+.logo{
+  height:45px;
+  object-fit:contain;
+}
 
-    .form {
-      background: white;
-      padding: 15px;
-      border-radius: 10px;
-      margin-bottom: 20px;
-    }
+.marquee-wrapper{
+  position:absolute;
+  width:100%;
+  overflow:hidden;
+}
 
-    input, button {
-      width: 100%;
-      padding: 10px;
-      margin-top: 10px;
-    }
+.marquee-text{
+  white-space:nowrap;
+  animation:move 12s linear infinite;
+  color:white;
+  margin-left:120px;
+}
 
-    button {
-      background: black;
-      color: white;
-      border: none;
-      cursor: pointer;
-    }
+@keyframes move{
+  0%{transform:translateX(100%);}
+  100%{transform:translateX(-100%);}
+}
 
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 10px;
-    }
+/* CATEGORY */
+.category-bar{
+  position:fixed;
+  top:45px;
+  width:100%;
+  height:40px;
+  background:#222;
+  display:flex;
+  overflow-x:auto;
+  z-index:2000;
+}
 
-    .card {
-      background: white;
-      padding: 10px;
-      border-radius: 10px;
-      text-align: center;
-    }
+.category-btn{
+  color:white;
+  padding:6px 14px;
+  margin:5px;
+  border-radius:20px;
+  white-space:nowrap;
+  cursor:pointer;
+}
 
-    .card img {
-      width: 100%;
-      height: 150px;
-      object-fit: cover;
-      border-radius: 10px;
-    }
+.category-btn.active{background:#25D366;}
+
+/* CARD */
+.card{
+  background:white;
+  border-radius:14px;
+  padding:10px;
+  margin-bottom:15px;
+}
+
+.img-wrap{border-radius:12px;overflow:hidden;}
+
+.carousel{
+  display:flex;
+  overflow-x:auto;
+  scroll-snap-type:x mandatory;
+}
+
+.carousel img{
+  min-width:100%;
+  height:380px;
+  object-fit:cover;
+  scroll-snap-align:center;
+}
+
+/* PRICE */
+.price{
+  background:#111;
+  color:white;
+  text-align:center;
+  padding:10px;
+  margin-top:10px;
+  border-radius:8px;
+}
+
+/* BUY BUTTON */
+.buy-btn{
+  background:#25D366;
+  color:white;
+  border:none;
+  width:100%;
+  padding:12px;
+  margin-top:10px;
+  border-radius:12px;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+/* ADMIN */
+.admin{
+  display:none;
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:white;
+  z-index:5000;
+  padding:10px;
+  overflow:auto;
+}
+
+.admin-icon{
+  position:absolute;
+  right:0;
+  width:45px;
+  height:45px;
+  background:#222;
+  color:white;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+}
+
+input,select{
+  width:100%;
+  padding:10px;
+  margin:5px 0;
+}
+
+.btn{
+  width:100%;
+  padding:10px;
+  background:green;
+  color:white;
+  border:none;
+  margin-top:5px;
+  cursor:pointer;
+}
+
+.delete-btn{
+  background:red;
+  color:white;
+  border:none;
+  padding:6px;
+}
   </style>
 </head>
 
 <body>
 
-<header>Luxury Heaven Ecommerce</header>
+<!-- HEADER -->
+<div class="top-marquee">
+  <img src="logo1.png" class="logo">
 
-<div class="container">
-
-  <div class="form">
-    <h3>Add Product</h3>
-    <input id="name" placeholder="Product Name">
-    <input id="price" placeholder="Price">
-    <input type="file" id="image">
-
-    <button onclick="uploadProduct()">Upload Product</button>
+  <div class="marquee-wrapper">
+    <div class="marquee-text">✨ LUXURY HEAVEN ✨ Premium Fashion Store ✨</div>
   </div>
 
-  <div class="grid" id="products"></div>
-
+  <div class="admin-icon" onclick="openAdmin()">🔒</div>
 </div>
 
-<script>
-  // ---------------- FIREBASE CONFIG (YOUR DATA ADDED) ----------------
-  const firebaseConfig = {
-    apiKey: "AIzaSyD40daowTCCVrKr1kWI6krf9nB7OHp8mWU",
-    authDomain: "luxury-heaven-c24df.firebaseapp.com",
-    projectId: "luxury-heaven-c24df",
-    storageBucket: "luxury-heaven-c24df.firebasestorage.app",
-    messagingSenderId: "277279766368",
-    appId: "1:277279766368:web:2f5858b54f58d1df629005"
-  };
+<!-- CATEGORY -->
+<div class="category-bar" id="categoryBar"></div>
 
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
+<!-- ABOUT -->
+<div id="aboutView" class="card">
+  <h2>Welcome to Luxury Heaven</h2>
+  <p>Premium fashion store for quality products.</p>
+</div>
 
-  // ---------------- CLOUDINARY CONFIG ----------------
-  const cloudName = "db92r6j9z";
-  const uploadPreset = "ummuhalti";
+<!-- PRODUCT VIEW -->
+<div id="productView"></div>
 
-  // Upload image to Cloudinary
-  async function uploadToCloudinary(file) {
-    let formData = new FormData();
-    formData.append("file", file);
-    formData.append("upload_preset", uploadPreset);
+<!-- ADMIN -->
+<div class="admin" id="adminPanel">
 
-    let res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
-      method: "POST",
-      body: formData
-    });
+  <h3>Admin Panel</h3>
 
-    let data = await res.json();
-    return data.secure_url;
-  }
+  <input id="aName" placeholder="Product Name">
+  <input id="aPrice" placeholder="Price">
+  <select id="aCategory"></select>
 
-  // Upload product
-  async function uploadProduct() {
-    let name = document.getElementById("name").value;
-    let price = document.getElementById("price").value;
-    let file = document.getElementById("image").files[0];
+  <button class="btn" onclick="uploadImage()">Upload Images</button>
+  <button class="btn" onclick="addProduct()">Save Product</button>
 
-    if (!name || !price || !file) {
-      alert("Fill all fields");
-      return;
-    }
+  <hr>
 
-    let imageUrl = await uploadToCloudinary(file);
+  <h3>Delete Product</h3>
+  <select id="delCat" onchange="loadDelete()"></select>
+  <div id="delList"></div>
 
-    await db.collection("products").add({
-      name,
-      price,
-      image: imageUrl,
-      time: Date.now()
-    });
+  <hr>
 
-    alert("Product uploaded successfully!");
-    loadProducts();
-  }
+  <h3>Add Category</h3>
+  <input id="newCat">
+  <button class="btn" onclick="addCategory()">Add</button>
 
-  // Load products
-  function loadProducts() {
-    db.collection("products").orderBy("time", "desc").onSnapshot(snapshot => {
-      let html = "";
+  <button class="btn" style="background:red" onclick="closeAdmin()">Close</button>
+</div>
 
-      snapshot.forEach(doc => {
-        let p = doc.data();
+<script type="module">
 
-        html += `
-          <div class="card">
-            <img src="${p.image}">
-            <h4>${p.name}</h4>
-            <p>₦${p.price}</p>
-          </div>
-        `;
-      });
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc } 
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-      document.getElementById("products").innerHTML = html;
-    });
-  }
+const firebaseConfig = {
+  apiKey: "YOUR_KEY",
+  authDomain: "YOUR_DOMAIN",
+  projectId: "YOUR_ID"
+};
 
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+/* GLOBAL DATA */
+let categories = [];
+let products = [];
+let uploadedImages = [];
+
+/* LOAD CATEGORIES */
+window.loadCategoriesFromFirebase = async function () {
+  const snap = await getDocs(collection(db,"categories"));
+  categories = [];
+
+  snap.forEach(d=>{
+    categories.push(d.data().name);
+  });
+
+  renderCategories();
+};
+
+/* RENDER */
+function renderCategories(){
+  let bar = document.getElementById("categoryBar");
+  let sel = document.getElementById("aCategory");
+  let del = document.getElementById("delCat");
+
+  bar.innerHTML = "";
+  sel.innerHTML = "";
+  del.innerHTML = "";
+
+  categories.forEach(cat=>{
+    let btn = document.createElement("div");
+    btn.className="category-btn";
+    btn.innerText=cat;
+    btn.onclick=()=>loadProducts(cat);
+    bar.appendChild(btn);
+
+    sel.innerHTML += `<option>${cat}</option>`;
+    del.innerHTML += `<option>${cat}</option>`;
+  });
+}
+
+/* ADD CATEGORY */
+window.addCategory = async function(){
+  let name = document.getElementById("newCat").value.toLowerCase();
+  if(!name) return;
+
+  if(categories.includes(name)) return alert("Exists");
+
+  await addDoc(collection(db,"categories"),{name});
+  loadCategoriesFromFirebase();
+};
+
+/* LOAD PRODUCTS */
+window.loadProducts = async function(cat=""){
+  const snap = await getDocs(collection(db,"products"));
+  products = [];
+
+  snap.forEach(d=>{
+    let data = d.data();
+    products.push({...data,id:d.id});
+  });
+
+  renderProducts(cat);
+};
+
+/* RENDER PRODUCTS */
+function renderProducts(cat){
+  let view = document.getElementById("productView");
+  view.innerHTML="";
+
+  let list = cat ? products.filter(p=>p.category===cat) : products;
+
+  list.forEach(p=>{
+    view.innerHTML += `
+      <div class="card">
+        <div class="carousel">
+          ${(p.images||[]).map(i=>`<img src="${i}">`).join("")}
+        </div>
+
+        <div class="price">₦ ${p.price}</div>
+
+        <button class="buy-btn"
+        onclick="window.open('https://wa.me/234911473893?text=I want ${p.name}')">
+        BUY
+        </button>
+      </div>
+    `;
+  });
+}
+
+/* ADD PRODUCT */
+window.addProduct = async function(){
+  await addDoc(collection(db,"products"),{
+    name:aName.value,
+    price:aPrice.value,
+    category:aCategory.value,
+    images:[...uploadedImages],
+    date:Date.now()
+  });
+
+  uploadedImages=[];
   loadProducts();
+};
+
+/* DELETE PRODUCT */
+window.deleteProduct = async function(id){
+  await deleteDoc(doc(db,"products",id));
+  loadProducts();
+};
+
+/* UPLOAD */
+window.uploadImage = function(){
+  cloudinary.openUploadWidget({
+    cloudName:"db92r6j9z",
+    uploadPreset:"ummuhalti",
+    multiple:true
+  },(err,res)=>{
+    if(res?.event==="success"){
+      uploadedImages.push(res.info.secure_url);
+      alert("Uploaded");
+    }
+  });
+};
+
+/* ADMIN */
+window.openAdmin=()=>adminPanel.style.display="block";
+window.closeAdmin=()=>adminPanel.style.display="none";
+
+/* INIT */
+loadCategoriesFromFirebase();
+loadProducts();
+
 </script>
 
 </body>
