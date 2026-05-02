@@ -11,10 +11,9 @@ body{
 margin:0;
 font-family:Arial;
 background:#f5f5f5;
-padding-top:85px;
+padding-top:80px;
 }
 
-/* HEADER */
 .top{
 position:fixed;
 top:0;
@@ -40,7 +39,6 @@ animation:move 12s linear infinite;
 100%{transform:translateX(-100%)}
 }
 
-/* CATEGORY */
 .bar{
 position:fixed;
 top:45px;
@@ -48,7 +46,6 @@ width:100%;
 background:#222;
 display:flex;
 overflow-x:auto;
-z-index:9998;
 }
 
 .cat{
@@ -62,74 +59,6 @@ white-space:nowrap;
 
 .cat.active{background:#25D366}
 
-/* VIEW */
-.view{display:none;margin-top:90px}
-.active-view{display:block}
-
-/* CARD */
-.card{
-background:white;
-margin:10px;
-padding:10px;
-border-radius:12px;
-}
-
-/* CAROUSEL */
-.carousel{
-display:flex;
-overflow-x:auto;
-scroll-snap-type:x mandatory;
-scroll-behavior:smooth;
-border-radius:12px;
-}
-
-.carousel img{
-min-width:100%;
-height:350px;
-object-fit:cover;
-scroll-snap-align:center;
-border-radius:12px;
-}
-
-.carousel::-webkit-scrollbar{display:none}
-
-/* DOTS */
-.dots{text-align:center;margin-top:5px}
-
-.dot{
-height:8px;width:8px;
-margin:0 3px;
-background:#bbb;
-border-radius:50%;
-display:inline-block;
-}
-
-.dot.active{background:#25D366}
-
-/* PRICE */
-.price{
-background:#111;
-color:white;
-text-align:center;
-padding:10px;
-margin-top:10px;
-border-radius:8px;
-}
-
-/* BUTTON */
-.buy-btn{
-background:#25D366;
-color:white;
-border:none;
-width:100%;
-padding:10px;
-margin-top:10px;
-border-radius:12px;
-font-weight:bold;
-cursor:pointer;
-}
-
-/* ADMIN */
 .admin{
 display:none;
 position:fixed;
@@ -149,8 +78,6 @@ padding:10px;
 margin:5px 0;
 }
 
-button{cursor:pointer}
-
 .green{background:green;color:white}
 .red{background:red;color:white}
 
@@ -169,15 +96,6 @@ button{cursor:pointer}
 <!-- CATEGORY -->
 <div class="bar" id="bar"></div>
 
-<!-- ABOUT -->
-<div id="about" class="view active-view">
-<div class="card">
-<h2>Welcome 👋</h2>
-<p>Luxury Heaven Store</p>
-</div>
-</div>
-
-<!-- PRODUCTS -->
 <div id="view"></div>
 
 <!-- ADMIN -->
@@ -223,19 +141,11 @@ appId: "1:277279766368:web:2f5858b54f58d1df629005"
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-/* STATE */
 let products = [];
 let categories = [];
 let uploadedImages = [];
-let activeCategory = "about";
 
-/* LOAD */
-window.onload = async () => {
-await loadCategories();
-await loadProducts();
-};
-
-/* ADMIN */
+/* OPEN ADMIN */
 window.openAdmin = () => {
 document.getElementById("admin").style.display="block";
 };
@@ -244,101 +154,17 @@ window.closeAdmin = () => {
 document.getElementById("admin").style.display="none";
 };
 
-/* PRODUCTS */
+/* LOAD PRODUCTS */
 async function loadProducts(){
 const snap = await getDocs(collection(db,"products"));
 products = [];
 snap.forEach(d=>products.push(d.data()));
-renderProducts();
 }
 
-/* GET IMAGES */
-function getImages(p){
-if(Array.isArray(p.images)) return p.images;
-if(p.image) return [p.image];
-return [];
-}
-
-/* RENDER PRODUCTS (STRICT CATEGORY FILTER) */
-function renderProducts(){
-
-let view = document.getElementById("view");
-view.innerHTML = "";
-
-/* ONLY SHOW IF NOT ABOUT */
-if(activeCategory === "about") return;
-
-let filtered = products.filter(p =>
-(p.category || "").toLowerCase() === activeCategory
-);
-
-filtered.forEach((p,i)=>{
-
-let type = (p.category || "item").toLowerCase();
-let images = getImages(p);
-
-view.innerHTML += `
-<div class="card">
-
-<div class="carousel car${type}${i}">
-${images.map(img=>`<img src="${img}">`).join("")}
-</div>
-
-<div class="dots dots${type}${i}"></div>
-
-<div class="price">₦ ${p.price}</div>
-
-<button class="buy-btn">BUY NOW</button>
-
-</div>
-`;
-
-setTimeout(()=>setupCarousel(type,i),100);
-
-});
-
-}
-
-/* CAROUSEL */
-function setupCarousel(type,i){
-
-let key = type+i;
-
-let c = document.querySelector(".car"+key);
-let box = document.querySelector(".dots"+key);
-
-if(!c || !box) return;
-
-let imgs = c.querySelectorAll("img");
-box.innerHTML = "";
-
-imgs.forEach((_,x)=>{
-let d = document.createElement("span");
-d.className = "dot" + (x===0?" active":"");
-box.appendChild(d);
-});
-
-let dots = box.querySelectorAll(".dot");
-
-c.addEventListener("scroll",()=>{
-
-let index = Math.round(c.scrollLeft / c.clientWidth);
-
-dots.forEach(d=>d.classList.remove("active"));
-
-if(dots[index]) dots[index].classList.add("active");
-
-});
-
-}
-
-/* CATEGORY */
+/* LOAD CATEGORIES */
 async function loadCategories(){
-
 const snap = await getDocs(collection(db,"categories"));
-
 categories = [];
-snap.forEach(d=>categories.push(d.data().name));
 
 let bar = document.getElementById("bar");
 let sel = document.getElementById("cat");
@@ -348,54 +174,84 @@ bar.innerHTML="";
 sel.innerHTML="";
 del.innerHTML="";
 
-/* ABOUT */
-let about = document.createElement("div");
-about.className="cat active";
-about.innerText="ABOUT";
+snap.forEach(d=>{
+let c = d.data().name;
+categories.push(c);
 
-about.onclick = () => {
-setActive(about);
-activeCategory = "about";
-showAbout();
-};
-
-bar.appendChild(about);
-
-/* CATEGORIES */
-categories.forEach(c=>{
-
+/* BUTTON */
 let btn = document.createElement("div");
 btn.className="cat";
 btn.innerText=c;
 
 btn.onclick = () => {
-setActive(btn);
-activeCategory = c.toLowerCase();
-renderProducts();
+document.querySelectorAll(".cat").forEach(b=>b.classList.remove("active"));
+btn.classList.add("active");
+renderProducts(c);
 };
 
 bar.appendChild(btn);
 
+/* SELECT */
 sel.innerHTML += `<option>${c}</option>`;
 del.innerHTML += `<option>${c}</option>`;
 
 });
+}
+
+/* RENDER */
+function renderProducts(cat){
+
+let view = document.getElementById("view");
+view.innerHTML="";
+
+let filtered = products.filter(p =>
+(p.category || "").toLowerCase() === cat.toLowerCase()
+);
+
+filtered.forEach(p=>{
+view.innerHTML += `
+<div class="card">
+<h3>${p.name}</h3>
+<p>₦ ${p.price}</p>
+</div>
+`;
+});
 
 }
 
-/* ACTIVE */
-function setActive(btn){
-document.querySelectorAll(".cat").forEach(b=>b.classList.remove("active"));
-btn.classList.add("active");
+/* FIXED SAVE PRODUCT */
+window.saveProduct = async function(){
+
+const product = {
+name: document.getElementById("name").value,
+price: document.getElementById("price").value,
+category: document.getElementById("cat").value,
+images: uploadedImages,
+date: Date.now()
+};
+
+if(!product.name || !product.price || !product.category){
+alert("Fill all fields ❌");
+return;
 }
 
-/* ABOUT */
-function showAbout(){
-document.getElementById("view").innerHTML="";
-document.getElementById("about").classList.add("active-view");
+if(uploadedImages.length === 0){
+alert("Upload images first ❌");
+return;
 }
 
-/* ADMIN ACTIONS */
+await addDoc(collection(db,"products"), product);
+
+alert("Product uploaded successfully ✅");
+
+document.getElementById("name").value="";
+document.getElementById("price").value="";
+uploadedImages=[];
+
+loadProducts();
+};
+
+/* UPLOAD */
 window.upload = function(){
 cloudinary.openUploadWidget({
 cloudName:"db92r6j9z",
@@ -409,22 +265,11 @@ alert("Uploaded ✔");
 });
 };
 
-window.saveProduct = async function(){
-
-await addDoc(collection(db,"products"),{
-name:name.value,
-price:price.value,
-category:cat.value,
-images:uploadedImages,
-date:Date.now()
-});
-
-alert("Saved ✔");
-uploadedImages=[];
-};
-
+/* CATEGORY */
 window.addCategory = async function(){
-await addDoc(collection(db,"categories"),{name:newCat.value});
+await addDoc(collection(db,"categories"),{
+name:document.getElementById("newCat").value
+});
 alert("Category added ✔");
 loadCategories();
 };
@@ -434,13 +279,19 @@ window.deleteCategory = async function(){
 const snap = await getDocs(collection(db,"categories"));
 
 snap.forEach(async d=>{
-if(d.data().name === delCat.value){
+if(d.data().name === document.getElementById("delCat").value){
 await deleteDoc(doc(db,"categories",d.id));
 }
 });
 
 alert("Category deleted ✔");
 loadCategories();
+};
+
+/* INIT */
+window.onload = async () => {
+await loadCategories();
+await loadProducts();
 };
 
 </script>
