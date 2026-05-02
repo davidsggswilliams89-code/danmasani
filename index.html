@@ -66,8 +66,14 @@ background:#25D366;
 }
 
 /* VIEWS */
-.view{display:none}
-.active-view{display:block}
+.view{
+display:none;
+margin-top:90px;
+}
+
+.active-view{
+display:block;
+}
 
 /* CARD */
 .card{
@@ -77,9 +83,9 @@ padding:10px;
 border-radius:12px;
 }
 
-/* ADMIN */
+/* ❗ FIXED ADMIN (IMPORTANT) */
 .admin{
-display:none;
+display:none;   /* MUST stay NONE */
 position:fixed;
 top:0;
 left:0;
@@ -87,7 +93,7 @@ width:100%;
 height:100%;
 background:white;
 z-index:99999;
-display:flex;
+
 justify-content:center;
 align-items:center;
 padding:20px;
@@ -111,11 +117,6 @@ box-sizing:border-box;
 font-size:14px;
 }
 
-.form-box input,
-.form-box select{
-border:1px solid #ccc;
-}
-
 .green{background:green;color:white}
 .red{background:red;color:white}
 
@@ -131,21 +132,21 @@ border:1px solid #ccc;
 <div style="margin-left:auto;padding:10px" onclick="openAdmin()">🔒</div>
 </div>
 
-<!-- CATEGORY BAR -->
+<!-- CATEGORY -->
 <div class="bar" id="bar"></div>
 
 <!-- ABOUT -->
 <div id="about" class="view active-view">
   <div class="card">
-    <h2 style="text-align:center;">Welcome to Luxury Heaven 👋</h2>
-    <p>Premium fashion store for quality products.</p>
+    <h2 style="text-align:center;">Welcome 👋</h2>
+    <p>Luxury Heaven Fashion Store</p>
   </div>
 </div>
 
-<!-- PRODUCT VIEW -->
+<!-- PRODUCT AREA -->
 <div id="view"></div>
 
-<!-- ADMIN -->
+<!-- ADMIN (FIXED HIDDEN) -->
 <div class="admin" id="admin">
 
 <div class="form-box">
@@ -161,17 +162,15 @@ border:1px solid #ccc;
 
 <hr>
 
-<h3>Add Category</h3>
 <input id="newCat" placeholder="New Category">
 <button class="green" onclick="addCategory()">Add Category</button>
 
-<h3>Delete Category</h3>
 <select id="deleteCat"></select>
 <button class="red" onclick="deleteCategory()">Delete Category</button>
 
 <hr>
 
-<button class="red" onclick="closeAdmin()">Close Admin</button>
+<button class="red" onclick="closeAdmin()">Close</button>
 
 </div>
 
@@ -182,7 +181,6 @@ border:1px solid #ccc;
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-/* FIREBASE */
 const firebaseConfig = {
 apiKey: "AIzaSyD40daowTCCVrKr1kWI6krf9nB7OHp8mWU",
 authDomain: "luxury-heaven-c24df.firebaseapp.com",
@@ -195,7 +193,6 @@ appId: "1:277279766368:web:2f5858b54f58d1df629005"
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-/* GLOBAL */
 let categories=[];
 let uploadedImages=[];
 
@@ -204,10 +201,10 @@ window.onload=async()=>{
 await loadCategories();
 };
 
-/* ================= CATEGORY ================= */
+/* CATEGORY LOAD */
 async function loadCategories(){
 
-const snap = await getDocs(collection(db,"categories"));
+const snap=await getDocs(collection(db,"categories"));
 
 categories=[];
 
@@ -223,7 +220,7 @@ bar.innerHTML="";
 sel.innerHTML="";
 del.innerHTML="";
 
-/* ABOUT BUTTON */
+/* ABOUT */
 let aboutBtn=document.createElement("div");
 aboutBtn.className="cat active";
 aboutBtn.innerText="ABOUT";
@@ -242,7 +239,7 @@ btn.className="cat";
 btn.innerText=c;
 
 btn.onclick=function(){
-showCategory(c,btn);
+showCat(c,btn);
 };
 
 bar.appendChild(btn);
@@ -253,9 +250,8 @@ del.innerHTML+=`<option value="${c}">${c}</option>`;
 
 }
 
-/* ================= VIEW ================= */
+/* VIEW FIX */
 function showAbout(btn){
-
 document.querySelectorAll(".cat").forEach(b=>b.classList.remove("active"));
 btn.classList.add("active");
 
@@ -264,7 +260,7 @@ document.querySelectorAll(".view").forEach(v=>v.classList.remove("active-view"))
 document.getElementById("about").classList.add("active-view");
 }
 
-function showCategory(cat,btn){
+function showCat(cat,btn){
 
 document.querySelectorAll(".cat").forEach(b=>b.classList.remove("active"));
 btn.classList.add("active");
@@ -282,45 +278,43 @@ document.body.appendChild(view);
 
 view.innerHTML=`
 <div class="card">
-<h3>${cat.toUpperCase()}</h3>
-<p>Products loading...</p>
+<h3>${cat}</h3>
+<p>Loading products...</p>
 </div>`;
 
 view.classList.add("active-view");
 }
 
-/* ================= ADMIN FIX ================= */
-
-/* OPEN ADMIN */
+/* ADMIN FIX */
 window.openAdmin=function(){
 if(prompt("Password")==="1234"){
-admin.style.display="flex";
+document.getElementById("admin").style.display="flex";
 }
 };
 
 window.closeAdmin=function(){
-admin.style.display="none";
+document.getElementById("admin").style.display="none";
 };
 
-/* UPLOAD IMAGE */
+/* CLOUDINARY */
 window.upload=function(){
 
 cloudinary.openUploadWidget({
 cloudName:"db92r6j9z",
 uploadPreset:"ummuhalti",
 multiple:true
-},(error,result)=>{
+},(err,res)=>{
 
-if(result && result.event==="success"){
-uploadedImages.push(result.info.secure_url);
-alert("Image uploaded ✔");
+if(res && res.event==="success"){
+uploadedImages.push(res.info.secure_url);
+alert("Uploaded ✔");
 }
 
 });
 
 };
 
-/* SAVE PRODUCT */
+/* SAVE */
 window.save=async function(){
 
 if(uploadedImages.length===0){
@@ -329,41 +323,37 @@ return;
 }
 
 await addDoc(collection(db,"products"),{
-name:document.getElementById("name").value,
-price:document.getElementById("price").value,
-category:document.getElementById("cat").value,
+name:name.value,
+price:price.value,
+category:cat.value,
 images:uploadedImages,
 date:Date.now()
 });
 
-alert("Product saved successfully ✔");
+alert("Saved ✔");
 
 uploadedImages=[];
 };
 
-/* ADD CATEGORY */
+/* CATEGORY */
 window.addCategory=async function(){
 
-let name=document.getElementById("newCat").value;
-
 await addDoc(collection(db,"categories"),{
-name:name
+name:newCat.value
 });
 
-alert("Category created ✔");
+alert("Category added ✔");
 
 loadCategories();
 };
 
-/* DELETE CATEGORY */
+/* DELETE */
 window.deleteCategory=async function(){
-
-let cat=document.getElementById("deleteCat").value;
 
 const snap=await getDocs(collection(db,"categories"));
 
 snap.forEach(async d=>{
-if(d.data().name===cat){
+if(d.data().name===deleteCat.value){
 await deleteDoc(doc(db,"categories",d.id));
 }
 });
