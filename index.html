@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>BOB TEXTILE</title>
+<title>LUXURY HEAVEN COLLECTION </title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <script src="https://widget.cloudinary.com/v2.0/global/all.js"></script>
@@ -36,7 +36,7 @@ background:white;border-radius:12px;
 padding:10px;margin:10px 0;
 }
 
-/* CAROUSEL */
+/* 🔥 BIGGER IMAGE */
 .carousel{
 display:flex;
 overflow-x:auto;
@@ -44,10 +44,11 @@ scroll-snap-type:x mandatory;
 }
 .carousel img{
 min-width:100%;
-height:300px;
-object-fit:cover;
+height:500px;
+object-fit:contain;
 scroll-snap-align:center;
 border-radius:10px;
+background:white;
 }
 .carousel::-webkit-scrollbar{display:none}
 
@@ -90,7 +91,7 @@ input,select{width:100%;padding:10px;margin:5px 0;}
 <body>
 
 <div class="top-bar">
-BOB TEXTILE
+LUXURY HEAVEN COLLECTION
 <div class="admin-icon" onclick="openAdmin()">🔒</div>
 </div>
 
@@ -104,7 +105,7 @@ BOB TEXTILE
 <div class="dots" id="testimonialDots"></div>
 <hr>
 <h2>About Us</h2>
-<p>BOB TEXTILE is your trusted fashion store.</p>
+<p>LUXURY HEAVEN COLLECTION is your trusted fashion store.</p>
 </div>
 </div>
 
@@ -171,7 +172,6 @@ const db = getFirestore(app);
 let products=[],categories=[],images=[],active="";
 let testimonials=[],tIndex=0,tAuto;
 
-/* ADMIN */
 window.openAdmin=()=>admin.style.display="block";
 window.closeAdmin=()=>admin.style.display="none";
 
@@ -257,7 +257,7 @@ productView.classList.add("active-view");
 renderProducts();
 }
 
-/* 🔥 PRODUCTS WITH BUY BUTTON */
+/* 🔥 UPDATED PRODUCT CARD */
 function renderProducts(){
 productView.innerHTML="";
 
@@ -273,6 +273,10 @@ ${p.images.map(img=>`<img src="${img}">`).join("")}
 
 <div class="dots dots${i}"></div>
 
+<div style="text-align:center;font-weight:bold;font-size:18px;margin-top:10px;">
+${p.name}
+</div>
+
 <div class="price">₦${p.price}</div>
 
 <button class="buy-btn" onclick="buyNow(${i})">
@@ -286,7 +290,7 @@ BUY NOW
 list.forEach((p,i)=>setupCarousel(i,p));
 }
 
-/* 🔥 BUY FUNCTION */
+/* BUY */
 window.buyNow=(i)=>{
 let list=products.filter(p=>p.category===active);
 let p=list[i];
@@ -311,7 +315,7 @@ Is this available? I want to buy.`;
 window.open("https://wa.me/2349114738932?text="+encodeURIComponent(msg));
 };
 
-/* CAROUSEL DOT */
+/* CAROUSEL */
 function setupCarousel(i,p){
 let car=document.querySelector(".car"+i);
 let dotsBox=document.querySelector(".dots"+i);
