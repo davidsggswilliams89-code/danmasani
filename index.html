@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>LUXURY HEAVEN</title>
+<title>LUXURY HEAVEN V2</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <script src="https://widget.cloudinary.com/v2.0/global/all.js"></script>
@@ -11,42 +11,32 @@ body{
 margin:0;
 font-family:Arial;
 background:#f5f5f5;
-padding-top:85px;
+padding-top:80px;
 }
 
-.top{
+.header{
 position:fixed;
 top:0;
 width:100%;
-height:45px;
+height:50px;
 background:#111;
 color:white;
 display:flex;
 align-items:center;
-z-index:9999;
+padding:0 10px;
+z-index:999;
 }
 
-.logo{height:45px}
-
-.marquee{
-margin-left:90px;
-white-space:nowrap;
-animation:move 12s linear infinite;
-}
-
-@keyframes move{
-0%{transform:translateX(100%)}
-100%{transform:translateX(-100%)}
-}
+.header h3{margin:0;font-size:16px}
 
 .bar{
 position:fixed;
-top:45px;
+top:50px;
 width:100%;
 background:#222;
 display:flex;
 overflow-x:auto;
-z-index:9998;
+z-index:998;
 }
 
 .cat{
@@ -60,7 +50,7 @@ white-space:nowrap;
 
 .cat.active{background:#25D366}
 
-.view{margin-top:90px}
+.view{margin-top:100px}
 
 .card{
 background:white;
@@ -72,21 +62,24 @@ border-radius:12px;
 .price{
 background:#111;
 color:white;
-padding:10px;
+padding:8px;
 text-align:center;
 border-radius:8px;
-margin-top:10px;
+margin-top:8px;
 }
 
 button{
 width:100%;
 padding:10px;
-margin:5px 0;
+margin-top:6px;
 cursor:pointer;
+border:none;
+border-radius:8px;
 }
 
-.green{background:green;color:white}
-.red{background:red;color:white}
+.buy{background:#25D366;color:white}
+.del{background:red;color:white}
+.save{background:green;color:white}
 
 .admin{
 display:none;
@@ -96,12 +89,18 @@ left:0;
 width:100%;
 height:100%;
 background:white;
-z-index:99999;
-padding:20px;
+z-index:9999;
+padding:15px;
 overflow:auto;
 }
 
-.admin-item{
+input,select{
+width:100%;
+padding:10px;
+margin:5px 0;
+}
+
+.item{
 display:flex;
 justify-content:space-between;
 align-items:center;
@@ -117,14 +116,13 @@ border-radius:8px;
 <body>
 
 <!-- HEADER -->
-<div class="top">
-<img src="logo1.png" class="logo">
-<div class="marquee">✨ LUXURY HEAVEN ✨</div>
-<div style="margin-left:auto;padding:10px;cursor:pointer" onclick="openAdmin()">🔒</div>
+<div class="header">
+<h3>LUXURY HEAVEN</h3>
+<div style="margin-left:auto;cursor:pointer" onclick="openAdmin()">⚙️</div>
 </div>
 
 <!-- CATEGORY -->
-<div class="bar" id="bar"></div>
+<div class="bar" id="catBar"></div>
 
 <!-- PRODUCTS -->
 <div id="view"></div>
@@ -132,33 +130,34 @@ border-radius:8px;
 <!-- ADMIN -->
 <div class="admin" id="admin">
 
-<h2>Admin Panel</h2>
+<h3>ADMIN PANEL</h3>
 
-<input id="name" placeholder="Product Name">
+<input id="pname" placeholder="Product name">
 <input id="price" placeholder="Price">
-<select id="cat"></select>
+<select id="category"></select>
 
-<button class="green" onclick="upload()">Upload Images</button>
-<button class="green" onclick="saveProduct()">Save Product</button>
+<button class="save" onclick="upload()">Upload Images</button>
+<button class="save" onclick="saveProduct()">Save Product</button>
 
 <hr>
 
-<h3>Delete Products</h3>
+<h4>Delete Products</h4>
 <select id="delCat" onchange="loadAdminProducts()"></select>
-
 <div id="adminList"></div>
 
 <hr>
 
-<input id="newCat" placeholder="New Category">
-<button class="green" onclick="addCategory()">Add Category</button>
+<h4>Add Category</h4>
+<input id="newCat">
+<button class="save" onclick="addCategory()">Add</button>
 
+<h4>Delete Category</h4>
 <select id="delCat2"></select>
-<button class="red" onclick="deleteCategory()">Delete Category</button>
+<button class="del" onclick="deleteCategory()">Delete</button>
 
 <hr>
 
-<button class="red" onclick="closeAdmin()">Close</button>
+<button class="del" onclick="closeAdmin()">Close</button>
 
 </div>
 
@@ -190,154 +189,102 @@ const db = getFirestore(app);
 /* STATE */
 let products = [];
 let categories = [];
-let uploadedImages = [];
-let activeCategory = "";
+let images = [];
+let active = "";
 
-/* OPEN ADMIN */
-window.openAdmin = () => {
-document.getElementById("admin").style.display="block";
+/* ADMIN */
+window.openAdmin = ()=>admin.style.display="block";
+window.closeAdmin = ()=>admin.style.display="none";
+
+/* LOAD */
+window.onload = async ()=>{
+await loadCategories();
+await loadProducts();
 };
 
-window.closeAdmin = () => {
-document.getElementById("admin").style.display="none";
-};
-
-/* LOAD PRODUCTS */
+/* PRODUCTS */
 async function loadProducts(){
 const snap = await getDocs(collection(db,"products"));
-
 products = [];
-
 snap.forEach(d=>{
-products.push({
-id: d.id,
-...d.data()
-});
+products.push({id:d.id,...d.data()});
 });
 }
 
-/* LOAD CATEGORIES */
+/* CATEGORIES */
 async function loadCategories(){
 
 const snap = await getDocs(collection(db,"categories"));
 
 categories = [];
 
-let bar = document.getElementById("bar");
-let sel = document.getElementById("cat");
-let del = document.getElementById("delCat");
-let del2 = document.getElementById("delCat2");
+catBar.innerHTML="";
+category.innerHTML="";
+delCat.innerHTML="";
+delCat2.innerHTML="";
 
-bar.innerHTML="";
-sel.innerHTML="";
-del.innerHTML="";
-del2.innerHTML="";
-
-/* ABOUT (optional) */
-
-/* CATEGORIES */
 snap.forEach(d=>{
 let c = d.data().name;
 categories.push(c);
 
 /* BUTTON */
-let btn = document.createElement("div");
-btn.className="cat";
-btn.innerText=c;
+let b = document.createElement("div");
+b.className="cat";
+b.innerText=c;
 
-btn.onclick = () => {
-document.querySelectorAll(".cat").forEach(b=>b.classList.remove("active"));
-btn.classList.add("active");
-
-activeCategory = c.toLowerCase();
-renderProducts(activeCategory);
+b.onclick=()=>{
+document.querySelectorAll(".cat").forEach(x=>x.classList.remove("active"));
+b.classList.add("active");
+active=c;
+render();
 };
 
-bar.appendChild(btn);
+catBar.appendChild(b);
 
-/* ADMIN SELECT */
-sel.innerHTML += `<option>${c}</option>`;
-del.innerHTML += `<option>${c}</option>`;
-del2.innerHTML += `<option>${c}</option>`;
+/* SELECT */
+category.innerHTML+=`<option>${c}</option>`;
+delCat.innerHTML+=`<option>${c}</option>`;
+delCat2.innerHTML+=`<option>${c}</option>`;
 });
-
 }
 
-/* CATEGORY → PRODUCTS */
-function renderProducts(category){
-
-let view = document.getElementById("view");
+/* RENDER */
+function render(){
 view.innerHTML="";
 
-if(!category) return;
-
 let filtered = products.filter(p =>
-(p.category || "").toLowerCase().trim() === category.toLowerCase().trim()
+(p.category||"").toLowerCase() === (active||"").toLowerCase()
 );
 
 filtered.forEach(p=>{
-view.innerHTML += `
+view.innerHTML+=`
 <div class="card">
 <h3>${p.name}</h3>
 <p class="price">₦ ${p.price}</p>
+<button class="buy" onclick="buy('${p.name}','${p.price}','${p.images? p.images[0]:''}')">
+BUY
+</button>
 </div>
 `;
 });
-
 }
 
-/* ADMIN PRODUCT LIST */
-window.loadAdminProducts = function(){
+/* WHATSAPP */
+window.buy = function(name,price,img){
 
-let cat = document.getElementById("delCat").value;
-let box = document.getElementById("adminList");
+let msg = `Hello 👋,
 
-box.innerHTML="";
+I want to order this Product:
 
-let filtered = products.filter(p =>
-(p.category || "") === cat
-);
+🛍️ Product: ${name}
+💰 Price: ₦${price}
 
-filtered.forEach(p=>{
-box.innerHTML += `
-<div class="admin-item">
-<div>${p.name}</div>
-<button class="red" onclick="deleteProduct('${p.id}')">Delete</button>
-</div>
-`;
-});
+🖼️ Image:
+${img}
 
-};
+Is it available?`;
 
-/* DELETE PRODUCT */
-window.deleteProduct = async function(id){
-
-await deleteDoc(doc(db,"products",id));
-
-alert("Product deleted ✔");
-
-await loadProducts();
-loadAdminProducts();
-};
-
-/* SAVE PRODUCT */
-window.saveProduct = async function(){
-
-await addDoc(collection(db,"products"),{
-name:name.value,
-price:price.value,
-category:cat.value,
-images:uploadedImages,
-date:Date.now()
-});
-
-alert("Product saved ✔");
-
-name.value="";
-price.value="";
-uploadedImages=[];
-
-await loadProducts();
+window.open("https://wa.me/2349114738932?text="+encodeURIComponent(msg));
 };
 
 /* UPLOAD */
@@ -347,11 +294,56 @@ cloudName:"db92r6j9z",
 uploadPreset:"ummuhalti",
 multiple:true
 },(e,r)=>{
-if(r && r.event==="success"){
-uploadedImages.push(r.info.secure_url);
+if(r.event==="success"){
+images.push(r.info.secure_url);
 alert("Uploaded ✔");
 }
 });
+};
+
+/* SAVE PRODUCT */
+window.saveProduct = async function(){
+
+await addDoc(collection(db,"products"),{
+name:pname.value,
+price:price.value,
+category:category.value,
+images:images,
+date:Date.now()
+});
+
+alert("Saved ✔");
+
+pname.value="";
+price.value="";
+images=[];
+
+await loadProducts();
+};
+
+/* ADMIN LIST */
+window.loadAdminProducts = function(){
+
+let c = delCat.value;
+adminList.innerHTML="";
+
+products.filter(p=>p.category===c)
+.forEach(p=>{
+adminList.innerHTML+=`
+<div class="item">
+${p.name}
+<button class="del" onclick="del('${p.id}')">X</button>
+</div>
+`;
+});
+};
+
+/* DELETE PRODUCT */
+window.del = async function(id){
+await deleteDoc(doc(db,"products",id));
+alert("Deleted ✔");
+await loadProducts();
+loadAdminProducts();
 };
 
 /* CATEGORY */
@@ -359,8 +351,8 @@ window.addCategory = async function(){
 await addDoc(collection(db,"categories"),{
 name:newCat.value
 });
-alert("Category added ✔");
-loadCategories();
+alert("Added ✔");
+await loadCategories();
 };
 
 window.deleteCategory = async function(){
@@ -368,19 +360,13 @@ window.deleteCategory = async function(){
 const snap = await getDocs(collection(db,"categories"));
 
 snap.forEach(async d=>{
-if(d.data().name === delCat2.value){
+if(d.data().name===delCat2.value){
 await deleteDoc(doc(db,"categories",d.id));
 }
 });
 
-alert("Category deleted ✔");
-loadCategories();
-};
-
-/* INIT */
-window.onload = async () => {
+alert("Deleted ✔");
 await loadCategories();
-await loadProducts();
 };
 
 </script>
