@@ -61,7 +61,9 @@ white-space:nowrap;
 font-size:13px;
 }
 
-.cat.active{background:#25D366}
+.cat.active{
+background:#25D366;
+}
 
 /* VIEWS */
 .view{display:none}
@@ -135,7 +137,7 @@ border:1px solid #ccc;
 <!-- VIEWS -->
 <div id="view"></div>
 
-<!-- ABOUT VIEW (RESTORED) -->
+<!-- ABOUT SECTION (ACTIVE DEFAULT) -->
 <div id="about" class="view active-view">
   <div class="card">
 
@@ -147,16 +149,16 @@ border:1px solid #ccc;
     <hr>
 
     <h3>Our Mission</h3>
-    <p>To bring quality fashion products to customers with style and affordability.</p>
+    <p>We provide quality fashion products at affordable prices with fast delivery across Nigeria.</p>
 
     <h3>About Us</h3>
-    <p>Luxury Heaven is a modern fashion store selling shoes, bags, clothing and more.</p>
+    <p>Luxury Heaven is a modern fashion store selling shoes, bags, clothing and accessories.</p>
 
     <h3>Address</h3>
-    <p>Nigeria, Nationwide Delivery Available</p>
+    <p>Nigeria (Nationwide Delivery Available)</p>
 
     <h3>Contact</h3>
-    <p>WhatsApp Support Available 24/7</p>
+    <p>WhatsApp support available 24/7</p>
 
   </div>
 </div>
@@ -217,15 +219,21 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 let categories=[];
-let products=[];
 let testimonials=[];
 let testimonialIds=[];
-let images=[];
 
 /* INIT */
 window.onload=async()=>{
+
 await loadCategories();
 await loadTestimonials();
+
+/* 🔥 MAKE ABOUT ACTIVE DEFAULT */
+let aboutBtn=document.querySelector(".cat");
+if(aboutBtn){
+showAbout(aboutBtn);
+}
+
 };
 
 /* ================= CATEGORY ================= */
@@ -247,13 +255,24 @@ bar.innerHTML="";
 sel.innerHTML="";
 del.innerHTML="";
 
+/* ABOUT BUTTON (ACTIVE DEFAULT) */
+let aboutBtn=document.createElement("div");
+aboutBtn.className="cat active";
+aboutBtn.innerText="ABOUT";
+
+aboutBtn.onclick=function(){
+showAbout(aboutBtn);
+};
+
+bar.appendChild(aboutBtn);
+
+/* CATEGORY BUTTONS */
 categories.forEach(c=>{
 
 let btn=document.createElement("div");
 btn.className="cat";
 btn.innerText=c;
 
-/* FIX CLICK */
 btn.onclick=function(){
 showView(c,btn);
 };
@@ -266,7 +285,18 @@ del.innerHTML+=`<option value="${c}">${c}</option>`;
 
 }
 
-/* ================= VIEW SWITCH FIX ================= */
+/* ================= ABOUT VIEW ================= */
+function showAbout(btn){
+
+document.querySelectorAll(".cat").forEach(b=>b.classList.remove("active"));
+btn.classList.add("active");
+
+document.querySelectorAll(".view").forEach(v=>v.classList.remove("active-view"));
+
+document.getElementById("about").classList.add("active-view");
+}
+
+/* ================= CATEGORY VIEW ================= */
 function showView(cat,btn){
 
 document.querySelectorAll(".cat").forEach(b=>b.classList.remove("active"));
@@ -328,7 +358,7 @@ alert("Deleted ✔");
 loadTestimonials();
 };
 
-/* ================= ADMIN ================= */
+/* ADMIN */
 window.openAdmin=function(){
 if(prompt("Password")==="1234"){
 admin.style.display="flex";
@@ -337,43 +367,6 @@ admin.style.display="flex";
 
 window.closeAdmin=function(){
 admin.style.display="none";
-};
-
-/* ================= TESTIMONIAL UPLOAD ================= */
-window.uploadTestimonial=function(){
-
-cloudinary.openUploadWidget({
-cloudName:"db92r6j9z",
-uploadPreset:"ummuhalti"
-},async(e,r)=>{
-
-if(r?.event==="success"){
-
-await addDoc(collection(db,"testimonials"),{
-image:r.info.secure_url,
-date:Date.now()
-});
-
-alert("Added ✔");
-
-loadTestimonials();
-}
-
-});
-};
-
-/* DELETE ALL */
-window.deleteAllTestimonials=async function(){
-
-const snap=await getDocs(collection(db,"testimonials"));
-
-snap.forEach(async d=>{
-await deleteDoc(doc(db,"testimonials",d.id));
-});
-
-alert("All deleted ✔");
-
-loadTestimonials();
 };
 
 </script>
