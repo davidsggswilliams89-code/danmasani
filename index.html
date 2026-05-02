@@ -81,19 +81,35 @@ margin:5px 0;
 .green{background:green;color:white}
 .red{background:red;color:white}
 
+/* ADMIN PRODUCT LIST */
+.admin-item{
+display:flex;
+align-items:center;
+justify-content:space-between;
+padding:8px;
+background:#f2f2f2;
+margin:5px 0;
+border-radius:8px;
+}
+
+.admin-item img{
+width:40px;
+height:40px;
+object-fit:cover;
+border-radius:5px;
+}
+
 </style>
 </head>
 
 <body>
 
-<!-- HEADER -->
 <div class="top">
 <img src="logo1.png" class="logo">
 <div class="marquee">✨ LUXURY HEAVEN ✨</div>
 <div style="margin-left:auto;padding:10px;cursor:pointer" onclick="openAdmin()">🔒</div>
 </div>
 
-<!-- CATEGORY -->
 <div class="bar" id="bar"></div>
 
 <div id="view"></div>
@@ -112,10 +128,17 @@ margin:5px 0;
 
 <hr>
 
+<h3>Delete Products</h3>
+<select id="delCat" onchange="loadAdminProducts()"></select>
+
+<div id="adminList"></div>
+
+<hr>
+
 <input id="newCat" placeholder="New Category">
 <button class="green" onclick="addCategory()">Add Category</button>
 
-<select id="delCat"></select>
+<select id="delCat2"></select>
 <button class="red" onclick="deleteCategory()">Delete Category</button>
 
 <hr>
@@ -127,7 +150,14 @@ margin:5px 0;
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {
+getFirestore,
+collection,
+getDocs,
+addDoc,
+deleteDoc,
+doc
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
 apiKey: "AIzaSyD40daowTCCVrKr1kWI6krf9nB7OHp8mWU",
@@ -148,37 +178,49 @@ let uploadedImages = [];
 /* OPEN ADMIN */
 window.openAdmin = () => {
 document.getElementById("admin").style.display="block";
+loadAdminProducts();
 };
 
 window.closeAdmin = () => {
 document.getElementById("admin").style.display="none";
 };
 
-/* LOAD PRODUCTS */
+/* LOAD PRODUCTS (IMPORTANT: INCLUDE ID) */
 async function loadProducts(){
 const snap = await getDocs(collection(db,"products"));
+
 products = [];
-snap.forEach(d=>products.push(d.data()));
+
+snap.forEach(d=>{
+products.push({
+id: d.id,
+...d.data()
+});
+});
 }
 
 /* LOAD CATEGORIES */
 async function loadCategories(){
+
 const snap = await getDocs(collection(db,"categories"));
+
 categories = [];
 
 let bar = document.getElementById("bar");
 let sel = document.getElementById("cat");
 let del = document.getElementById("delCat");
+let del2 = document.getElementById("delCat2");
 
 bar.innerHTML="";
 sel.innerHTML="";
 del.innerHTML="";
+del2.innerHTML="";
 
+/* CATEGORY BUTTONS */
 snap.forEach(d=>{
 let c = d.data().name;
 categories.push(c);
 
-/* BUTTON */
 let btn = document.createElement("div");
 btn.className="cat";
 btn.innerText=c;
@@ -191,14 +233,14 @@ renderProducts(c);
 
 bar.appendChild(btn);
 
-/* SELECT */
 sel.innerHTML += `<option>${c}</option>`;
 del.innerHTML += `<option>${c}</option>`;
-
+del2.innerHTML += `<option>${c}</option>`;
 });
+
 }
 
-/* RENDER */
+/* RENDER PRODUCTS */
 function renderProducts(cat){
 
 let view = document.getElementById("view");
@@ -219,39 +261,69 @@ view.innerHTML += `
 
 }
 
-/* FIXED SAVE PRODUCT */
-window.saveProduct = async function(){
+/* ADMIN PRODUCT LIST (DELETE FEATURE) */
+window.loadAdminProducts = function(){
 
-const product = {
-name: document.getElementById("name").value,
-price: document.getElementById("price").value,
-category: document.getElementById("cat").value,
-images: uploadedImages,
-date: Date.now()
+let cat = document.getElementById("delCat").value;
+let box = document.getElementById("adminList");
+
+box.innerHTML="";
+
+let filtered = products.filter(p =>
+(p.category || "") === cat
+);
+
+filtered.forEach(p=>{
+box.innerHTML += `
+<div class="admin-item">
+<img src="${p.images ? p.images[0] : ''}">
+<div style="flex:1;margin-left:10px">
+${p.name}
+</div>
+<button class="red" onclick="deleteProduct('${p.id}')">Delete</button>
+</div>
+`;
+});
+
 };
 
-if(!product.name || !product.price || !product.category){
-alert("Fill all fields ❌");
-return;
-}
+/* DELETE PRODUCT */
+window.deleteProduct = async function(id){
+
+await deleteDoc(doc(db,"products",id));
+
+alert("Product deleted ✔");
+
+await loadProducts();
+loadAdminProducts();
+};
+
+/* SAVE PRODUCT */
+window.saveProduct = async function(){
 
 if(uploadedImages.length === 0){
 alert("Upload images first ❌");
 return;
 }
 
-await addDoc(collection(db,"products"), product);
+await addDoc(collection(db,"products"),{
+name: name.value,
+price: price.value,
+category: cat.value,
+images: uploadedImages,
+date: Date.now()
+});
 
-alert("Product uploaded successfully ✅");
+alert("Product saved ✔");
 
-document.getElementById("name").value="";
-document.getElementById("price").value="";
+name.value="";
+price.value="";
 uploadedImages=[];
 
-loadProducts();
+await loadProducts();
 };
 
-/* UPLOAD */
+/* CLOUDINARY */
 window.upload = function(){
 cloudinary.openUploadWidget({
 cloudName:"db92r6j9z",
@@ -268,7 +340,7 @@ alert("Uploaded ✔");
 /* CATEGORY */
 window.addCategory = async function(){
 await addDoc(collection(db,"categories"),{
-name:document.getElementById("newCat").value
+name:newCat.value
 });
 alert("Category added ✔");
 loadCategories();
@@ -279,7 +351,7 @@ window.deleteCategory = async function(){
 const snap = await getDocs(collection(db,"categories"));
 
 snap.forEach(async d=>{
-if(d.data().name === document.getElementById("delCat").value){
+if(d.data().name === document.getElementById("delCat2").value){
 await deleteDoc(doc(db,"categories",d.id));
 }
 });
