@@ -8,32 +8,77 @@
 
 <style>
 body{margin:0;font-family:Arial;background:#f5f5f5;padding-top:80px;}
-.top-bar{position:fixed;top:0;width:100%;height:45px;background:#111;color:white;display:flex;align-items:center;padding:0 10px;z-index:3000;}
+
+.top-bar{
+position:fixed;top:0;width:100%;height:45px;
+background:#111;color:white;display:flex;
+align-items:center;padding:0 10px;z-index:3000;
+}
+
 .admin-icon{margin-left:auto;cursor:pointer;}
 
-.category-bar{position:fixed;top:45px;width:100%;height:40px;background:#222;display:flex;overflow-x:auto;}
-.category-btn{color:white;padding:6px 14px;margin:5px;border-radius:20px;cursor:pointer;}
+.category-bar{
+position:fixed;top:45px;width:100%;height:40px;
+background:#222;display:flex;overflow-x:auto;
+}
+
+.category-btn{
+color:white;padding:6px 14px;margin:5px;
+border-radius:20px;cursor:pointer;
+}
 .category-btn.active{background:#25D366;}
 
 .view{display:none;padding:10px;}
 .active-view{display:block;}
 
-.card{background:white;border-radius:12px;padding:10px;margin:10px 0;}
+.card{
+background:white;border-radius:12px;
+padding:10px;margin:10px 0;
+}
 
-.carousel{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;}
-.carousel img{min-width:100%;height:300px;object-fit:cover;border-radius:10px;}
-#testimonialCarousel img{object-fit:contain;background:#fff;}
-.carousel::-webkit-scrollbar{display:none;}
+/* CAROUSEL */
+.carousel{
+display:flex;
+overflow-x:auto;
+scroll-snap-type:x mandatory;
+}
+.carousel img{
+min-width:100%;
+height:300px;
+object-fit:cover;
+scroll-snap-align:center;
+border-radius:10px;
+}
+.carousel::-webkit-scrollbar{display:none}
 
+/* DOTS */
 .dots{text-align:center;margin-top:5px;}
-.dot{height:8px;width:8px;background:#bbb;border-radius:50%;display:inline-block;margin:0 3px;cursor:pointer;}
+.dot{
+height:8px;width:8px;background:#bbb;
+border-radius:50%;display:inline-block;margin:0 3px;
+}
 .dot.active{background:#25D366;}
 
-.price{background:#111;color:white;padding:10px;text-align:center;border-radius:8px;margin-top:8px;}
+.price{
+background:#111;color:white;padding:10px;
+text-align:center;border-radius:8px;margin-top:8px;
+}
 
-.buy-btn{background:#25D366;color:white;padding:10px;border:none;width:100%;border-radius:10px;margin-top:8px;}
+/* BUY BUTTON */
+.buy-btn{
+background:#25D366;color:white;
+padding:12px;border:none;width:100%;
+border-radius:12px;margin-top:10px;
+display:flex;align-items:center;
+justify-content:center;gap:8px;font-weight:bold;
+cursor:pointer;
+}
 
-.admin{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:white;z-index:9999;padding:10px;overflow:auto;}
+.admin{
+display:none;position:fixed;top:0;left:0;
+width:100%;height:100%;background:white;
+z-index:9999;padding:10px;overflow:auto;
+}
 
 input,select{width:100%;padding:10px;margin:5px 0;}
 
@@ -126,6 +171,7 @@ const db = getFirestore(app);
 let products=[],categories=[],images=[],active="";
 let testimonials=[],tIndex=0,tAuto;
 
+/* ADMIN */
 window.openAdmin=()=>admin.style.display="block";
 window.closeAdmin=()=>admin.style.display="none";
 
@@ -142,6 +188,7 @@ let snap=await getDocs(collection(db,"categories"));
 snap.forEach(d=>categories.push(d.data().name));
 
 categoryBar.innerHTML="";
+
 let about=document.createElement("div");
 about.className="category-btn active";
 about.innerText="ABOUT";
@@ -210,16 +257,92 @@ productView.classList.add("active-view");
 renderProducts();
 }
 
+/* 🔥 PRODUCTS WITH BUY BUTTON */
 function renderProducts(){
 productView.innerHTML="";
-products.filter(p=>p.category===active).forEach(p=>{
+
+let list=products.filter(p=>p.category===active);
+
+list.forEach((p,i)=>{
 productView.innerHTML+=`
 <div class="card">
-<div class="carousel">${p.images.map(i=>`<img src="${i}">`).join("")}</div>
+
+<div class="carousel car${i}">
+${p.images.map(img=>`<img src="${img}">`).join("")}
+</div>
+
+<div class="dots dots${i}"></div>
+
 <div class="price">₦${p.price}</div>
+
+<button class="buy-btn" onclick="buyNow(${i})">
+<img src="https://cdn-icons-png.flaticon.com/512/733/733585.png" width="18">
+BUY NOW
+</button>
+
 </div>`;
 });
+
+list.forEach((p,i)=>setupCarousel(i,p));
 }
+
+/* 🔥 BUY FUNCTION */
+window.buyNow=(i)=>{
+let list=products.filter(p=>p.category===active);
+let p=list[i];
+
+let car=document.querySelector(".car"+i);
+let index=Math.round(car.scrollLeft/car.clientWidth);
+let img=p.images[index] || p.images[0];
+
+let msg=`Hello 👋,
+
+I want to order this Product:
+
+🧵 Category: ${p.category}
+🛍️ Product: ${p.name}
+💰 Price: ₦${p.price}
+
+🖼️ Selected Image:
+${img}
+
+Is this available? I want to buy.`;
+
+window.open("https://wa.me/2349114738932?text="+encodeURIComponent(msg));
+};
+
+/* CAROUSEL DOT */
+function setupCarousel(i,p){
+let car=document.querySelector(".car"+i);
+let dotsBox=document.querySelector(".dots"+i);
+
+dotsBox.innerHTML="";
+
+p.images.forEach((_,x)=>{
+let d=document.createElement("span");
+d.className="dot"+(x===0?" active":"");
+dotsBox.appendChild(d);
+});
+
+let dots=dotsBox.querySelectorAll(".dot");
+
+car.addEventListener("scroll",()=>{
+let index=Math.round(car.scrollLeft/car.clientWidth);
+dots.forEach(d=>d.classList.remove("active"));
+if(dots[index]) dots[index].classList.add("active");
+});
+}
+
+/* CLOUDINARY */
+window.uploadImages=()=>{
+cloudinary.openUploadWidget({
+cloudName:"db92r6j9z",
+uploadPreset:"ummuhalti",
+multiple:true
+},(e,r)=>{
+if(r.event==="success") images.push(r.info.secure_url);
+});
+};
 
 window.saveProduct=async()=>{
 await addDoc(collection(db,"products"),{
@@ -233,36 +356,7 @@ images=[];
 loadProducts();
 };
 
-window.deleteProduct=async(id)=>{
-await deleteDoc(doc(db,"products",id));
-loadProducts();
-loadAdminProducts();
-};
-
-window.loadAdminProducts=()=>{
-let cat=delCat.value;
-adminList.innerHTML="";
-products.filter(p=>p.category===cat)
-.forEach(p=>{
-adminList.innerHTML+=`
-<div>${p.name}
-<button class="del-btn" onclick="deleteProduct('${p.id}')">X</button>
-</div>`;
-});
-};
-
-/* CLOUDINARY */
-window.uploadImages=()=>{
-cloudinary.openUploadWidget({
-cloudName:"db92r6j9z",
-uploadPreset:"ummuhalti",
-multiple:true
-},(e,r)=>{
-if(r.event==="success") images.push(r.info.secure_url);
-});
-};
-
-/* TESTIMONIALS */
+/* TESTIMONIAL */
 async function loadTestimonials(){
 testimonials=[];
 let snap=await getDocs(collection(db,"testimonials"));
@@ -272,18 +366,15 @@ loadTestimonialAdmin();
 }
 
 function renderTestimonials(){
-let box=testimonialCarousel;
-let dots=testimonialDots;
-
-box.innerHTML="";
-dots.innerHTML="";
+testimonialCarousel.innerHTML="";
+testimonialDots.innerHTML="";
 
 testimonials.forEach((t,i)=>{
-box.innerHTML+=`<img src="${t.image}">`;
+testimonialCarousel.innerHTML+=`<img src="${t.image}">`;
 let d=document.createElement("span");
 d.className="dot"+(i===0?" active":"");
 d.onclick=()=>scrollTestimonial(i);
-dots.appendChild(d);
+testimonialDots.appendChild(d);
 });
 
 scrollTestimonial(0);
