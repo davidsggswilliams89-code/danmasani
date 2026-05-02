@@ -27,7 +27,7 @@ body{margin:0;font-family:Arial;background:#f5f5f5;padding-top:80px}
 /* CARD */
 .card{background:white;margin:10px;padding:10px;border-radius:12px}
 
-/* PRODUCT CAROUSEL */
+/* CAROUSEL */
 .carousel{display:flex;overflow-x:auto;scroll-snap-type:x mandatory}
 .carousel img{min-width:100%;height:320px;object-fit:cover;scroll-snap-align:center}
 .carousel::-webkit-scrollbar{display:none}
@@ -53,7 +53,7 @@ color:white;font-size:13px;text-decoration:none
 .ig{background:#E1306C}
 .social-btn img{width:18px;height:18px}
 
-/* ===== TESTIMONIAL (PREMIUM) ===== */
+/* TESTIMONIAL */
 .testimonial-carousel{
 display:flex;
 overflow-x:auto;
@@ -61,38 +61,11 @@ scroll-snap-type:x mandatory;
 scroll-behavior:smooth;
 }
 
-.testimonial-card{
-min-width:100%;
-background:white;
-border-radius:12px;
-padding:15px;
-text-align:center;
-box-sizing:border-box;
-scroll-snap-align:center;
-}
-
-.testimonial-card img{
-width:70px;
-height:70px;
-border-radius:50%;
-object-fit:cover;
-margin-bottom:8px;
-}
-
-.stars{
-color:#FFD700;
-margin:5px 0;
-}
-
-.testimonial-name{
-font-weight:bold;
-margin-top:5px;
-}
-
 .testimonial-carousel img{
-width:100%;
+min-width:100%;
 height:300px;
 object-fit:contain;
+background:white;
 }
 
 /* ADMIN */
@@ -121,18 +94,19 @@ button{width:100%;padding:10px;border:none;border-radius:8px}
 <div class="card">
 
 <h3 style="text-align:center;">What Our Customers Say 💬</h3>
+
 <div class="testimonial-carousel" id="testimonialCarousel"></div>
 <div class="dots" id="testimonialDots"></div>
 
 <hr>
 
 <h3>Our Mission</h3>
-<p>We bring affordable luxury fashion to your doorstep.</p>
+<p>We deliver quality fashion products at affordable prices.</p>
 
 <hr>
 
 <h3>About Us</h3>
-<p>Luxury Heaven by Aleesha is a fashion store for modern women in Nigeria.</p>
+<p>Luxury Heaven by Aleesha is an online fashion store for women.</p>
 
 <hr>
 
@@ -146,7 +120,7 @@ button{width:100%;padding:10px;border:none;border-radius:8px}
 
 <hr>
 
-<h3>Connect</h3>
+<h3>Connect With Us</h3>
 
 <div style="display:flex;gap:10px">
 
@@ -170,7 +144,7 @@ Instagram
 <!-- ADMIN -->
 <div class="admin" id="admin">
 
-<h2>Admin Dashboard</h2>
+<h2>Admin Panel</h2>
 
 <input id="name" placeholder="Product Name">
 <input id="price" placeholder="Price">
@@ -218,8 +192,8 @@ const db = getFirestore(app);
 const cloudName="db92r6j9z";
 const uploadPreset="ummuhalti";
 
-let products=[],categories=[],images=[];
-let testimonials=[];
+let products=[],categories=[],images=[],testimonials=[];
+let tIndex=0,tAuto;
 
 /* INIT */
 window.onload=async()=>{
@@ -274,6 +248,7 @@ render(products);
 function render(list){
 let view=document.getElementById("view");
 view.innerHTML="";
+
 list.forEach((p,i)=>{
 view.innerHTML+=`
 <div class="card">
@@ -306,51 +281,61 @@ I want to order this Product:
 🖼️ Selected Image:
 ${img}`;
 
-window.open("https://wa.me/234911473893?text="+encodeURIComponent(msg));
+window.open("https://wa.me/2349114738932?text="+encodeURIComponent(msg));
 };
 
 /* TESTIMONIAL */
 function loadTestimonials(){
-let box=document.getElementById("testimonialCarousel");
-let dots=document.getElementById("testimonialDots");
+const box=document.getElementById("testimonialCarousel");
+const dots=document.getElementById("testimonialDots");
 
 box.innerHTML="";dots.innerHTML="";
 
 testimonials.forEach((t,i)=>{
-box.innerHTML+=`
-<div class="testimonial-card">
-<img src="${t.image}">
-<div class="stars">${"⭐".repeat(t.rating||5)}</div>
-<p>${t.message}</p>
-<div class="testimonial-name">— ${t.name}</div>
-</div>`;
+box.innerHTML+=`<img src="${t.image}">`;
 
 let d=document.createElement("span");
 d.className="dot"+(i===0?" active":"");
 dots.appendChild(d);
 });
+
+scrollTestimonial(0);
+startAuto();
+}
+
+function scrollTestimonial(i){
+const box=document.getElementById("testimonialCarousel");
+const dots=document.querySelectorAll("#testimonialDots .dot");
+
+box.scrollTo({left:box.clientWidth*i,behavior:"smooth"});
+
+dots.forEach(d=>d.classList.remove("active"));
+if(dots[i])dots[i].classList.add("active");
+
+tIndex=i;
+}
+
+function startAuto(){
+clearInterval(tAuto);
+if(testimonials.length<=1)return;
+
+tAuto=setInterval(()=>{
+tIndex=(tIndex+1)%testimonials.length;
+scrollTestimonial(tIndex);
+},4000);
 }
 
 /* ADMIN TESTIMONIAL */
 window.uploadTestimonial=()=>{
-let name=prompt("Name");
-let message=prompt("Message");
-let rating=prompt("Rating 1-5");
-
 cloudinary.openUploadWidget({
 cloudName,uploadPreset
 },async(e,r)=>{
 if(r?.event==="success"){
-
 await addDoc(collection(db,"testimonials"),{
-name,message,
-rating:Number(rating||5),
 image:r.info.secure_url,
 date:Date.now()
 });
-
 loadTestimonials();
-loadTestimonialAdmin();
 }
 });
 };
