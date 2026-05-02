@@ -1,75 +1,300 @@
-let testimonials = [];
-let tIndex = 0;
-let tAuto;
+<!DOCTYPE html>
+<html>
+<head>
+<title>LUXURY HEAVEN</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-/* LOAD FROM FIREBASE */
-async function loadTestimonials(){
-  const snap = await getDocs(collection(db,"testimonials"));
+<script src="https://widget.cloudinary.com/v2.0/global/all.js"></script>
 
-  testimonials = [];
-
-  snap.forEach(d=>{
-    testimonials.push({
-      id: d.id,
-      image: d.data().image
-    });
-  });
-
-  renderTestimonials();
+<style>
+body{
+margin:0;
+font-family:Arial;
+background:#f5f5f5;
+padding-top:85px;
 }
 
-/* RENDER */
-function renderTestimonials(){
-  const box = document.getElementById("testimonialCarousel");
-  const dots = document.getElementById("testimonialDots");
-
-  if(!box || !dots) return;
-
-  box.innerHTML = "";
-  dots.innerHTML = "";
-
-  if(testimonials.length === 0){
-    box.innerHTML = `<p style="text-align:center;color:#777;">No testimonials yet</p>`;
-    return;
-  }
-
-  testimonials.forEach((t,i)=>{
-    box.innerHTML += `<img src="${t.image}">`;
-
-    let d = document.createElement("span");
-    d.className = "dot" + (i===0?" active":"");
-    d.onclick = ()=>scrollTestimonial(i);
-    dots.appendChild(d);
-  });
-
-  scrollTestimonial(0);
-  startAuto();
+/* HEADER */
+.top{
+position:fixed;
+top:0;
+width:100%;
+height:45px;
+background:#111;
+color:white;
+display:flex;
+align-items:center;
+z-index:9999;
 }
 
-/* SCROLL */
-function scrollTestimonial(i){
-  const box = document.getElementById("testimonialCarousel");
-  const dots = document.querySelectorAll("#testimonialDots .dot");
+.logo{height:45px}
 
-  box.scrollTo({
-    left: box.clientWidth * i,
-    behavior: "smooth"
-  });
-
-  dots.forEach(d=>d.classList.remove("active"));
-  if(dots[i]) dots[i].classList.add("active");
-
-  tIndex = i;
+.marquee{
+margin-left:90px;
+white-space:nowrap;
+animation:move 12s linear infinite;
 }
 
-/* AUTO SLIDE */
-function startAuto(){
-  clearInterval(tAuto);
-
-  if(testimonials.length <= 1) return;
-
-  tAuto = setInterval(()=>{
-    tIndex = (tIndex + 1) % testimonials.length;
-    scrollTestimonial(tIndex);
-  },4000);
+@keyframes move{
+0%{transform:translateX(100%)}
+100%{transform:translateX(-100%)}
 }
+
+/* CATEGORY */
+.bar{
+position:fixed;
+top:45px;
+width:100%;
+background:#222;
+display:flex;
+overflow-x:auto;
+z-index:9998;
+}
+
+.cat{
+color:white;
+padding:8px 14px;
+margin:5px;
+border-radius:20px;
+cursor:pointer;
+white-space:nowrap;
+}
+
+.cat.active{background:#25D366}
+
+/* VIEW */
+.view{display:none;margin-top:90px}
+.active-view{display:block}
+
+/* CARD */
+.card{
+background:white;
+margin:10px;
+padding:10px;
+border-radius:12px;
+}
+
+/* CAROUSEL */
+.carousel{
+display:flex;
+overflow-x:auto;
+scroll-snap-type:x mandatory;
+scroll-behavior:smooth;
+border-radius:12px;
+}
+
+.carousel img{
+min-width:100%;
+height:350px;
+object-fit:cover;
+scroll-snap-align:center;
+border-radius:12px;
+}
+
+.carousel::-webkit-scrollbar{display:none}
+
+/* DOTS */
+.dots{
+text-align:center;
+margin-top:5px;
+}
+
+.dot{
+height:8px;
+width:8px;
+margin:0 3px;
+background:#bbb;
+border-radius:50%;
+display:inline-block;
+}
+
+.dot.active{
+background:#25D366;
+}
+
+/* PRICE */
+.price{
+background:#111;
+color:white;
+text-align:center;
+padding:10px;
+margin-top:10px;
+border-radius:8px;
+}
+
+/* BUTTON */
+.buy-btn{
+background:#25D366;
+color:white;
+border:none;
+width:100%;
+padding:10px;
+margin-top:10px;
+border-radius:12px;
+font-weight:bold;
+cursor:pointer;
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- HEADER -->
+<div class="top">
+<img src="logo1.png" class="logo">
+<div class="marquee">✨ LUXURY HEAVEN ✨</div>
+</div>
+
+<!-- CATEGORY -->
+<div class="bar" id="bar"></div>
+
+<!-- ABOUT -->
+<div id="about" class="view active-view">
+<div class="card">
+<h2>Welcome to Luxury Heaven 👋</h2>
+<p>Premium fashion store</p>
+</div>
+</div>
+
+<!-- PRODUCT VIEW -->
+<div id="view"></div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+apiKey: "AIzaSyD40daowTCCVrKr1kWI6krf9nB7OHp8mWU",
+authDomain: "luxury-heaven-c24df.firebaseapp.com",
+projectId: "luxury-heaven-c24df",
+storageBucket: "luxury-heaven-c24df.firebasestorage.app",
+messagingSenderId: "277279766368",
+appId: "1:277279766368:web:2f5858b54f58d1df629005"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+let products = [];
+let categories = [];
+let activeBtn = null;
+
+/* LOAD */
+window.onload = async () => {
+await loadProducts();
+};
+
+/* PRODUCTS */
+async function loadProducts(){
+
+const snap = await getDocs(collection(db,"products"));
+
+products = [];
+
+snap.forEach(d=>{
+products.push(d.data());
+});
+
+renderProducts();
+}
+
+/* RENDER PRODUCTS */
+function renderProducts(){
+
+let view = document.getElementById("view");
+view.innerHTML = "";
+
+products.forEach((p,i)=>{
+
+let type = p.category || "item";
+let images = p.images || [];
+
+let isNew = (Date.now() - (p.date||0)) < 86400000;
+
+let html = `
+<div class="card">
+
+${isNew ? '<div style="color:red;font-weight:bold">NEW</div>' : ''}
+
+<div class="carousel car${type}${i}">
+${images.map(img=>`<img src="${img}">`).join("")}
+</div>
+
+<div class="dots dots${type}${i}"></div>
+
+<div class="price">₦ ${p.price}</div>
+
+<button class="buy-btn" onclick="buyNow(${i})">
+BUY NOW
+</button>
+
+</div>
+`;
+
+view.innerHTML += html;
+
+setTimeout(()=>setupCarousel(type,i),100);
+});
+
+}
+
+/* CAROUSEL DOT SYSTEM */
+function setupCarousel(type,i){
+
+let c = document.querySelector(".car"+type+i);
+let box = document.querySelector(".dots"+type+i);
+
+if(!c || !box) return;
+
+let imgs = c.querySelectorAll("img");
+box.innerHTML = "";
+
+imgs.forEach((_,x)=>{
+
+let d = document.createElement("span");
+d.className = "dot" + (x===0?" active":"");
+box.appendChild(d);
+
+});
+
+let dots = box.querySelectorAll(".dot");
+
+c.addEventListener("scroll",()=>{
+
+let index = Math.round(c.scrollLeft / c.clientWidth);
+
+dots.forEach(d=>d.classList.remove("active"));
+
+if(dots[index]) dots[index].classList.add("active");
+
+});
+
+}
+
+/* BUY BUTTON */
+window.buyNow = function(i){
+
+let p = products[i];
+
+let msg = `Hello 👋,
+
+I want to order this Product:
+
+🛍️ Product: ${p.name}
+💰 Price: ₦${p.price}
+
+🖼️ Selected Image:
+${p.images[0] || ""}
+
+Please confirm availability.`;
+
+window.open("https://wa.me/2349114738932?text="+encodeURIComponent(msg));
+
+};
+
+</script>
+
+</body>
+</html>
