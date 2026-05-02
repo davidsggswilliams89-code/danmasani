@@ -11,7 +11,7 @@ body{
 margin:0;
 font-family:Arial;
 background:#f5f5f5;
-padding-top:80px;
+padding-top:85px;
 }
 
 .top{
@@ -46,6 +46,7 @@ width:100%;
 background:#222;
 display:flex;
 overflow-x:auto;
+z-index:9998;
 }
 
 .cat{
@@ -58,6 +59,34 @@ white-space:nowrap;
 }
 
 .cat.active{background:#25D366}
+
+.view{margin-top:90px}
+
+.card{
+background:white;
+margin:10px;
+padding:10px;
+border-radius:12px;
+}
+
+.price{
+background:#111;
+color:white;
+padding:10px;
+text-align:center;
+border-radius:8px;
+margin-top:10px;
+}
+
+button{
+width:100%;
+padding:10px;
+margin:5px 0;
+cursor:pointer;
+}
+
+.green{background:green;color:white}
+.red{background:red;color:white}
 
 .admin{
 display:none;
@@ -72,31 +101,14 @@ padding:20px;
 overflow:auto;
 }
 
-input,select,button{
-width:100%;
-padding:10px;
-margin:5px 0;
-}
-
-.green{background:green;color:white}
-.red{background:red;color:white}
-
-/* ADMIN PRODUCT LIST */
 .admin-item{
 display:flex;
-align-items:center;
 justify-content:space-between;
+align-items:center;
+background:#eee;
 padding:8px;
-background:#f2f2f2;
 margin:5px 0;
 border-radius:8px;
-}
-
-.admin-item img{
-width:40px;
-height:40px;
-object-fit:cover;
-border-radius:5px;
 }
 
 </style>
@@ -104,14 +116,17 @@ border-radius:5px;
 
 <body>
 
+<!-- HEADER -->
 <div class="top">
 <img src="logo1.png" class="logo">
 <div class="marquee">✨ LUXURY HEAVEN ✨</div>
 <div style="margin-left:auto;padding:10px;cursor:pointer" onclick="openAdmin()">🔒</div>
 </div>
 
+<!-- CATEGORY -->
 <div class="bar" id="bar"></div>
 
+<!-- PRODUCTS -->
 <div id="view"></div>
 
 <!-- ADMIN -->
@@ -159,6 +174,7 @@ deleteDoc,
 doc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+/* FIREBASE */
 const firebaseConfig = {
 apiKey: "AIzaSyD40daowTCCVrKr1kWI6krf9nB7OHp8mWU",
 authDomain: "luxury-heaven-c24df.firebaseapp.com",
@@ -171,21 +187,22 @@ appId: "1:277279766368:web:2f5858b54f58d1df629005"
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+/* STATE */
 let products = [];
 let categories = [];
 let uploadedImages = [];
+let activeCategory = "";
 
 /* OPEN ADMIN */
 window.openAdmin = () => {
 document.getElementById("admin").style.display="block";
-loadAdminProducts();
 };
 
 window.closeAdmin = () => {
 document.getElementById("admin").style.display="none";
 };
 
-/* LOAD PRODUCTS (IMPORTANT: INCLUDE ID) */
+/* LOAD PRODUCTS */
 async function loadProducts(){
 const snap = await getDocs(collection(db,"products"));
 
@@ -216,11 +233,14 @@ sel.innerHTML="";
 del.innerHTML="";
 del2.innerHTML="";
 
-/* CATEGORY BUTTONS */
+/* ABOUT (optional) */
+
+/* CATEGORIES */
 snap.forEach(d=>{
 let c = d.data().name;
 categories.push(c);
 
+/* BUTTON */
 let btn = document.createElement("div");
 btn.className="cat";
 btn.innerText=c;
@@ -228,11 +248,14 @@ btn.innerText=c;
 btn.onclick = () => {
 document.querySelectorAll(".cat").forEach(b=>b.classList.remove("active"));
 btn.classList.add("active");
-renderProducts(c);
+
+activeCategory = c.toLowerCase();
+renderProducts(activeCategory);
 };
 
 bar.appendChild(btn);
 
+/* ADMIN SELECT */
 sel.innerHTML += `<option>${c}</option>`;
 del.innerHTML += `<option>${c}</option>`;
 del2.innerHTML += `<option>${c}</option>`;
@@ -240,28 +263,30 @@ del2.innerHTML += `<option>${c}</option>`;
 
 }
 
-/* RENDER PRODUCTS */
-function renderProducts(cat){
+/* CATEGORY → PRODUCTS */
+function renderProducts(category){
 
 let view = document.getElementById("view");
 view.innerHTML="";
 
+if(!category) return;
+
 let filtered = products.filter(p =>
-(p.category || "").toLowerCase() === cat.toLowerCase()
+(p.category || "").toLowerCase().trim() === category.toLowerCase().trim()
 );
 
 filtered.forEach(p=>{
 view.innerHTML += `
 <div class="card">
 <h3>${p.name}</h3>
-<p>₦ ${p.price}</p>
+<p class="price">₦ ${p.price}</p>
 </div>
 `;
 });
 
 }
 
-/* ADMIN PRODUCT LIST (DELETE FEATURE) */
+/* ADMIN PRODUCT LIST */
 window.loadAdminProducts = function(){
 
 let cat = document.getElementById("delCat").value;
@@ -276,10 +301,7 @@ let filtered = products.filter(p =>
 filtered.forEach(p=>{
 box.innerHTML += `
 <div class="admin-item">
-<img src="${p.images ? p.images[0] : ''}">
-<div style="flex:1;margin-left:10px">
-${p.name}
-</div>
+<div>${p.name}</div>
 <button class="red" onclick="deleteProduct('${p.id}')">Delete</button>
 </div>
 `;
@@ -301,17 +323,12 @@ loadAdminProducts();
 /* SAVE PRODUCT */
 window.saveProduct = async function(){
 
-if(uploadedImages.length === 0){
-alert("Upload images first ❌");
-return;
-}
-
 await addDoc(collection(db,"products"),{
-name: name.value,
-price: price.value,
-category: cat.value,
-images: uploadedImages,
-date: Date.now()
+name:name.value,
+price:price.value,
+category:cat.value,
+images:uploadedImages,
+date:Date.now()
 });
 
 alert("Product saved ✔");
@@ -323,7 +340,7 @@ uploadedImages=[];
 await loadProducts();
 };
 
-/* CLOUDINARY */
+/* UPLOAD */
 window.upload = function(){
 cloudinary.openUploadWidget({
 cloudName:"db92r6j9z",
@@ -351,7 +368,7 @@ window.deleteCategory = async function(){
 const snap = await getDocs(collection(db,"categories"));
 
 snap.forEach(async d=>{
-if(d.data().name === document.getElementById("delCat2").value){
+if(d.data().name === delCat2.value){
 await deleteDoc(doc(db,"categories",d.id));
 }
 });
