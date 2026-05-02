@@ -11,7 +11,7 @@ body{
 margin:0;
 font-family:Arial;
 background:#f5f5f5;
-padding-top:85px;
+padding-top:80px;
 }
 
 /* HEADER */
@@ -39,34 +39,6 @@ animation:move 12s linear infinite;
 0%{transform:translateX(100%)}
 100%{transform:translateX(-100%)}
 }
-
-/* CATEGORY */
-.bar{
-position:fixed;
-top:45px;
-width:100%;
-background:#222;
-display:flex;
-overflow-x:auto;
-z-index:9998;
-}
-
-.cat{
-color:white;
-padding:8px 14px;
-margin:5px;
-border-radius:20px;
-cursor:pointer;
-white-space:nowrap;
-}
-
-.cat.active{
-background:#25D366;
-}
-
-/* VIEW */
-.view{display:none;margin-top:90px}
-.active-view{display:block}
 
 /* CARD */
 .card{
@@ -96,10 +68,14 @@ border-radius:12px;
 .carousel::-webkit-scrollbar{display:none}
 
 /* DOTS */
-.dots{text-align:center;margin-top:5px}
+.dots{
+text-align:center;
+margin-top:5px;
+}
 
 .dot{
-height:8px;width:8px;
+height:8px;
+width:8px;
 margin:0 3px;
 background:#bbb;
 border-radius:50%;
@@ -108,40 +84,28 @@ display:inline-block;
 
 .dot.active{background:#25D366}
 
-/* ADMIN */
-.admin{
-display:none;
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-background:white;
-z-index:99999;
-justify-content:center;
-align-items:center;
-padding:20px;
+/* PRICE */
+.price{
+background:#111;
+color:white;
+text-align:center;
+padding:10px;
+margin-top:10px;
+border-radius:8px;
 }
 
-.form-box{
-width:100%;
-max-width:360px;
-display:flex;
-flex-direction:column;
-gap:10px;
-}
-
-.form-box input,
-.form-box select,
-.form-box button{
+/* BUTTON */
+.buy-btn{
+background:#25D366;
+color:white;
+border:none;
 width:100%;
 padding:10px;
-border-radius:10px;
-font-size:14px;
+margin-top:10px;
+border-radius:12px;
+font-weight:bold;
+cursor:pointer;
 }
-
-.green{background:green;color:white}
-.red{background:red;color:white}
 
 </style>
 </head>
@@ -152,58 +116,16 @@ font-size:14px;
 <div class="top">
 <img src="logo1.png" class="logo">
 <div class="marquee">✨ LUXURY HEAVEN ✨</div>
-<div style="margin-left:auto;padding:10px" onclick="openAdmin()">🔒</div>
 </div>
 
-<!-- CATEGORY -->
-<div class="bar" id="bar"></div>
-
-<!-- ABOUT -->
-<div id="about" class="view active-view">
-<div class="card">
-<h2>Welcome 👋</h2>
-<p>Luxury Heaven Store</p>
-</div>
-</div>
-
-<!-- PRODUCTS -->
 <div id="view"></div>
-
-<!-- ADMIN -->
-<div class="admin" id="admin">
-
-<div class="form-box">
-
-<h2 style="text-align:center;">Admin Panel</h2>
-
-<input id="name" placeholder="Product Name">
-<input id="price" placeholder="Price">
-<select id="cat"></select>
-
-<button class="green" onclick="upload()">Upload Images</button>
-<button class="green" onclick="save()">Save Product</button>
-
-<hr>
-
-<input id="newCat" placeholder="New Category">
-<button class="green" onclick="addCategory()">Add Category</button>
-
-<select id="deleteCat"></select>
-<button class="red" onclick="deleteCategory()">Delete Category</button>
-
-<hr>
-
-<button class="red" onclick="closeAdmin()">Close</button>
-
-</div>
-
-</div>
 
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+/* FIREBASE */
 const firebaseConfig = {
 apiKey: "AIzaSyD40daowTCCVrKr1kWI6krf9nB7OHp8mWU",
 authDomain: "luxury-heaven-c24df.firebaseapp.com",
@@ -217,19 +139,28 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 let products = [];
-let categories = [];
-let uploadedImages = [];
-let activeBtn = null;
 
-/* INIT */
+/* TRACK IMAGE INDEX */
+let currentImageIndex = {};
+
+/* LOAD */
 window.onload = async () => {
-await loadCategories();
 await loadProducts();
 };
 
-/* ================= PRODUCTS ================= */
-async function loadProducts(){
+/* GET IMAGES */
+function getImages(p){
+if(Array.isArray(p.images) && p.images.length>0){
+return p.images;
+}
+if(p.image){
+return [p.image];
+}
+return [];
+}
 
+/* LOAD PRODUCTS */
+async function loadProducts(){
 const snap = await getDocs(collection(db,"products"));
 
 products = [];
@@ -241,12 +172,7 @@ products.push(d.data());
 renderProducts();
 }
 
-function getImages(p){
-if(Array.isArray(p.images)) return p.images;
-if(p.image) return [p.image];
-return [];
-}
-
+/* RENDER */
 function renderProducts(){
 
 let view = document.getElementById("view");
@@ -257,33 +183,39 @@ products.forEach((p,i)=>{
 let type = (p.category || "item").toLowerCase();
 let images = getImages(p);
 
+let key = type+i;
+
+currentImageIndex[key] = 0;
+
 view.innerHTML += `
 <div class="card">
 
-<div class="carousel car${type}${i}">
+<div class="carousel car${key}">
 ${images.map(img=>`<img src="${img}">`).join("")}
 </div>
 
-<div class="dots dots${type}${i}"></div>
+<div class="dots dots${key}"></div>
 
 <div class="price">₦ ${p.price}</div>
 
-<button class="buy-btn">BUY NOW</button>
+<button class="buy-btn" onclick="buyNow(${i},'${type}')">
+BUY NOW
+</button>
 
 </div>
 `;
 
-setTimeout(()=>setupCarousel(type,i),100);
+setTimeout(()=>setupCarousel(key),100);
 
 });
 
 }
 
-/* ================= CAROUSEL ================= */
-function setupCarousel(type,i){
+/* CAROUSEL */
+function setupCarousel(key){
 
-let c = document.querySelector(".car"+type+i);
-let box = document.querySelector(".dots"+type+i);
+let c = document.querySelector(".car"+key);
+let box = document.querySelector(".dots"+key);
 
 if(!c || !box) return;
 
@@ -302,6 +234,8 @@ c.addEventListener("scroll",()=>{
 
 let index = Math.round(c.scrollLeft / c.clientWidth);
 
+currentImageIndex[key] = index;
+
 dots.forEach(d=>d.classList.remove("active"));
 
 if(dots[index]) dots[index].classList.add("active");
@@ -310,133 +244,34 @@ if(dots[index]) dots[index].classList.add("active");
 
 }
 
-/* ================= CATEGORY ================= */
-async function loadCategories(){
+/* BUY NOW - SELECTED IMAGE FIX */
+window.buyNow = function(i,type){
 
-const snap = await getDocs(collection(db,"categories"));
+let p = products[i];
 
-categories = [];
+let key = type.toLowerCase() + i;
 
-snap.forEach(d=>{
-categories.push(d.data().name);
-});
+let images = getImages(p);
 
-let bar = document.getElementById("bar");
-let sel = document.getElementById("cat");
-let del = document.getElementById("deleteCat");
+let index = currentImageIndex[key] || 0;
 
-bar.innerHTML="";
-sel.innerHTML="";
-del.innerHTML="";
+let img = images[index] || images[0] || "";
 
-/* ABOUT BUTTON */
-let aboutBtn = document.createElement("div");
-aboutBtn.className="cat active";
-aboutBtn.innerText="ABOUT";
+let msg = `Hello 👋,
 
-aboutBtn.onclick=function(){
-setActive(aboutBtn);
-showAbout();
-};
+I want to order this Product:
 
-bar.appendChild(aboutBtn);
+🧵 Category: ${p.category}
+🛍️ Product: ${p.name}
+💰 Price: ₦${p.price}
 
-/* CATEGORY */
-categories.forEach(c=>{
+🖼️ Selected Image:
+${img}
 
-let btn = document.createElement("div");
-btn.className="cat";
-btn.innerText=c;
+Is this available? I want to buy.`;
 
-btn.onclick=function(){
-setActive(btn);
-showCategory(c);
-};
+window.open("https://wa.me/2349114738932?text="+encodeURIComponent(msg));
 
-bar.appendChild(btn);
-
-sel.innerHTML += `<option value="${c}">${c}</option>`;
-del.innerHTML += `<option value="${c}">${c}</option>`;
-
-});
-
-}
-
-function setActive(btn){
-document.querySelectorAll(".cat").forEach(b=>b.classList.remove("active"));
-btn.classList.add("active");
-}
-
-/* VIEWS */
-function showAbout(){
-document.querySelectorAll(".view").forEach(v=>v.classList.remove("active-view"));
-document.getElementById("about").classList.add("active-view");
-}
-
-function showCategory(cat){
-document.querySelectorAll(".view").forEach(v=>v.classList.remove("active-view"));
-document.getElementById("view").classList.add("active-view");
-}
-
-/* ================= ADMIN FIX ================= */
-window.openAdmin = function(){
-if(prompt("Password")==="1234"){
-document.getElementById("admin").style.display="flex";
-}
-};
-
-window.closeAdmin = function(){
-document.getElementById("admin").style.display="none";
-};
-
-/* CLOUDINARY */
-window.upload = function(){
-cloudinary.openUploadWidget({
-cloudName:"db92r6j9z",
-uploadPreset:"ummuhalti",
-multiple:true
-},(err,res)=>{
-if(res && res.event==="success"){
-uploadedImages.push(res.info.secure_url);
-alert("Uploaded ✔");
-}
-});
-};
-
-/* SAVE */
-window.save = async function(){
-
-await addDoc(collection(db,"products"),{
-name:name.value,
-price:price.value,
-category:cat.value,
-images:uploadedImages,
-date:Date.now()
-});
-
-alert("Saved ✔");
-
-uploadedImages=[];
-};
-
-window.addCategory = async function(){
-await addDoc(collection(db,"categories"),{name:newCat.value});
-alert("Category added ✔");
-loadCategories();
-};
-
-window.deleteCategory = async function(){
-
-const snap = await getDocs(collection(db,"categories"));
-
-snap.forEach(async d=>{
-if(d.data().name === deleteCat.value){
-await deleteDoc(doc(db,"categories",d.id));
-}
-});
-
-alert("Category deleted ✔");
-loadCategories();
 };
 
 </script>
