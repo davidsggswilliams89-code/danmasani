@@ -40,7 +40,7 @@ animation:move 12s linear infinite;
 100%{transform:translateX(-100%)}
 }
 
-/* CATEGORY */
+/* CATEGORY BAR */
 .bar{
 position:fixed;
 top:45px;
@@ -58,13 +58,22 @@ margin:5px;
 border-radius:20px;
 cursor:pointer;
 white-space:nowrap;
+font-size:13px;
 }
 
-.cat.active{background:#25D366}
+.cat.active{
+background:#25D366;
+}
 
-/* VIEW */
-.view{display:none;margin-top:90px}
-.active-view{display:block}
+/* VIEWS */
+.view{
+display:none;
+margin-top:90px;
+}
+
+.active-view{
+display:block;
+}
 
 /* CARD */
 .card{
@@ -74,66 +83,47 @@ padding:10px;
 border-radius:12px;
 }
 
-/* CAROUSEL */
-.carousel{
-display:flex;
-overflow-x:auto;
-scroll-snap-type:x mandatory;
-scroll-behavior:smooth;
-border-radius:12px;
-}
-
-.carousel img{
-min-width:100%;
-height:350px;
-object-fit:cover;
-scroll-snap-align:center;
-border-radius:12px;
-}
-
-.carousel::-webkit-scrollbar{display:none}
-
-/* DOTS */
-.dots{
-text-align:center;
-margin-top:5px;
-}
-
-.dot{
-height:8px;
-width:8px;
-margin:0 3px;
-background:#bbb;
-border-radius:50%;
-display:inline-block;
-}
-
-.dot.active{
-background:#25D366;
-}
-
-/* PRICE */
-.price{
-background:#111;
-color:white;
-text-align:center;
-padding:10px;
-margin-top:10px;
-border-radius:8px;
-}
-
-/* BUTTON */
-.buy-btn{
-background:#25D366;
-color:white;
-border:none;
+/* ADMIN FIX (IMPORTANT: hidden by default) */
+.admin{
+display:none;   /* 🔥 FIXED */
+position:fixed;
+top:0;
+left:0;
 width:100%;
-padding:10px;
-margin-top:10px;
-border-radius:12px;
-font-weight:bold;
-cursor:pointer;
+height:100%;
+background:white;
+z-index:99999;
+
+justify-content:center;
+align-items:center;
+padding:20px;
 }
+
+.form-box{
+width:100%;
+max-width:360px;
+display:flex;
+flex-direction:column;
+gap:10px;
+}
+
+.form-box input,
+.form-box select,
+.form-box button{
+width:100%;
+padding:10px 12px;
+border-radius:10px;
+box-sizing:border-box;
+font-size:14px;
+}
+
+.form-box input,
+.form-box select{
+border:1px solid #ccc;
+}
+
+.green{background:green;color:white}
+.red{background:red;color:white}
 
 </style>
 </head>
@@ -144,21 +134,62 @@ cursor:pointer;
 <div class="top">
 <img src="logo1.png" class="logo">
 <div class="marquee">✨ LUXURY HEAVEN ✨</div>
+<div style="margin-left:auto;padding:10px" onclick="openAdmin()">🔒</div>
 </div>
 
-<!-- CATEGORY -->
+<!-- CATEGORY BAR -->
 <div class="bar" id="bar"></div>
 
-<!-- ABOUT -->
+<!-- ABOUT SECTION -->
 <div id="about" class="view active-view">
-<div class="card">
-<h2>Welcome to Luxury Heaven 👋</h2>
-<p>Premium fashion store</p>
-</div>
+  <div class="card">
+    <h2 style="text-align:center;">Welcome to Luxury Heaven 👋</h2>
+
+    <h3>About Us</h3>
+    <p>Luxury Heaven is a fashion store offering quality products at affordable prices.</p>
+
+    <h3>Mission</h3>
+    <p>Deliver stylish fashion with fast nationwide delivery.</p>
+
+    <h3>Contact</h3>
+    <p>WhatsApp support available 24/7</p>
+  </div>
 </div>
 
-<!-- PRODUCT VIEW -->
+<!-- PRODUCT VIEW CONTAINER -->
 <div id="view"></div>
+
+<!-- ADMIN (FIXED - hidden properly) -->
+<div class="admin" id="admin">
+
+<div class="form-box">
+
+<h2 style="text-align:center;">Admin Panel</h2>
+
+<input id="name" placeholder="Product Name">
+<input id="price" placeholder="Price">
+<select id="cat"></select>
+
+<button class="green" onclick="upload()">📷 Upload Images</button>
+<button class="green" onclick="save()">💾 Save Product</button>
+
+<hr>
+
+<h3>Categories</h3>
+
+<input id="newCat" placeholder="New Category">
+<button class="green" onclick="addCategory()">Add Category</button>
+
+<select id="deleteCat"></select>
+<button class="red" onclick="deleteCategory()">Delete Category</button>
+
+<hr>
+
+<button class="red" onclick="closeAdmin()">Close</button>
+
+</div>
+
+</div>
 
 <script type="module">
 
@@ -177,121 +208,118 @@ appId: "1:277279766368:web:2f5858b54f58d1df629005"
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-let products = [];
-let categories = [];
-let activeBtn = null;
+let categories=[];
+let activeBtn=null;
 
-/* LOAD */
-window.onload = async () => {
-await loadProducts();
+/* INIT */
+window.onload=async()=>{
+await loadCategories();
 };
 
-/* PRODUCTS */
-async function loadProducts(){
+/* CATEGORY LOAD */
+async function loadCategories(){
 
-const snap = await getDocs(collection(db,"products"));
+const snap = await getDocs(collection(db,"categories"));
 
-products = [];
+categories=[];
 
 snap.forEach(d=>{
-products.push(d.data());
+categories.push(d.data().name);
 });
 
-renderProducts();
+let bar=document.getElementById("bar");
+let sel=document.getElementById("cat");
+let del=document.getElementById("deleteCat");
+
+bar.innerHTML="";
+sel.innerHTML="";
+del.innerHTML="";
+
+/* ABOUT BUTTON */
+let aboutBtn=document.createElement("div");
+aboutBtn.className="cat active";
+aboutBtn.innerText="ABOUT";
+
+aboutBtn.onclick=function(){
+showAbout(aboutBtn);
+};
+
+bar.appendChild(aboutBtn);
+
+/* CATEGORY BUTTONS */
+categories.forEach(c=>{
+
+let btn=document.createElement("div");
+btn.className="cat";
+btn.innerText=c;
+
+btn.onclick=function(){
+showView(c,btn);
+};
+
+bar.appendChild(btn);
+
+sel.innerHTML+=`<option value="${c}">${c}</option>`;
+del.innerHTML+=`<option value="${c}">${c}</option>`;
+});
+
 }
 
-/* RENDER PRODUCTS */
-function renderProducts(){
+/* VIEW SYSTEM FIX */
+function showAbout(btn){
 
-let view = document.getElementById("view");
-view.innerHTML = "";
+setActive(btn);
 
-products.forEach((p,i)=>{
+hideAll();
 
-let type = p.category || "item";
-let images = p.images || [];
+document.getElementById("about").classList.add("active-view");
+}
 
-let isNew = (Date.now() - (p.date||0)) < 86400000;
+function showView(cat,btn){
 
-let html = `
+setActive(btn);
+
+hideAll();
+
+let view=document.getElementById(cat);
+
+if(!view){
+view=document.createElement("div");
+view.id=cat;
+view.className="view";
+document.body.appendChild(view);
+}
+
+view.innerHTML=`
 <div class="card">
+<h3>${cat.toUpperCase()}</h3>
+<p>Products coming soon...</p>
+</div>`;
 
-${isNew ? '<div style="color:red;font-weight:bold">NEW</div>' : ''}
-
-<div class="carousel car${type}${i}">
-${images.map(img=>`<img src="${img}">`).join("")}
-</div>
-
-<div class="dots dots${type}${i}"></div>
-
-<div class="price">₦ ${p.price}</div>
-
-<button class="buy-btn" onclick="buyNow(${i})">
-BUY NOW
-</button>
-
-</div>
-`;
-
-view.innerHTML += html;
-
-setTimeout(()=>setupCarousel(type,i),100);
-});
-
+view.classList.add("active-view");
 }
 
-/* CAROUSEL DOT SYSTEM */
-function setupCarousel(type,i){
-
-let c = document.querySelector(".car"+type+i);
-let box = document.querySelector(".dots"+type+i);
-
-if(!c || !box) return;
-
-let imgs = c.querySelectorAll("img");
-box.innerHTML = "";
-
-imgs.forEach((_,x)=>{
-
-let d = document.createElement("span");
-d.className = "dot" + (x===0?" active":"");
-box.appendChild(d);
-
-});
-
-let dots = box.querySelectorAll(".dot");
-
-c.addEventListener("scroll",()=>{
-
-let index = Math.round(c.scrollLeft / c.clientWidth);
-
-dots.forEach(d=>d.classList.remove("active"));
-
-if(dots[index]) dots[index].classList.add("active");
-
-});
-
+function setActive(btn){
+if(activeBtn) activeBtn.classList.remove("active");
+btn.classList.add("active");
+activeBtn=btn;
 }
 
-/* BUY BUTTON */
-window.buyNow = function(i){
+function hideAll(){
+document.querySelectorAll(".view").forEach(v=>{
+v.classList.remove("active-view");
+});
+}
 
-let p = products[i];
+/* ADMIN OPEN */
+window.openAdmin=function(){
+if(prompt("Password")==="1234"){
+admin.style.display="flex";
+}
+};
 
-let msg = `Hello 👋,
-
-I want to order this Product:
-
-🛍️ Product: ${p.name}
-💰 Price: ₦${p.price}
-
-🖼️ Selected Image:
-${p.images[0] || ""}
-
-Please confirm availability.`;
-
-window.open("https://wa.me/2349114738932?text="+encodeURIComponent(msg));
-
+window.closeAdmin=function(){
+admin.style.display="none";
 };
 
 </script>
