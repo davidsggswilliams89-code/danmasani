@@ -27,8 +27,6 @@ padding:0 10px;
 z-index:999;
 }
 
-.header h3{margin:0;font-size:16px}
-
 .bar{
 position:fixed;
 top:50px;
@@ -36,7 +34,6 @@ width:100%;
 background:#222;
 display:flex;
 overflow-x:auto;
-z-index:998;
 }
 
 .cat{
@@ -59,6 +56,38 @@ padding:10px;
 border-radius:12px;
 }
 
+/* CAROUSEL */
+.carousel{
+display:flex;
+overflow-x:auto;
+scroll-snap-type:x mandatory;
+scroll-behavior:smooth;
+border-radius:10px;
+}
+
+.carousel img{
+min-width:100%;
+height:250px;
+object-fit:cover;
+scroll-snap-align:center;
+border-radius:10px;
+}
+
+.carousel::-webkit-scrollbar{display:none}
+
+/* DOTS */
+.dots{text-align:center;margin-top:5px}
+
+.dot{
+height:8px;width:8px;
+background:#bbb;
+border-radius:50%;
+display:inline-block;
+margin:0 3px;
+}
+
+.dot.active{background:#25D366}
+
 .price{
 background:#111;
 color:white;
@@ -72,9 +101,9 @@ button{
 width:100%;
 padding:10px;
 margin-top:6px;
-cursor:pointer;
 border:none;
 border-radius:8px;
+cursor:pointer;
 }
 
 .buy{background:#25D366;color:white}
@@ -109,23 +138,19 @@ padding:8px;
 margin:5px 0;
 border-radius:8px;
 }
-
 </style>
 </head>
 
 <body>
 
-<!-- HEADER -->
 <div class="header">
 <h3>LUXURY HEAVEN</h3>
 <div style="margin-left:auto;cursor:pointer" onclick="openAdmin()">⚙️</div>
 </div>
 
-<!-- CATEGORY -->
 <div class="bar" id="catBar"></div>
 
-<!-- PRODUCTS -->
-<div id="view"></div>
+<div id="view" class="view"></div>
 
 <!-- ADMIN -->
 <div class="admin" id="admin">
@@ -165,15 +190,9 @@ border-radius:8px;
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
-getFirestore,
-collection,
-getDocs,
-addDoc,
-deleteDoc,
-doc
+getFirestore, collection, getDocs, addDoc, deleteDoc, doc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-/* FIREBASE */
 const firebaseConfig = {
 apiKey: "AIzaSyD40daowTCCVrKr1kWI6krf9nB7OHp8mWU",
 authDomain: "luxury-heaven-c24df.firebaseapp.com",
@@ -191,6 +210,7 @@ let products = [];
 let categories = [];
 let images = [];
 let active = "";
+let activeImageIndex = {}; // track per product
 
 /* ADMIN */
 window.openAdmin = ()=>admin.style.display="block";
@@ -213,10 +233,7 @@ products.push({id:d.id,...d.data()});
 
 /* CATEGORIES */
 async function loadCategories(){
-
 const snap = await getDocs(collection(db,"categories"));
-
-categories = [];
 
 catBar.innerHTML="";
 category.innerHTML="";
@@ -225,9 +242,7 @@ delCat2.innerHTML="";
 
 snap.forEach(d=>{
 let c = d.data().name;
-categories.push(c);
 
-/* BUTTON */
 let b = document.createElement("div");
 b.className="cat";
 b.innerText=c;
@@ -235,13 +250,12 @@ b.innerText=c;
 b.onclick=()=>{
 document.querySelectorAll(".cat").forEach(x=>x.classList.remove("active"));
 b.classList.add("active");
-active=c;
+active=c.toLowerCase().trim();
 render();
 };
 
 catBar.appendChild(b);
 
-/* SELECT */
 category.innerHTML+=`<option>${c}</option>`;
 delCat.innerHTML+=`<option>${c}</option>`;
 delCat2.innerHTML+=`<option>${c}</option>`;
@@ -253,24 +267,72 @@ function render(){
 view.innerHTML="";
 
 let filtered = products.filter(p =>
-(p.category||"").toLowerCase() === (active||"").toLowerCase()
+(p.category||"").toLowerCase().trim() === active
 );
 
-filtered.forEach(p=>{
-view.innerHTML+=`
+filtered.forEach((p,i)=>{
+
+let imgs = p.images || [];
+activeImageIndex[p.id] = 0;
+
+view.innerHTML += `
 <div class="card">
-<h3>${p.name}</h3>
+
+<div class="carousel" id="car${i}">
+${imgs.map(img=>`<img src="${img}">`).join("")}
+</div>
+
+<div class="dots" id="dots${i}"></div>
+
 <p class="price">₦ ${p.price}</p>
-<button class="buy" onclick="buy('${p.name}','${p.price}','${p.images? p.images[0]:''}')">
+
+<button class="buy" onclick="buy('${p.id}','${p.name}','${p.price}')">
 BUY
 </button>
+
 </div>
 `;
+
+setTimeout(()=>setupCarousel(i,p.id,imgs.length),100);
+
 });
 }
 
-/* WHATSAPP */
-window.buy = function(name,price,img){
+/* CAROUSEL LOGIC */
+function setupCarousel(i,id,count){
+
+let c = document.getElementById("car"+i);
+let dotsBox = document.getElementById("dots"+i);
+
+dotsBox.innerHTML="";
+
+for(let x=0;x<count;x++){
+let d = document.createElement("span");
+d.className="dot"+(x===0?" active":"");
+dotsBox.appendChild(d);
+}
+
+let dots = dotsBox.querySelectorAll(".dot");
+
+c.addEventListener("scroll",()=>{
+
+let index = Math.round(c.scrollLeft / c.clientWidth);
+
+activeImageIndex[id] = index;
+
+dots.forEach(d=>d.classList.remove("active"));
+if(dots[index]) dots[index].classList.add("active");
+
+});
+
+}
+
+/* WHATSAPP WITH ACTIVE IMAGE */
+window.buy = function(id,name,price){
+
+let product = products.find(p=>p.id===id);
+let index = activeImageIndex[id] || 0;
+let img = product.images[index] || "";
 
 let msg = `Hello 👋,
 
@@ -279,7 +341,7 @@ I want to order this Product:
 🛍️ Product: ${name}
 💰 Price: ₦${price}
 
-🖼️ Image:
+🖼️ Selected Image:
 ${img}
 
 Is it available?`;
@@ -294,20 +356,19 @@ cloudName:"db92r6j9z",
 uploadPreset:"ummuhalti",
 multiple:true
 },(e,r)=>{
-if(r.event==="success"){
+if(r && r.event==="success"){
 images.push(r.info.secure_url);
 alert("Uploaded ✔");
 }
 });
 };
 
-/* SAVE PRODUCT */
+/* SAVE */
 window.saveProduct = async function(){
-
 await addDoc(collection(db,"products"),{
 name:pname.value,
 price:price.value,
-category:category.value,
+category:category.value.toLowerCase().trim(),
 images:images,
 date:Date.now()
 });
@@ -321,13 +382,12 @@ images=[];
 await loadProducts();
 };
 
-/* ADMIN LIST */
+/* ADMIN DELETE LIST */
 window.loadAdminProducts = function(){
-
 let c = delCat.value;
 adminList.innerHTML="";
 
-products.filter(p=>p.category===c)
+products.filter(p=>p.category===c.toLowerCase().trim())
 .forEach(p=>{
 adminList.innerHTML+=`
 <div class="item">
@@ -338,7 +398,7 @@ ${p.name}
 });
 };
 
-/* DELETE PRODUCT */
+/* DELETE */
 window.del = async function(id){
 await deleteDoc(doc(db,"products",id));
 alert("Deleted ✔");
@@ -348,23 +408,18 @@ loadAdminProducts();
 
 /* CATEGORY */
 window.addCategory = async function(){
-await addDoc(collection(db,"categories"),{
-name:newCat.value
-});
+await addDoc(collection(db,"categories"),{name:newCat.value});
 alert("Added ✔");
 await loadCategories();
 };
 
 window.deleteCategory = async function(){
-
 const snap = await getDocs(collection(db,"categories"));
-
 snap.forEach(async d=>{
 if(d.data().name===delCat2.value){
 await deleteDoc(doc(db,"categories",d.id));
 }
 });
-
 alert("Deleted ✔");
 await loadCategories();
 };
