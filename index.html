@@ -66,8 +66,14 @@ background:#25D366;
 }
 
 /* VIEWS */
-.view{display:none}
-.active-view{display:block}
+.view{
+display:none;
+margin-top:90px;
+}
+
+.active-view{
+display:block;
+}
 
 /* CARD */
 .card{
@@ -77,9 +83,9 @@ padding:10px;
 border-radius:12px;
 }
 
-/* ADMIN */
+/* ADMIN FIX (IMPORTANT: hidden by default) */
 .admin{
-display:none;
+display:none;   /* 🔥 FIXED */
 position:fixed;
 top:0;
 left:0;
@@ -87,7 +93,7 @@ width:100%;
 height:100%;
 background:white;
 z-index:99999;
-display:flex;
+
 justify-content:center;
 align-items:center;
 padding:20px;
@@ -134,28 +140,26 @@ border:1px solid #ccc;
 <!-- CATEGORY BAR -->
 <div class="bar" id="bar"></div>
 
-<!-- VIEWS -->
-<div id="view"></div>
-
 <!-- ABOUT SECTION -->
 <div id="about" class="view active-view">
   <div class="card">
-
     <h2 style="text-align:center;">Welcome to Luxury Heaven 👋</h2>
 
     <h3>About Us</h3>
-    <p>Luxury Heaven is a modern fashion store offering quality products at affordable prices.</p>
+    <p>Luxury Heaven is a fashion store offering quality products at affordable prices.</p>
 
     <h3>Mission</h3>
-    <p>To provide stylish fashion items with fast delivery and customer satisfaction.</p>
+    <p>Deliver stylish fashion with fast nationwide delivery.</p>
 
     <h3>Contact</h3>
-    <p>WhatsApp Support Available</p>
-
+    <p>WhatsApp support available 24/7</p>
   </div>
 </div>
 
-<!-- ADMIN -->
+<!-- PRODUCT VIEW CONTAINER -->
+<div id="view"></div>
+
+<!-- ADMIN (FIXED - hidden properly) -->
 <div class="admin" id="admin">
 
 <div class="form-box">
@@ -204,26 +208,20 @@ appId: "1:277279766368:web:2f5858b54f58d1df629005"
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-let activeBtn = null;
-let categories = [];
+let categories=[];
+let activeBtn=null;
 
 /* INIT */
-window.onload = async () => {
+window.onload=async()=>{
 await loadCategories();
-
-/* AUTO OPEN ABOUT */
-let aboutBtn = document.querySelector(".cat");
-if (aboutBtn) {
-showAbout(aboutBtn);
-}
 };
 
-/* ================= CATEGORY ================= */
+/* CATEGORY LOAD */
 async function loadCategories(){
 
 const snap = await getDocs(collection(db,"categories"));
 
-categories = [];
+categories=[];
 
 snap.forEach(d=>{
 categories.push(d.data().name);
@@ -267,7 +265,7 @@ del.innerHTML+=`<option value="${c}">${c}</option>`;
 
 }
 
-/* ================= VIEW SYSTEM (FIXED CORE) ================= */
+/* VIEW SYSTEM FIX */
 function showAbout(btn){
 
 setActive(btn);
@@ -301,26 +299,19 @@ view.innerHTML=`
 view.classList.add("active-view");
 }
 
-/* ACTIVE BUTTON CONTROL */
 function setActive(btn){
-
 if(activeBtn) activeBtn.classList.remove("active");
-
 btn.classList.add("active");
-
-activeBtn = btn;
+activeBtn=btn;
 }
 
-/* HIDE ALL VIEWS */
 function hideAll(){
-
 document.querySelectorAll(".view").forEach(v=>{
 v.classList.remove("active-view");
 });
-
 }
 
-/* ADMIN */
+/* ADMIN OPEN */
 window.openAdmin=function(){
 if(prompt("Password")==="1234"){
 admin.style.display="flex";
