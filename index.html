@@ -40,7 +40,7 @@ animation:move 12s linear infinite;
 100%{transform:translateX(-100%)}
 }
 
-/* CATEGORY BAR */
+/* CATEGORY */
 .bar{
 position:fixed;
 top:45px;
@@ -48,32 +48,21 @@ width:100%;
 background:#222;
 display:flex;
 overflow-x:auto;
-z-index:9998;
 }
 
 .cat{
 color:white;
-padding:8px 14px;
+padding:8px 12px;
 margin:5px;
 border-radius:20px;
 cursor:pointer;
-white-space:nowrap;
-font-size:13px;
 }
 
-.cat.active{
-background:#25D366;
-}
+.cat.active{background:#25D366}
 
-/* VIEWS */
-.view{
-display:none;
-margin-top:90px;
-}
-
-.active-view{
-display:block;
-}
+/* VIEW */
+.view{display:none}
+.active-view{display:block}
 
 /* CARD */
 .card{
@@ -83,9 +72,44 @@ padding:10px;
 border-radius:12px;
 }
 
-/* ❗ FIXED ADMIN (IMPORTANT) */
+.carousel{
+display:flex;
+overflow-x:auto;
+scroll-snap-type:x mandatory;
+}
+
+.carousel img{
+min-width:100%;
+height:320px;
+object-fit:cover;
+scroll-snap-align:center;
+}
+
+.carousel::-webkit-scrollbar{display:none}
+
+/* PRICE */
+.price{
+background:#111;
+color:white;
+text-align:center;
+padding:10px;
+margin-top:10px;
+border-radius:8px;
+}
+
+.buy{
+width:100%;
+padding:10px;
+background:#25D366;
+color:white;
+border:none;
+margin-top:10px;
+border-radius:10px;
+}
+
+/* ADMIN */
 .admin{
-display:none;   /* MUST stay NONE */
+display:none;
 position:fixed;
 top:0;
 left:0;
@@ -93,32 +117,48 @@ width:100%;
 height:100%;
 background:white;
 z-index:99999;
-
+padding:20px 12px;
+overflow:auto;
+display:flex;
 justify-content:center;
 align-items:center;
-padding:20px;
 }
 
+/* FORM BOX */
 .form-box{
 width:100%;
-max-width:360px;
+max-width:340px;
 display:flex;
 flex-direction:column;
 gap:10px;
 }
 
+/* INPUTS + BUTTONS SAME WIDTH */
 .form-box input,
 .form-box select,
 .form-box button{
 width:100%;
-padding:10px 12px;
+padding:10px 14px;
 border-radius:10px;
 box-sizing:border-box;
 font-size:14px;
 }
 
+.form-box input,
+.form-box select{
+border:1px solid #ccc;
+}
+
+.form-box button{
+border:none;
+}
+
 .green{background:green;color:white}
 .red{background:red;color:white}
+
+.green{
+margin-bottom:10px;
+}
 
 </style>
 </head>
@@ -135,18 +175,10 @@ font-size:14px;
 <!-- CATEGORY -->
 <div class="bar" id="bar"></div>
 
-<!-- ABOUT -->
-<div id="about" class="view active-view">
-  <div class="card">
-    <h2 style="text-align:center;">Welcome 👋</h2>
-    <p>Luxury Heaven Fashion Store</p>
-  </div>
-</div>
-
-<!-- PRODUCT AREA -->
+<!-- PRODUCT VIEW -->
 <div id="view"></div>
 
-<!-- ADMIN (FIXED HIDDEN) -->
+<!-- ADMIN -->
 <div class="admin" id="admin">
 
 <div class="form-box">
@@ -161,6 +193,8 @@ font-size:14px;
 <button class="green" onclick="save()">💾 Save Product</button>
 
 <hr>
+
+<h3 style="text-align:center;">Categories</h3>
 
 <input id="newCat" placeholder="New Category">
 <button class="green" onclick="addCategory()">Add Category</button>
@@ -193,18 +227,20 @@ appId: "1:277279766368:web:2f5858b54f58d1df629005"
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+let products=[];
 let categories=[];
-let uploadedImages=[];
+let images=[];
 
 /* INIT */
 window.onload=async()=>{
 await loadCategories();
+await loadProducts();
 };
 
-/* CATEGORY LOAD */
+/* CATEGORY */
 async function loadCategories(){
 
-const snap=await getDocs(collection(db,"categories"));
+const snap = await getDocs(collection(db,"categories"));
 
 categories=[];
 
@@ -220,147 +256,102 @@ bar.innerHTML="";
 sel.innerHTML="";
 del.innerHTML="";
 
-/* ABOUT */
-let aboutBtn=document.createElement("div");
-aboutBtn.className="cat active";
-aboutBtn.innerText="ABOUT";
-
-aboutBtn.onclick=function(){
-showAbout(aboutBtn);
-};
-
-bar.appendChild(aboutBtn);
-
-/* CATEGORY BUTTONS */
 categories.forEach(c=>{
-
-let btn=document.createElement("div");
-btn.className="cat";
-btn.innerText=c;
-
-btn.onclick=function(){
-showCat(c,btn);
-};
-
-bar.appendChild(btn);
-
+bar.innerHTML+=`<div class="cat">${c}</div>`;
 sel.innerHTML+=`<option value="${c}">${c}</option>`;
 del.innerHTML+=`<option value="${c}">${c}</option>`;
 });
-
 }
 
-/* VIEW FIX */
-function showAbout(btn){
-document.querySelectorAll(".cat").forEach(b=>b.classList.remove("active"));
-btn.classList.add("active");
-
-document.querySelectorAll(".view").forEach(v=>v.classList.remove("active-view"));
-
-document.getElementById("about").classList.add("active-view");
-}
-
-function showCat(cat,btn){
-
-document.querySelectorAll(".cat").forEach(b=>b.classList.remove("active"));
-btn.classList.add("active");
-
-document.querySelectorAll(".view").forEach(v=>v.classList.remove("active-view"));
-
-let view=document.getElementById(cat);
-
-if(!view){
-view=document.createElement("div");
-view.id=cat;
-view.className="view";
-document.body.appendChild(view);
-}
-
-view.innerHTML=`
-<div class="card">
-<h3>${cat}</h3>
-<p>Loading products...</p>
-</div>`;
-
-view.classList.add("active-view");
-}
-
-/* ADMIN FIX */
+/* ADMIN */
 window.openAdmin=function(){
 if(prompt("Password")==="1234"){
-document.getElementById("admin").style.display="flex";
+admin.style.display="flex";
 }
 };
 
 window.closeAdmin=function(){
-document.getElementById("admin").style.display="none";
+admin.style.display="none";
 };
 
-/* CLOUDINARY */
+/* UPLOAD */
 window.upload=function(){
-
 cloudinary.openUploadWidget({
 cloudName:"db92r6j9z",
-uploadPreset:"ummuhalti",
-multiple:true
-},(err,res)=>{
-
-if(res && res.event==="success"){
-uploadedImages.push(res.info.secure_url);
-alert("Uploaded ✔");
+uploadPreset:"ummuhalti"
+},(e,r)=>{
+if(r?.event==="success"){
+images.push(r.info.secure_url);
+alert("Image uploaded ✔");
 }
-
 });
-
 };
 
-/* SAVE */
+/* SAVE PRODUCT */
 window.save=async function(){
 
-if(uploadedImages.length===0){
+if(images.length===0){
 alert("Upload images first");
 return;
 }
 
 await addDoc(collection(db,"products"),{
-name:name.value,
-price:price.value,
-category:cat.value,
-images:uploadedImages,
+name:document.getElementById("name").value,
+price:document.getElementById("price").value,
+category:document.getElementById("cat").value,
+images:images,
 date:Date.now()
 });
 
-alert("Saved ✔");
+alert("Product saved ✔");
 
-uploadedImages=[];
+images=[];
 };
 
-/* CATEGORY */
-window.addCategory=async function(){
+/* ================= CATEGORY FIXED WITH FEEDBACK ================= */
 
-await addDoc(collection(db,"categories"),{
-name:newCat.value
-});
+window.addCategory = async function () {
+let name = document.getElementById("newCat").value.trim();
 
-alert("Category added ✔");
+if (!name) {
+alert("Enter category name");
+return;
+}
+
+await addDoc(collection(db,"categories"),{name});
+
+document.getElementById("newCat").value="";
+
+alert("Category created ✔");
 
 loadCategories();
 };
 
-/* DELETE */
-window.deleteCategory=async function(){
+window.deleteCategory = async function () {
+let cat = document.getElementById("deleteCat").value;
 
-const snap=await getDocs(collection(db,"categories"));
+if (!cat) {
+alert("Select category");
+return;
+}
+
+const snap = await getDocs(collection(db,"categories"));
+
+let deleted = false;
 
 snap.forEach(async d=>{
-if(d.data().name===deleteCat.value){
+if(d.data().name === cat){
 await deleteDoc(doc(db,"categories",d.id));
+deleted = true;
 }
 });
 
+setTimeout(()=>{
+if(deleted){
 alert("Category deleted ✔");
-
+}
 loadCategories();
+},500);
 };
 
 </script>
