@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>LUXURY HEAVEN COLLECTION </title>
+<title>BOB TEXTILE</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <script src="https://widget.cloudinary.com/v2.0/global/all.js"></script>
@@ -36,7 +36,7 @@ background:white;border-radius:12px;
 padding:10px;margin:10px 0;
 }
 
-/* 🔥 BIGGER IMAGE */
+/* ✅ NORMAL IMAGE HEIGHT RESTORED */
 .carousel{
 display:flex;
 overflow-x:auto;
@@ -44,11 +44,10 @@ scroll-snap-type:x mandatory;
 }
 .carousel img{
 min-width:100%;
-height:500px;
-object-fit:contain;
+height:300px;
+object-fit:cover;
 scroll-snap-align:center;
 border-radius:10px;
-background:white;
 }
 .carousel::-webkit-scrollbar{display:none}
 
@@ -91,7 +90,7 @@ input,select{width:100%;padding:10px;margin:5px 0;}
 <body>
 
 <div class="top-bar">
-LUXURY HEAVEN COLLECTION
+BOB TEXTILE
 <div class="admin-icon" onclick="openAdmin()">🔒</div>
 </div>
 
@@ -105,7 +104,7 @@ LUXURY HEAVEN COLLECTION
 <div class="dots" id="testimonialDots"></div>
 <hr>
 <h2>About Us</h2>
-<p>LUXURY HEAVEN COLLECTION is your trusted fashion store.</p>
+<p>BOB TEXTILE is your trusted fashion store.</p>
 </div>
 </div>
 
@@ -257,10 +256,8 @@ productView.classList.add("active-view");
 renderProducts();
 }
 
-/* 🔥 UPDATED PRODUCT CARD */
 function renderProducts(){
 productView.innerHTML="";
-
 let list=products.filter(p=>p.category===active);
 
 list.forEach((p,i)=>{
@@ -290,7 +287,6 @@ BUY NOW
 list.forEach((p,i)=>setupCarousel(i,p));
 }
 
-/* BUY */
 window.buyNow=(i)=>{
 let list=products.filter(p=>p.category===active);
 let p=list[i];
@@ -315,7 +311,6 @@ Is this available? I want to buy.`;
 window.open("https://wa.me/2349114738932?text="+encodeURIComponent(msg));
 };
 
-/* CAROUSEL */
 function setupCarousel(i,p){
 let car=document.querySelector(".car"+i);
 let dotsBox=document.querySelector(".dots"+i);
