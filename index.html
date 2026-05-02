@@ -97,7 +97,6 @@ margin-top:10px;
 border-radius:8px;
 }
 
-/* BUY */
 .buy{
 width:100%;
 padding:10px;
@@ -108,8 +107,7 @@ margin-top:10px;
 border-radius:10px;
 }
 
-/* ================= ADMIN FIX (INPUT + BUTTON MATCH WIDTH) ================= */
-
+/* ADMIN */
 .admin{
 display:none;
 position:fixed;
@@ -121,46 +119,46 @@ background:white;
 z-index:99999;
 padding:20px 12px;
 overflow:auto;
-flex-direction:column;
+display:flex;
+justify-content:center;
 align-items:center;
 }
 
-/* 🔥 SAME WIDTH FOR INPUTS + BUTTONS */
-.admin input,
-.admin select,
-.admin button{
+/* FORM BOX */
+.form-box{
 width:100%;
-max-width:320px;
-box-sizing:border-box;
-border-radius:10px;
+max-width:340px;
+display:flex;
+flex-direction:column;
+gap:10px;
 }
 
-/* INPUT STYLE */
-.admin input,
-.admin select{
-padding:10px;
-margin:6px auto;
-display:block;
-border:1px solid #ccc;
+/* INPUTS + BUTTONS SAME WIDTH */
+.form-box input,
+.form-box select,
+.form-box button{
+width:100%;
+padding:10px 14px;
+border-radius:10px;
+box-sizing:border-box;
 font-size:14px;
 }
 
-/* BUTTON STYLE */
-.admin button{
-margin:6px auto;
-padding:10px 14px;
+.form-box input,
+.form-box select{
+border:1px solid #ccc;
+}
+
+.form-box button{
 border:none;
-display:block;
 }
 
-/* SPACE BETWEEN UPLOAD & SAVE */
-.admin .green{
-margin-bottom:12px;
-}
-
-/* COLORS */
 .green{background:green;color:white}
 .red{background:red;color:white}
+
+.green{
+margin-bottom:10px;
+}
 
 </style>
 </head>
@@ -183,7 +181,9 @@ margin-bottom:12px;
 <!-- ADMIN -->
 <div class="admin" id="admin">
 
-<h2>Admin Panel</h2>
+<div class="form-box">
+
+<h2 style="text-align:center;">Admin Panel</h2>
 
 <input id="name" placeholder="Product Name">
 <input id="price" placeholder="Price">
@@ -192,9 +192,9 @@ margin-bottom:12px;
 <button class="green" onclick="upload()">📷 Upload Images</button>
 <button class="green" onclick="save()">💾 Save Product</button>
 
-<hr style="width:100%;max-width:320px">
+<hr>
 
-<h3>Categories</h3>
+<h3 style="text-align:center;">Categories</h3>
 
 <input id="newCat" placeholder="New Category">
 <button class="green" onclick="addCategory()">Add Category</button>
@@ -202,9 +202,11 @@ margin-bottom:12px;
 <select id="deleteCat"></select>
 <button class="red" onclick="deleteCategory()">Delete Category</button>
 
-<hr style="width:100%;max-width:320px">
+<hr>
 
 <button class="red" onclick="closeAdmin()">Close</button>
+
+</div>
 
 </div>
 
@@ -285,7 +287,7 @@ alert("Image uploaded ✔");
 });
 };
 
-/* SAVE */
+/* SAVE PRODUCT */
 window.save=async function(){
 
 if(images.length===0){
@@ -306,27 +308,50 @@ alert("Product saved ✔");
 images=[];
 };
 
-/* CATEGORY */
-window.addCategory=async function(){
-let name=document.getElementById("newCat").value;
+/* ================= CATEGORY FIXED WITH FEEDBACK ================= */
+
+window.addCategory = async function () {
+let name = document.getElementById("newCat").value.trim();
+
+if (!name) {
+alert("Enter category name");
+return;
+}
 
 await addDoc(collection(db,"categories"),{name});
+
+document.getElementById("newCat").value="";
+
+alert("Category created ✔");
 
 loadCategories();
 };
 
-window.deleteCategory=async function(){
-let cat=document.getElementById("deleteCat").value;
+window.deleteCategory = async function () {
+let cat = document.getElementById("deleteCat").value;
 
-const snap=await getDocs(collection(db,"categories"));
+if (!cat) {
+alert("Select category");
+return;
+}
+
+const snap = await getDocs(collection(db,"categories"));
+
+let deleted = false;
 
 snap.forEach(async d=>{
-if(d.data().name===cat){
+if(d.data().name === cat){
 await deleteDoc(doc(db,"categories",d.id));
+deleted = true;
 }
 });
 
+setTimeout(()=>{
+if(deleted){
+alert("Category deleted ✔");
+}
 loadCategories();
+},500);
 };
 
 </script>
