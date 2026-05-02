@@ -137,28 +137,20 @@ border:1px solid #ccc;
 <!-- VIEWS -->
 <div id="view"></div>
 
-<!-- ABOUT SECTION (ACTIVE DEFAULT) -->
+<!-- ABOUT SECTION -->
 <div id="about" class="view active-view">
   <div class="card">
 
     <h2 style="text-align:center;">Welcome to Luxury Heaven 👋</h2>
 
-    <h3>What Customers Say 💬</h3>
-    <div id="testimonialList"></div>
-
-    <hr>
-
-    <h3>Our Mission</h3>
-    <p>We provide quality fashion products at affordable prices with fast delivery across Nigeria.</p>
-
     <h3>About Us</h3>
-    <p>Luxury Heaven is a modern fashion store selling shoes, bags, clothing and accessories.</p>
+    <p>Luxury Heaven is a modern fashion store offering quality products at affordable prices.</p>
 
-    <h3>Address</h3>
-    <p>Nigeria (Nationwide Delivery Available)</p>
+    <h3>Mission</h3>
+    <p>To provide stylish fashion items with fast delivery and customer satisfaction.</p>
 
     <h3>Contact</h3>
-    <p>WhatsApp support available 24/7</p>
+    <p>WhatsApp Support Available</p>
 
   </div>
 </div>
@@ -189,12 +181,6 @@ border:1px solid #ccc;
 
 <hr>
 
-<h3>Testimonials</h3>
-<button class="green" onclick="uploadTestimonial()">Add Testimonial</button>
-<button class="red" onclick="deleteAllTestimonials()">Delete All</button>
-
-<hr>
-
 <button class="red" onclick="closeAdmin()">Close</button>
 
 </div>
@@ -204,7 +190,7 @@ border:1px solid #ccc;
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
 apiKey: "AIzaSyD40daowTCCVrKr1kWI6krf9nB7OHp8mWU",
@@ -218,22 +204,18 @@ appId: "1:277279766368:web:2f5858b54f58d1df629005"
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-let categories=[];
-let testimonials=[];
-let testimonialIds=[];
+let activeBtn = null;
+let categories = [];
 
 /* INIT */
-window.onload=async()=>{
-
+window.onload = async () => {
 await loadCategories();
-await loadTestimonials();
 
-/* 🔥 MAKE ABOUT ACTIVE DEFAULT */
-let aboutBtn=document.querySelector(".cat");
-if(aboutBtn){
+/* AUTO OPEN ABOUT */
+let aboutBtn = document.querySelector(".cat");
+if (aboutBtn) {
 showAbout(aboutBtn);
 }
-
 };
 
 /* ================= CATEGORY ================= */
@@ -241,7 +223,7 @@ async function loadCategories(){
 
 const snap = await getDocs(collection(db,"categories"));
 
-categories=[];
+categories = [];
 
 snap.forEach(d=>{
 categories.push(d.data().name);
@@ -255,7 +237,7 @@ bar.innerHTML="";
 sel.innerHTML="";
 del.innerHTML="";
 
-/* ABOUT BUTTON (ACTIVE DEFAULT) */
+/* ABOUT BUTTON */
 let aboutBtn=document.createElement("div");
 aboutBtn.className="cat active";
 aboutBtn.innerText="ABOUT";
@@ -285,24 +267,21 @@ del.innerHTML+=`<option value="${c}">${c}</option>`;
 
 }
 
-/* ================= ABOUT VIEW ================= */
+/* ================= VIEW SYSTEM (FIXED CORE) ================= */
 function showAbout(btn){
 
-document.querySelectorAll(".cat").forEach(b=>b.classList.remove("active"));
-btn.classList.add("active");
+setActive(btn);
 
-document.querySelectorAll(".view").forEach(v=>v.classList.remove("active-view"));
+hideAll();
 
 document.getElementById("about").classList.add("active-view");
 }
 
-/* ================= CATEGORY VIEW ================= */
 function showView(cat,btn){
 
-document.querySelectorAll(".cat").forEach(b=>b.classList.remove("active"));
-btn.classList.add("active");
+setActive(btn);
 
-document.querySelectorAll(".view").forEach(v=>v.classList.remove("active-view"));
+hideAll();
 
 let view=document.getElementById(cat);
 
@@ -313,50 +292,33 @@ view.className="view";
 document.body.appendChild(view);
 }
 
-view.innerHTML=`<div class="card"><h3>${cat} Products Coming Soon...</h3></div>`;
-view.classList.add("active-view");
-
-}
-
-/* ================= TESTIMONIAL ================= */
-async function loadTestimonials(){
-
-const snap=await getDocs(collection(db,"testimonials"));
-
-testimonials=[];
-testimonialIds=[];
-
-snap.forEach(d=>{
-testimonials.push(d.data().image);
-testimonialIds.push(d.id);
-});
-
-renderTestimonials();
-}
-
-function renderTestimonials(){
-
-let box=document.getElementById("testimonialList");
-box.innerHTML="";
-
-testimonials.forEach((img,i)=>{
-box.innerHTML+=`
-<div style="display:flex;gap:10px;align-items:center;margin-bottom:6px;">
-<img src="${img}" width="40" height="40" style="border-radius:6px;">
-<button onclick="deleteTestimonial(${i})" style="background:red;color:white;border:none;padding:5px;">Delete</button>
+view.innerHTML=`
+<div class="card">
+<h3>${cat.toUpperCase()}</h3>
+<p>Products coming soon...</p>
 </div>`;
-});
+
+view.classList.add("active-view");
 }
 
-/* DELETE TESTIMONIAL */
-window.deleteTestimonial=async function(i){
+/* ACTIVE BUTTON CONTROL */
+function setActive(btn){
 
-await deleteDoc(doc(db,"testimonials",testimonialIds[i]));
+if(activeBtn) activeBtn.classList.remove("active");
 
-alert("Deleted ✔");
+btn.classList.add("active");
 
-loadTestimonials();
-};
+activeBtn = btn;
+}
+
+/* HIDE ALL VIEWS */
+function hideAll(){
+
+document.querySelectorAll(".view").forEach(v=>{
+v.classList.remove("active-view");
+});
+
+}
 
 /* ADMIN */
 window.openAdmin=function(){
