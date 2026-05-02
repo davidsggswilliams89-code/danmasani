@@ -157,10 +157,10 @@ Instagram
 
 <h3>Categories</h3>
 <input id="newCat" placeholder="New Category">
-<button class="green" onclick="addCategory()">Add</button>
+<button class="green" onclick="addCategory()">Add Category</button>
 
 <select id="deleteCat"></select>
-<button class="red" onclick="deleteCategory()">Delete</button>
+<button class="red" onclick="deleteCategory()">Delete Category</button>
 
 <hr>
 
@@ -193,7 +193,6 @@ const cloudName="db92r6j9z";
 const uploadPreset="ummuhalti";
 
 let products=[],categories=[],images=[],testimonials=[];
-let tIndex=0,tAuto;
 
 /* INIT */
 window.onload=async()=>{
@@ -202,49 +201,75 @@ await loadProducts();
 loadTestimonials();
 };
 
-/* CATEGORY */
-async function loadCategories(){
-const snap=await getDocs(collection(db,"categories"));
-categories=[];
-snap.forEach(d=>categories.push(d.data().name));
+/* ================= CATEGORY FIXED ================= */
 
-let bar=document.getElementById("bar");
-bar.innerHTML=`<div class="cat active" onclick="showAbout(this)">ABOUT</div>`;
+async function loadCategories(){
+
+const snap = await getDocs(collection(db,"categories"));
+
+categories = []; // IMPORTANT FIX
+
+snap.forEach(d=>{
+categories.push(d.data().name);
+});
+
+let bar = document.getElementById("bar");
+let sel = document.getElementById("cat");
+let del = document.getElementById("deleteCat");
+
+bar.innerHTML = `<div class="cat active" onclick="showAbout(this)">ABOUT</div>`;
+sel.innerHTML = "";
+del.innerHTML = "";
 
 categories.forEach(c=>{
-bar.innerHTML+=`<div class="cat" onclick="filter('${c}',this)">${c}</div>`;
+bar.innerHTML += `<div class="cat" onclick="filter('${c}',this)">${c}</div>`;
+sel.innerHTML += `<option value="${c}">${c}</option>`;
+del.innerHTML += `<option value="${c}">${c}</option>`;
 });
 }
 
-/* ACTIVE */
-function setActive(el){
-document.querySelectorAll(".cat").forEach(b=>b.classList.remove("active"));
-el.classList.add("active");
+window.addCategory = async function(){
+let name = document.getElementById("newCat").value.trim().toLowerCase();
+
+if(!name){
+alert("Enter category");
+return;
 }
 
-/* ABOUT */
-window.showAbout=(el)=>{
-setActive(el);
-document.getElementById("view").innerHTML="";
-document.getElementById("aboutView").classList.add("active-view");
+await addDoc(collection(db,"categories"),{name});
+
+document.getElementById("newCat").value="";
+
+alert("Category added ✔");
+
+loadCategories();
 };
 
-/* FILTER */
-window.filter=(c,el)=>{
-setActive(el);
-document.getElementById("aboutView").classList.remove("active-view");
-render(products.filter(p=>p.category===c));
+window.deleteCategory = async function(){
+let cat = document.getElementById("deleteCat").value;
+
+const snap = await getDocs(collection(db,"categories"));
+
+snap.forEach(async d=>{
+if(d.data().name === cat){
+await deleteDoc(doc(db,"categories",d.id));
+}
+});
+
+alert("Category deleted ✔");
+
+loadCategories();
 };
 
-/* PRODUCTS */
+/* ================= PRODUCTS ================= */
+
 async function loadProducts(){
-const snap=await getDocs(collection(db,"products"));
+const snap = await getDocs(collection(db,"products"));
 products=[];
 snap.forEach(d=>products.push({...d.data(),id:d.id}));
 render(products);
 }
 
-/* RENDER */
 function render(list){
 let view=document.getElementById("view");
 view.innerHTML="";
@@ -255,12 +280,11 @@ view.innerHTML+=`
 <div class="carousel" id="car${i}">
 ${(p.images||[]).map(img=>`<img src="${img}">`).join("")}
 </div>
-<div class="dots" id="dot${i}"></div>
+<div class="dots"></div>
 <div class="price">₦ ${p.price}</div>
 <button class="buy" onclick="buyNow(${i})">BUY NOW</button>
 </div>`;
 });
-setTimeout(setupCarousel,100);
 }
 
 /* BUY */
@@ -272,19 +296,18 @@ let img=p.images[index]||p.images[0];
 
 let msg=`Hello 👋,
 
-I want to order this Product:
-
 🧵 Category: ${p.category}
 🛍️ Product: ${p.name}
 💰 Price: ₦${p.price}
 
-🖼️ Selected Image:
+🖼️ Image:
 ${img}`;
 
-window.open("https://wa.me/2349114738932?text="+encodeURIComponent(msg));
+window.open("https://wa.me/234911473893?text="+encodeURIComponent(msg));
 };
 
-/* TESTIMONIAL */
+/* ================= TESTIMONIAL ================= */
+
 function loadTestimonials(){
 const box=document.getElementById("testimonialCarousel");
 const dots=document.getElementById("testimonialDots");
@@ -298,43 +321,21 @@ let d=document.createElement("span");
 d.className="dot"+(i===0?" active":"");
 dots.appendChild(d);
 });
-
-scrollTestimonial(0);
-startAuto();
 }
 
-function scrollTestimonial(i){
-const box=document.getElementById("testimonialCarousel");
-const dots=document.querySelectorAll("#testimonialDots .dot");
+/* ================= ADMIN ================= */
 
-box.scrollTo({left:box.clientWidth*i,behavior:"smooth"});
-
-dots.forEach(d=>d.classList.remove("active"));
-if(dots[i])dots[i].classList.add("active");
-
-tIndex=i;
-}
-
-function startAuto(){
-clearInterval(tAuto);
-if(testimonials.length<=1)return;
-
-tAuto=setInterval(()=>{
-tIndex=(tIndex+1)%testimonials.length;
-scrollTestimonial(tIndex);
-},4000);
-}
-
-/* ADMIN TESTIMONIAL */
 window.uploadTestimonial=()=>{
 cloudinary.openUploadWidget({
 cloudName,uploadPreset
 },async(e,r)=>{
 if(r?.event==="success"){
+
 await addDoc(collection(db,"testimonials"),{
 image:r.info.secure_url,
 date:Date.now()
 });
+
 loadTestimonials();
 }
 });
