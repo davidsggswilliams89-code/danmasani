@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>LUXURY HEAVEN V2</title>
+<title>LUXURY HEAVEN</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <script src="https://widget.cloudinary.com/v2.0/global/all.js"></script>
@@ -11,7 +11,7 @@ body{
 margin:0;
 font-family:Arial;
 background:#f5f5f5;
-padding-top:80px;
+padding-top:90px;
 }
 
 .header{
@@ -44,7 +44,6 @@ border-radius:20px;
 cursor:pointer;
 white-space:nowrap;
 }
-
 .cat.active{background:#25D366}
 
 .view{margin-top:100px}
@@ -62,9 +61,7 @@ display:flex;
 overflow-x:auto;
 scroll-snap-type:x mandatory;
 scroll-behavior:smooth;
-border-radius:10px;
 }
-
 .carousel img{
 min-width:100%;
 height:250px;
@@ -72,12 +69,10 @@ object-fit:cover;
 scroll-snap-align:center;
 border-radius:10px;
 }
-
 .carousel::-webkit-scrollbar{display:none}
 
 /* DOTS */
 .dots{text-align:center;margin-top:5px}
-
 .dot{
 height:8px;width:8px;
 background:#bbb;
@@ -85,7 +80,6 @@ border-radius:50%;
 display:inline-block;
 margin:0 3px;
 }
-
 .dot.active{background:#25D366}
 
 .price{
@@ -143,13 +137,16 @@ border-radius:8px;
 
 <body>
 
+<!-- HEADER -->
 <div class="header">
 <h3>LUXURY HEAVEN</h3>
 <div style="margin-left:auto;cursor:pointer" onclick="openAdmin()">⚙️</div>
 </div>
 
+<!-- CATEGORY -->
 <div class="bar" id="catBar"></div>
 
+<!-- PRODUCTS -->
 <div id="view" class="view"></div>
 
 <!-- ADMIN -->
@@ -193,6 +190,7 @@ import {
 getFirestore, collection, getDocs, addDoc, deleteDoc, doc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+/* FIREBASE */
 const firebaseConfig = {
 apiKey: "AIzaSyD40daowTCCVrKr1kWI6krf9nB7OHp8mWU",
 authDomain: "luxury-heaven-c24df.firebaseapp.com",
@@ -207,32 +205,33 @@ const db = getFirestore(app);
 
 /* STATE */
 let products = [];
-let categories = [];
 let images = [];
 let active = "";
-let activeImageIndex = {}; // track per product
+let activeImageIndex = {};
 
 /* ADMIN */
 window.openAdmin = ()=>admin.style.display="block";
 window.closeAdmin = ()=>admin.style.display="none";
 
-/* LOAD */
+/* INIT */
 window.onload = async ()=>{
 await loadCategories();
 await loadProducts();
 };
 
-/* PRODUCTS */
+/* LOAD PRODUCTS */
 async function loadProducts(){
 const snap = await getDocs(collection(db,"products"));
 products = [];
 snap.forEach(d=>{
 products.push({id:d.id,...d.data()});
 });
+if(active) render();
 }
 
-/* CATEGORIES */
+/* LOAD CATEGORIES */
 async function loadCategories(){
+
 const snap = await getDocs(collection(db,"categories"));
 
 catBar.innerHTML="";
@@ -250,6 +249,7 @@ b.innerText=c;
 b.onclick=()=>{
 document.querySelectorAll(".cat").forEach(x=>x.classList.remove("active"));
 b.classList.add("active");
+
 active=c.toLowerCase().trim();
 render();
 };
@@ -270,12 +270,17 @@ let filtered = products.filter(p =>
 (p.category||"").toLowerCase().trim() === active
 );
 
+if(filtered.length===0){
+view.innerHTML="<p style='text-align:center'>No products</p>";
+return;
+}
+
 filtered.forEach((p,i)=>{
 
 let imgs = p.images || [];
-activeImageIndex[p.id] = 0;
+activeImageIndex[p.id]=0;
 
-view.innerHTML += `
+view.innerHTML+=`
 <div class="card">
 
 <div class="carousel" id="car${i}">
@@ -294,11 +299,10 @@ BUY
 `;
 
 setTimeout(()=>setupCarousel(i,p.id,imgs.length),100);
-
 });
 }
 
-/* CAROUSEL LOGIC */
+/* CAROUSEL */
 function setupCarousel(i,id,count){
 
 let c = document.getElementById("car"+i);
@@ -307,7 +311,7 @@ let dotsBox = document.getElementById("dots"+i);
 dotsBox.innerHTML="";
 
 for(let x=0;x<count;x++){
-let d = document.createElement("span");
+let d=document.createElement("span");
 d.className="dot"+(x===0?" active":"");
 dotsBox.appendChild(d);
 }
@@ -315,26 +319,22 @@ dotsBox.appendChild(d);
 let dots = dotsBox.querySelectorAll(".dot");
 
 c.addEventListener("scroll",()=>{
-
-let index = Math.round(c.scrollLeft / c.clientWidth);
-
-activeImageIndex[id] = index;
+let index=Math.round(c.scrollLeft/c.clientWidth);
+activeImageIndex[id]=index;
 
 dots.forEach(d=>d.classList.remove("active"));
 if(dots[index]) dots[index].classList.add("active");
-
 });
-
 }
 
-/* WHATSAPP WITH ACTIVE IMAGE */
-window.buy = function(id,name,price){
+/* WHATSAPP */
+window.buy=function(id,name,price){
 
-let product = products.find(p=>p.id===id);
-let index = activeImageIndex[id] || 0;
-let img = product.images[index] || "";
+let p=products.find(x=>x.id===id);
+let index=activeImageIndex[id]||0;
+let img=p.images[index]||"";
 
-let msg = `Hello 👋,
+let msg=`Hello 👋,
 
 I want to order this Product:
 
@@ -350,7 +350,7 @@ window.open("https://wa.me/2349114738932?text="+encodeURIComponent(msg));
 };
 
 /* UPLOAD */
-window.upload = function(){
+window.upload=function(){
 cloudinary.openUploadWidget({
 cloudName:"db92r6j9z",
 uploadPreset:"ummuhalti",
@@ -363,8 +363,14 @@ alert("Uploaded ✔");
 });
 };
 
-/* SAVE */
-window.saveProduct = async function(){
+/* SAVE PRODUCT */
+window.saveProduct=async function(){
+
+if(!pname.value||!price.value){
+alert("Fill all fields");
+return;
+}
+
 await addDoc(collection(db,"products"),{
 name:pname.value,
 price:price.value,
@@ -373,33 +379,41 @@ images:images,
 date:Date.now()
 });
 
-alert("Saved ✔");
+alert("Product saved ✔");
 
 pname.value="";
 price.value="";
 images=[];
 
 await loadProducts();
+loadAdminProducts();
 };
 
-/* ADMIN DELETE LIST */
-window.loadAdminProducts = function(){
-let c = delCat.value;
+/* ADMIN LIST */
+window.loadAdminProducts=function(){
+
+let c=delCat.value;
 adminList.innerHTML="";
 
-products.filter(p=>p.category===c.toLowerCase().trim())
-.forEach(p=>{
+let list=products.filter(p=>p.category===c.toLowerCase().trim());
+
+if(list.length===0){
+adminList.innerHTML="<p>No products</p>";
+return;
+}
+
+list.forEach(p=>{
 adminList.innerHTML+=`
 <div class="item">
 ${p.name}
-<button class="del" onclick="del('${p.id}')">X</button>
+<button class="del" onclick="del('${p.id}')">Delete</button>
 </div>
 `;
 });
 };
 
-/* DELETE */
-window.del = async function(id){
+/* DELETE PRODUCT */
+window.del=async function(id){
 await deleteDoc(doc(db,"products",id));
 alert("Deleted ✔");
 await loadProducts();
@@ -407,20 +421,33 @@ loadAdminProducts();
 };
 
 /* CATEGORY */
-window.addCategory = async function(){
-await addDoc(collection(db,"categories"),{name:newCat.value});
-alert("Added ✔");
+window.addCategory=async function(){
+
+if(!newCat.value){
+alert("Enter category");
+return;
+}
+
+await addDoc(collection(db,"categories"),{
+name:newCat.value
+});
+
+alert("Category added ✔");
+newCat.value="";
 await loadCategories();
 };
 
-window.deleteCategory = async function(){
-const snap = await getDocs(collection(db,"categories"));
+window.deleteCategory=async function(){
+
+const snap=await getDocs(collection(db,"categories"));
+
 snap.forEach(async d=>{
 if(d.data().name===delCat2.value){
 await deleteDoc(doc(db,"categories",d.id));
 }
 });
-alert("Deleted ✔");
+
+alert("Category deleted ✔");
 await loadCategories();
 };
 
