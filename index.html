@@ -72,41 +72,6 @@ padding:10px;
 border-radius:12px;
 }
 
-.carousel{
-display:flex;
-overflow-x:auto;
-scroll-snap-type:x mandatory;
-}
-
-.carousel img{
-min-width:100%;
-height:320px;
-object-fit:cover;
-scroll-snap-align:center;
-}
-
-.carousel::-webkit-scrollbar{display:none}
-
-/* PRICE */
-.price{
-background:#111;
-color:white;
-text-align:center;
-padding:10px;
-margin-top:10px;
-border-radius:8px;
-}
-
-.buy{
-width:100%;
-padding:10px;
-background:#25D366;
-color:white;
-border:none;
-margin-top:10px;
-border-radius:10px;
-}
-
 /* ADMIN */
 .admin{
 display:none;
@@ -124,16 +89,14 @@ justify-content:center;
 align-items:center;
 }
 
-/* FORM BOX */
 .form-box{
 width:100%;
-max-width:340px;
+max-width:360px;
 display:flex;
 flex-direction:column;
 gap:10px;
 }
 
-/* INPUTS + BUTTONS SAME WIDTH */
 .form-box input,
 .form-box select,
 .form-box button{
@@ -156,8 +119,32 @@ border:none;
 .green{background:green;color:white}
 .red{background:red;color:white}
 
-.green{
-margin-bottom:10px;
+.green{margin-bottom:10px}
+
+/* LIST ITEM */
+.list-item{
+display:flex;
+align-items:center;
+gap:10px;
+background:#f2f2f2;
+padding:8px;
+border-radius:8px;
+margin-bottom:6px;
+}
+
+.list-item img{
+width:40px;
+height:40px;
+object-fit:cover;
+border-radius:6px;
+}
+
+.small-btn{
+padding:6px;
+font-size:12px;
+border:none;
+border-radius:6px;
+cursor:pointer;
 }
 
 </style>
@@ -165,17 +152,13 @@ margin-bottom:10px;
 
 <body>
 
-<!-- HEADER -->
 <div class="top">
 <img src="logo1.png" class="logo">
 <div class="marquee">✨ LUXURY HEAVEN ✨</div>
 <div style="margin-left:auto;padding:10px" onclick="openAdmin()">🔒</div>
 </div>
 
-<!-- CATEGORY -->
 <div class="bar" id="bar"></div>
-
-<!-- PRODUCT VIEW -->
 <div id="view"></div>
 
 <!-- ADMIN -->
@@ -194,13 +177,11 @@ margin-bottom:10px;
 
 <hr>
 
-<h3 style="text-align:center;">Categories</h3>
+<h3>Testimonials</h3>
+<button class="green" onclick="uploadTestimonial()">Upload Testimonial</button>
+<button class="red" onclick="deleteAllTestimonials()">Delete All</button>
 
-<input id="newCat" placeholder="New Category">
-<button class="green" onclick="addCategory()">Add Category</button>
-
-<select id="deleteCat"></select>
-<button class="red" onclick="deleteCategory()">Delete Category</button>
+<div id="testimonialList"></div>
 
 <hr>
 
@@ -227,131 +208,102 @@ appId: "1:277279766368:web:2f5858b54f58d1df629005"
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-let products=[];
-let categories=[];
+/* GLOBALS */
+let testimonials=[];
+let testimonialIds=[];
 let images=[];
 
-/* INIT */
-window.onload=async()=>{
-await loadCategories();
-await loadProducts();
-};
+/* LOAD TESTIMONIALS */
+async function loadTestimonials(){
 
-/* CATEGORY */
-async function loadCategories(){
+const snap = await getDocs(collection(db,"testimonials"));
 
-const snap = await getDocs(collection(db,"categories"));
-
-categories=[];
+testimonials=[];
+testimonialIds=[];
 
 snap.forEach(d=>{
-categories.push(d.data().name);
+testimonials.push(d.data().image);
+testimonialIds.push(d.id);
 });
 
-let bar=document.getElementById("bar");
-let sel=document.getElementById("cat");
-let del=document.getElementById("deleteCat");
+renderTestimonials();
+}
 
-bar.innerHTML="";
-sel.innerHTML="";
-del.innerHTML="";
+/* RENDER */
+function renderTestimonials(){
 
-categories.forEach(c=>{
-bar.innerHTML+=`<div class="cat">${c}</div>`;
-sel.innerHTML+=`<option value="${c}">${c}</option>`;
-del.innerHTML+=`<option value="${c}">${c}</option>`;
+let box=document.getElementById("testimonialList");
+if(!box) return;
+
+box.innerHTML="";
+
+testimonials.forEach((img,i)=>{
+box.innerHTML+=`
+<div class="list-item">
+  <img src="${img}">
+  <div style="flex:1">Testimonial ${i+1}</div>
+  <button class="small-btn red" onclick="deleteTestimonial(${i})">Delete</button>
+</div>`;
 });
 }
 
-/* ADMIN */
+/* DELETE SINGLE TESTIMONIAL */
+window.deleteTestimonial = async function(i){
+
+await deleteDoc(doc(db,"testimonials",testimonialIds[i]));
+
+alert("Testimonial deleted ✔");
+
+loadTestimonials();
+};
+
+/* DELETE ALL */
+window.deleteAllTestimonials = async function(){
+
+const snap = await getDocs(collection(db,"testimonials"));
+
+snap.forEach(async d=>{
+await deleteDoc(doc(db,"testimonials",d.id));
+});
+
+alert("All testimonials deleted ✔");
+
+loadTestimonials();
+};
+
+/* UPLOAD TESTIMONIAL */
+window.uploadTestimonial = function(){
+
+cloudinary.openUploadWidget({
+cloudName:"db92r6j9z",
+uploadPreset:"ummuhalti"
+},async(e,r)=>{
+
+if(r?.event==="success"){
+
+await addDoc(collection(db,"testimonials"),{
+image:r.info.secure_url,
+date:Date.now()
+});
+
+alert("Testimonial added ✔");
+
+loadTestimonials();
+}
+
+});
+};
+
+/* ADMIN OPEN */
 window.openAdmin=function(){
 if(prompt("Password")==="1234"){
 admin.style.display="flex";
+loadTestimonials(); // IMPORTANT FIX
 }
 };
 
 window.closeAdmin=function(){
 admin.style.display="none";
-};
-
-/* UPLOAD */
-window.upload=function(){
-cloudinary.openUploadWidget({
-cloudName:"db92r6j9z",
-uploadPreset:"ummuhalti"
-},(e,r)=>{
-if(r?.event==="success"){
-images.push(r.info.secure_url);
-alert("Image uploaded ✔");
-}
-});
-};
-
-/* SAVE PRODUCT */
-window.save=async function(){
-
-if(images.length===0){
-alert("Upload images first");
-return;
-}
-
-await addDoc(collection(db,"products"),{
-name:document.getElementById("name").value,
-price:document.getElementById("price").value,
-category:document.getElementById("cat").value,
-images:images,
-date:Date.now()
-});
-
-alert("Product saved ✔");
-
-images=[];
-};
-
-/* ================= CATEGORY FIXED WITH FEEDBACK ================= */
-
-window.addCategory = async function () {
-let name = document.getElementById("newCat").value.trim();
-
-if (!name) {
-alert("Enter category name");
-return;
-}
-
-await addDoc(collection(db,"categories"),{name});
-
-document.getElementById("newCat").value="";
-
-alert("Category created ✔");
-
-loadCategories();
-};
-
-window.deleteCategory = async function () {
-let cat = document.getElementById("deleteCat").value;
-
-if (!cat) {
-alert("Select category");
-return;
-}
-
-const snap = await getDocs(collection(db,"categories"));
-
-let deleted = false;
-
-snap.forEach(async d=>{
-if(d.data().name === cat){
-await deleteDoc(doc(db,"categories",d.id));
-deleted = true;
-}
-});
-
-setTimeout(()=>{
-if(deleted){
-alert("Category deleted ✔");
-}
-loadCategories();
-},500);
 };
 
 </script>
