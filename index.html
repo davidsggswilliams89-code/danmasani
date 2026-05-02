@@ -7,184 +7,59 @@
 <script src="https://widget.cloudinary.com/v2.0/global/all.js"></script>
 
 <style>
-body{
-margin:0;
-font-family:Arial;
-background:#f5f5f5;
-padding-top:80px;
-}
+body{margin:0;font-family:Arial;background:#f5f5f5;padding-top:80px;}
+.top-bar{position:fixed;top:0;width:100%;height:45px;background:#111;color:white;display:flex;align-items:center;padding:0 10px;z-index:3000;}
+.admin-icon{margin-left:auto;cursor:pointer;}
 
-/* HEADER */
-.top-bar{
-position:fixed;
-top:0;
-width:100%;
-height:45px;
-background:#111;
-color:white;
-display:flex;
-align-items:center;
-padding:0 10px;
-z-index:3000;
-}
+.category-bar{position:fixed;top:45px;width:100%;height:40px;background:#222;display:flex;overflow-x:auto;}
+.category-btn{color:white;padding:6px 14px;margin:5px;border-radius:20px;cursor:pointer;}
+.category-btn.active{background:#25D366;}
 
-.admin-icon{margin-left:auto;cursor:pointer}
-
-/* CATEGORY */
-.category-bar{
-position:fixed;
-top:45px;
-width:100%;
-height:40px;
-background:#222;
-display:flex;
-overflow-x:auto;
-z-index:2000;
-}
-
-.category-btn{
-color:white;
-padding:6px 14px;
-margin:5px;
-border-radius:20px;
-cursor:pointer;
-white-space:nowrap;
-}
-.category-btn.active{background:#25D366}
-
-/* VIEW */
 .view{display:none;padding:10px;}
-.active-view{display:block}
+.active-view{display:block;}
 
-/* CARD */
-.card{
-background:white;
-border-radius:12px;
-padding:10px;
-margin:10px 0;
-}
+.card{background:white;border-radius:12px;padding:10px;margin:10px 0;}
 
-/* CAROUSEL */
-.carousel{
-display:flex;
-overflow-x:auto;
-scroll-snap-type:x mandatory;
-}
-.carousel img{
-min-width:100%;
-height:300px;
-object-fit:cover;
-scroll-snap-align:center;
-border-radius:10px;
-}
-.carousel::-webkit-scrollbar{display:none}
+.carousel{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;}
+.carousel img{min-width:100%;height:300px;object-fit:cover;border-radius:10px;}
+#testimonialCarousel img{object-fit:contain;background:#fff;}
+.carousel::-webkit-scrollbar{display:none;}
 
-/* TESTIMONIAL IMAGE */
-#testimonialCarousel img{
-object-fit:contain;
-background:#fff;
-}
+.dots{text-align:center;margin-top:5px;}
+.dot{height:8px;width:8px;background:#bbb;border-radius:50%;display:inline-block;margin:0 3px;cursor:pointer;}
+.dot.active{background:#25D366;}
 
-/* DOTS */
-.dots{text-align:center;margin-top:5px}
-.dot{
-height:8px;width:8px;
-background:#bbb;
-border-radius:50%;
-display:inline-block;
-margin:0 3px;
-cursor:pointer;
-}
-.dot.active{background:#25D366}
+.price{background:#111;color:white;padding:10px;text-align:center;border-radius:8px;margin-top:8px;}
 
-/* PRICE */
-.price{
-background:#111;
-color:white;
-padding:10px;
-text-align:center;
-border-radius:8px;
-margin-top:8px;
-}
+.buy-btn{background:#25D366;color:white;padding:10px;border:none;width:100%;border-radius:10px;margin-top:8px;}
 
-/* BUTTON */
-.buy-btn{
-background:#25D366;
-color:white;
-padding:10px;
-border:none;
-width:100%;
-border-radius:10px;
-margin-top:8px;
-cursor:pointer;
-}
+.admin{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:white;z-index:9999;padding:10px;overflow:auto;}
 
-/* ADMIN */
-.admin{
-display:none;
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-background:white;
-z-index:9999;
-padding:10px;
-overflow:auto;
-}
+input,select{width:100%;padding:10px;margin:5px 0;}
 
-input,select{
-width:100%;
-padding:10px;
-margin:5px 0;
-}
-
-.btn{
-width:100%;
-padding:10px;
-background:green;
-color:white;
-border:none;
-margin-top:5px;
-cursor:pointer;
-}
-
-.del-btn{
-background:red;
-color:white;
-border:none;
-padding:6px;
-cursor:pointer;
-}
+.btn{width:100%;padding:10px;background:green;color:white;border:none;margin-top:5px;}
+.del-btn{background:red;color:white;border:none;padding:6px;margin-top:5px;}
 </style>
 </head>
 
 <body>
 
-<!-- HEADER -->
 <div class="top-bar">
 BOB TEXTILE
 <div class="admin-icon" onclick="openAdmin()">🔒</div>
 </div>
 
-<!-- CATEGORY -->
 <div class="category-bar" id="categoryBar"></div>
 
 <!-- ABOUT -->
 <div id="aboutView" class="view active-view">
-
 <div class="card">
-
-<h3 style="text-align:center;">What Our Customers Say 💬</h3>
-
+<h3 style="text-align:center;">Testimonials 💬</h3>
 <div class="carousel" id="testimonialCarousel"></div>
 <div class="dots" id="testimonialDots"></div>
-
 <hr>
-
 <h2>About Us</h2>
-<p>BOB TEXTILE is your trusted fashion store for quality fabrics and styles.</p>
-
+<p>BOB TEXTILE is your trusted fashion store.</p>
 </div>
 </div>
 
@@ -211,8 +86,18 @@ BOB TEXTILE
 
 <hr>
 
+<h3>Categories</h3>
+<input id="newCat" placeholder="New category">
+<button class="btn" onclick="addCategory()">Add Category</button>
+
+<select id="catDelete"></select>
+<button class="del-btn" onclick="deleteCategory()">Delete Category</button>
+
+<hr>
+
 <h3>Testimonials</h3>
 <button class="btn" onclick="uploadTestimonial()">Upload Testimonial</button>
+<div id="testimonialAdminList"></div>
 
 <hr>
 
@@ -223,16 +108,9 @@ BOB TEXTILE
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import {
-getFirestore,
-collection,
-getDocs,
-addDoc,
-deleteDoc,
-doc
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc } 
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-/* FIREBASE CONFIG */
 const firebaseConfig = {
 apiKey: "AIzaSyD40daowTCCVrKr1kWI6krf9nB7OHp8mWU",
 authDomain: "luxury-heaven-c24df.firebaseapp.com",
@@ -245,31 +123,24 @@ appId: "1:277279766368:web:2f5858b54f58d1df629005"
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-/* STATE */
 let products=[],categories=[],images=[],active="";
 let testimonials=[],tIndex=0,tAuto;
 
-/* ADMIN */
 window.openAdmin=()=>admin.style.display="block";
 window.closeAdmin=()=>admin.style.display="none";
 
-/* INIT */
 window.onload=()=>{
 loadCategories();
 loadProducts();
 loadTestimonials();
 };
 
-/* CATEGORIES */
+/* CATEGORY */
 async function loadCategories(){
 categories=[];
 let snap=await getDocs(collection(db,"categories"));
 snap.forEach(d=>categories.push(d.data().name));
-renderCategories();
-fillAdmin();
-}
 
-function renderCategories(){
 categoryBar.innerHTML="";
 let about=document.createElement("div");
 about.className="category-btn active";
@@ -284,16 +155,37 @@ btn.innerText=c;
 btn.onclick=()=>show(c,btn);
 categoryBar.appendChild(btn);
 });
+
+fillAdmin();
 }
 
 function fillAdmin(){
 category.innerHTML="";
 delCat.innerHTML="";
+catDelete.innerHTML="";
 categories.forEach(c=>{
 category.innerHTML+=`<option>${c}</option>`;
 delCat.innerHTML+=`<option>${c}</option>`;
+catDelete.innerHTML+=`<option>${c}</option>`;
 });
 }
+
+window.addCategory=async()=>{
+if(!newCat.value) return;
+await addDoc(collection(db,"categories"),{name:newCat.value});
+newCat.value="";
+loadCategories();
+};
+
+window.deleteCategory=async()=>{
+let snap=await getDocs(collection(db,"categories"));
+snap.forEach(async d=>{
+if(d.data().name===catDelete.value){
+await deleteDoc(doc(db,"categories",d.id));
+}
+});
+loadCategories();
+};
 
 /* PRODUCTS */
 async function loadProducts(){
@@ -302,7 +194,6 @@ let snap=await getDocs(collection(db,"products"));
 snap.forEach(d=>products.push({id:d.id,...d.data()}));
 }
 
-/* SHOW */
 function show(type,btn){
 document.querySelectorAll(".category-btn").forEach(b=>b.classList.remove("active"));
 btn.classList.add("active");
@@ -319,24 +210,17 @@ productView.classList.add("active-view");
 renderProducts();
 }
 
-/* RENDER PRODUCTS */
 function renderProducts(){
 productView.innerHTML="";
-let list=products.filter(p=>p.category===active);
-
-list.forEach(p=>{
+products.filter(p=>p.category===active).forEach(p=>{
 productView.innerHTML+=`
 <div class="card">
-<div class="carousel">
-${p.images.map(i=>`<img src="${i}">`).join("")}
-</div>
+<div class="carousel">${p.images.map(i=>`<img src="${i}">`).join("")}</div>
 <div class="price">₦${p.price}</div>
-<button class="buy-btn">BUY NOW</button>
 </div>`;
 });
 }
 
-/* SAVE PRODUCT */
 window.saveProduct=async()=>{
 await addDoc(collection(db,"products"),{
 name:pname.value,
@@ -347,16 +231,14 @@ date:Date.now()
 });
 images=[];
 loadProducts();
-}
+};
 
-/* DELETE PRODUCT */
 window.deleteProduct=async(id)=>{
 await deleteDoc(doc(db,"products",id));
 loadProducts();
 loadAdminProducts();
-}
+};
 
-/* ADMIN LIST */
 window.loadAdminProducts=()=>{
 let cat=delCat.value;
 adminList.innerHTML="";
@@ -367,7 +249,7 @@ adminList.innerHTML+=`
 <button class="del-btn" onclick="deleteProduct('${p.id}')">X</button>
 </div>`;
 });
-}
+};
 
 /* CLOUDINARY */
 window.uploadImages=()=>{
@@ -384,25 +266,20 @@ if(r.event==="success") images.push(r.info.secure_url);
 async function loadTestimonials(){
 testimonials=[];
 let snap=await getDocs(collection(db,"testimonials"));
-snap.forEach(d=>testimonials.push(d.data().image));
+snap.forEach(d=>testimonials.push({id:d.id,image:d.data().image}));
 renderTestimonials();
+loadTestimonialAdmin();
 }
 
 function renderTestimonials(){
-let box=document.getElementById("testimonialCarousel");
-let dots=document.getElementById("testimonialDots");
+let box=testimonialCarousel;
+let dots=testimonialDots;
 
 box.innerHTML="";
 dots.innerHTML="";
 
-if(testimonials.length===0){
-box.innerHTML="<p>No testimonials</p>";
-return;
-}
-
-testimonials.forEach((img,i)=>{
-box.innerHTML+=`<img src="${img}">`;
-
+testimonials.forEach((t,i)=>{
+box.innerHTML+=`<img src="${t.image}">`;
 let d=document.createElement("span");
 d.className="dot"+(i===0?" active":"");
 d.onclick=()=>scrollTestimonial(i);
@@ -414,28 +291,20 @@ startAuto();
 }
 
 function scrollTestimonial(i){
-let box=document.getElementById("testimonialCarousel");
-let dots=document.querySelectorAll("#testimonialDots .dot");
-
-box.scrollTo({left:box.clientWidth*i,behavior:"smooth"});
-
-dots.forEach(d=>d.classList.remove("active"));
-if(dots[i]) dots[i].classList.add("active");
-
+testimonialCarousel.scrollTo({left:testimonialCarousel.clientWidth*i,behavior:"smooth"});
+document.querySelectorAll("#testimonialDots .dot").forEach(d=>d.classList.remove("active"));
+testimonialDots.children[i].classList.add("active");
 tIndex=i;
 }
 
 function startAuto(){
 clearInterval(tAuto);
-if(testimonials.length<=1)return;
-
 tAuto=setInterval(()=>{
 tIndex=(tIndex+1)%testimonials.length;
 scrollTestimonial(tIndex);
 },4000);
 }
 
-/* UPLOAD TESTIMONIAL */
 window.uploadTestimonial=()=>{
 cloudinary.openUploadWidget({
 cloudName:"db92r6j9z",
@@ -443,12 +312,26 @@ uploadPreset:"ummuhalti",
 multiple:true
 },async(e,r)=>{
 if(r.event==="success"){
-await addDoc(collection(db,"testimonials"),{
-image:r.info.secure_url
-});
+await addDoc(collection(db,"testimonials"),{image:r.info.secure_url});
 loadTestimonials();
 }
 });
+};
+
+function loadTestimonialAdmin(){
+testimonialAdminList.innerHTML="";
+testimonials.forEach(t=>{
+testimonialAdminList.innerHTML+=`
+<div>
+<img src="${t.image}" width="40">
+<button class="del-btn" onclick="deleteTestimonial('${t.id}')">Delete</button>
+</div>`;
+});
+}
+
+window.deleteTestimonial=async(id)=>{
+await deleteDoc(doc(db,"testimonials",id));
+loadTestimonials();
 };
 
 </script>
