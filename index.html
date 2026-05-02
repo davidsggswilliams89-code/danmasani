@@ -11,7 +11,7 @@ body{
 margin:0;
 font-family:Arial;
 background:#f5f5f5;
-padding-top:80px;
+padding-top:85px;
 }
 
 /* HEADER */
@@ -39,6 +39,32 @@ animation:move 12s linear infinite;
 0%{transform:translateX(100%)}
 100%{transform:translateX(-100%)}
 }
+
+/* CATEGORY */
+.bar{
+position:fixed;
+top:45px;
+width:100%;
+background:#222;
+display:flex;
+overflow-x:auto;
+z-index:9998;
+}
+
+.cat{
+color:white;
+padding:8px 14px;
+margin:5px;
+border-radius:20px;
+cursor:pointer;
+white-space:nowrap;
+}
+
+.cat.active{background:#25D366}
+
+/* VIEW */
+.view{display:none;margin-top:90px}
+.active-view{display:block}
 
 /* CARD */
 .card{
@@ -68,14 +94,10 @@ border-radius:12px;
 .carousel::-webkit-scrollbar{display:none}
 
 /* DOTS */
-.dots{
-text-align:center;
-margin-top:5px;
-}
+.dots{text-align:center;margin-top:5px}
 
 .dot{
-height:8px;
-width:8px;
+height:8px;width:8px;
 margin:0 3px;
 background:#bbb;
 border-radius:50%;
@@ -107,6 +129,31 @@ font-weight:bold;
 cursor:pointer;
 }
 
+/* ADMIN */
+.admin{
+display:none;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:white;
+z-index:99999;
+padding:20px;
+overflow:auto;
+}
+
+input,select,button{
+width:100%;
+padding:10px;
+margin:5px 0;
+}
+
+button{cursor:pointer}
+
+.green{background:green;color:white}
+.red{background:red;color:white}
+
 </style>
 </head>
 
@@ -116,16 +163,54 @@ cursor:pointer;
 <div class="top">
 <img src="logo1.png" class="logo">
 <div class="marquee">✨ LUXURY HEAVEN ✨</div>
+<div style="margin-left:auto;padding:10px;cursor:pointer" onclick="openAdmin()">🔒</div>
 </div>
 
+<!-- CATEGORY -->
+<div class="bar" id="bar"></div>
+
+<!-- ABOUT -->
+<div id="about" class="view active-view">
+<div class="card">
+<h2>Welcome 👋</h2>
+<p>Luxury Heaven Fashion Store</p>
+</div>
+</div>
+
+<!-- PRODUCTS -->
 <div id="view"></div>
+
+<!-- ADMIN -->
+<div class="admin" id="admin">
+
+<h2>Admin Panel</h2>
+
+<input id="name" placeholder="Product Name">
+<input id="price" placeholder="Price">
+<select id="cat"></select>
+
+<button class="green" onclick="upload()">Upload Images</button>
+<button class="green" onclick="saveProduct()">Save Product</button>
+
+<hr>
+
+<input id="newCat" placeholder="New Category">
+<button class="green" onclick="addCategory()">Add Category</button>
+
+<select id="delCat"></select>
+<button class="red" onclick="deleteCategory()">Delete Category</button>
+
+<hr>
+
+<button class="red" onclick="closeAdmin()">Close</button>
+
+</div>
 
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-/* FIREBASE */
 const firebaseConfig = {
 apiKey: "AIzaSyD40daowTCCVrKr1kWI6krf9nB7OHp8mWU",
 authDomain: "luxury-heaven-c24df.firebaseapp.com",
@@ -139,80 +224,80 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 let products = [];
-
-/* TRACK IMAGE INDEX */
-let currentImageIndex = {};
+let categories = [];
+let uploadedImages = [];
+let activeCategory = "about";
 
 /* LOAD */
 window.onload = async () => {
+await loadCategories();
 await loadProducts();
 };
 
-/* GET IMAGES */
+/* ================= ADMIN ================= */
+window.openAdmin = function(){
+document.getElementById("admin").style.display="block";
+};
+
+window.closeAdmin = function(){
+document.getElementById("admin").style.display="none";
+};
+
+/* ================= PRODUCTS ================= */
+async function loadProducts(){
+const snap = await getDocs(collection(db,"products"));
+products = [];
+snap.forEach(d=>products.push(d.data()));
+render();
+}
+
 function getImages(p){
-if(Array.isArray(p.images) && p.images.length>0){
-return p.images;
-}
-if(p.image){
-return [p.image];
-}
+if(Array.isArray(p.images)) return p.images;
+if(p.image) return [p.image];
 return [];
 }
 
-/* LOAD PRODUCTS */
-async function loadProducts(){
-const snap = await getDocs(collection(db,"products"));
-
-products = [];
-
-snap.forEach(d=>{
-products.push(d.data());
-});
-
-renderProducts();
-}
-
-/* RENDER */
-function renderProducts(){
+/* RENDER PRODUCTS BY CATEGORY */
+function render(){
 
 let view = document.getElementById("view");
 view.innerHTML = "";
 
-products.forEach((p,i)=>{
+let filtered = products.filter(p =>
+(p.category || "").toLowerCase() === activeCategory.toLowerCase()
+);
+
+filtered.forEach((p,i)=>{
 
 let type = (p.category || "item").toLowerCase();
 let images = getImages(p);
 
-let key = type+i;
-
-currentImageIndex[key] = 0;
-
 view.innerHTML += `
 <div class="card">
 
-<div class="carousel car${key}">
+<div class="carousel car${type}${i}">
 ${images.map(img=>`<img src="${img}">`).join("")}
 </div>
 
-<div class="dots dots${key}"></div>
+<div class="dots dots${type}${i}"></div>
 
 <div class="price">₦ ${p.price}</div>
 
-<button class="buy-btn" onclick="buyNow(${i},'${type}')">
-BUY NOW
-</button>
+<button class="buy-btn">BUY NOW</button>
 
 </div>
 `;
 
-setTimeout(()=>setupCarousel(key),100);
+setTimeout(()=>setup(type,i),100);
 
 });
 
 }
 
 /* CAROUSEL */
-function setupCarousel(key){
+function setup(type,i){
+
+let key = type+i;
 
 let c = document.querySelector(".car"+key);
 let box = document.querySelector(".dots"+key);
@@ -224,7 +309,7 @@ box.innerHTML = "";
 
 imgs.forEach((_,x)=>{
 let d = document.createElement("span");
-d.className = "dot" + (x===0?" active":"");
+d.className="dot"+(x===0?" active":"");
 box.appendChild(d);
 });
 
@@ -232,9 +317,7 @@ let dots = box.querySelectorAll(".dot");
 
 c.addEventListener("scroll",()=>{
 
-let index = Math.round(c.scrollLeft / c.clientWidth);
-
-currentImageIndex[key] = index;
+let index = Math.round(c.scrollLeft/c.clientWidth);
 
 dots.forEach(d=>d.classList.remove("active"));
 
@@ -244,34 +327,116 @@ if(dots[index]) dots[index].classList.add("active");
 
 }
 
-/* BUY NOW - SELECTED IMAGE FIX */
-window.buyNow = function(i,type){
+/* ================= CATEGORY ================= */
+async function loadCategories(){
 
-let p = products[i];
+const snap = await getDocs(collection(db,"categories"));
 
-let key = type.toLowerCase() + i;
+categories = [];
+snap.forEach(d=>categories.push(d.data().name));
 
-let images = getImages(p);
+let bar = document.getElementById("bar");
+let sel = document.getElementById("cat");
+let del = document.getElementById("delCat");
 
-let index = currentImageIndex[key] || 0;
+bar.innerHTML="";
+sel.innerHTML="";
+del.innerHTML="";
 
-let img = images[index] || images[0] || "";
+/* ABOUT */
+let about = document.createElement("div");
+about.className="cat active";
+about.innerText="ABOUT";
 
-let msg = `Hello 👋,
+about.onclick=()=>{
+setActive(about);
+activeCategory="about";
+showAbout();
+};
 
-I want to order this Product:
+bar.appendChild(about);
 
-🧵 Category: ${p.category}
-🛍️ Product: ${p.name}
-💰 Price: ₦${p.price}
+/* CATEGORIES */
+categories.forEach(c=>{
 
-🖼️ Selected Image:
-${img}
+let btn = document.createElement("div");
+btn.className="cat";
+btn.innerText=c;
 
-Is this available? I want to buy.`;
+btn.onclick=()=>{
+setActive(btn);
+activeCategory=c;
+render();
+};
 
-window.open("https://wa.me/2349114738932?text="+encodeURIComponent(msg));
+bar.appendChild(btn);
 
+sel.innerHTML += `<option>${c}</option>`;
+del.innerHTML += `<option>${c}</option>`;
+
+});
+
+}
+
+/* ACTIVE */
+function setActive(btn){
+document.querySelectorAll(".cat").forEach(b=>b.classList.remove("active"));
+btn.classList.add("active");
+}
+
+/* ABOUT */
+function showAbout(){
+document.getElementById("view").innerHTML="";
+document.getElementById("about").classList.add("active-view");
+}
+
+/* ================= ADMIN FUNCTIONS ================= */
+window.upload = function(){
+cloudinary.openUploadWidget({
+cloudName:"db92r6j9z",
+uploadPreset:"ummuhalti",
+multiple:true
+},(e,r)=>{
+if(r && r.event==="success"){
+uploadedImages.push(r.info.secure_url);
+alert("Uploaded ✔");
+}
+});
+};
+
+window.saveProduct = async function(){
+
+await addDoc(collection(db,"products"),{
+name:name.value,
+price:price.value,
+category:cat.value,
+images:uploadedImages,
+date:Date.now()
+});
+
+alert("Product saved ✔");
+
+uploadedImages=[];
+};
+
+window.addCategory = async function(){
+await addDoc(collection(db,"categories"),{name:newCat.value});
+alert("Category added ✔");
+loadCategories();
+};
+
+window.deleteCategory = async function(){
+
+const snap = await getDocs(collection(db,"categories"));
+
+snap.forEach(async d=>{
+if(d.data().name === delCat.value){
+await deleteDoc(doc(db,"categories",d.id));
+}
+});
+
+alert("Category deleted ✔");
+loadCategories();
 };
 
 </script>
