@@ -14,6 +14,7 @@ background:#f5f5f5;
 padding-top:80px;
 }
 
+/* HEADER */
 .top-bar{
 position:fixed;
 top:0;
@@ -27,11 +28,9 @@ padding:0 10px;
 z-index:3000;
 }
 
-.admin-icon{
-margin-left:auto;
-cursor:pointer;
-}
+.admin-icon{margin-left:auto;cursor:pointer}
 
+/* CATEGORY */
 .category-bar{
 position:fixed;
 top:45px;
@@ -48,15 +47,16 @@ color:white;
 padding:6px 14px;
 margin:5px;
 border-radius:20px;
-white-space:nowrap;
 cursor:pointer;
+white-space:nowrap;
 }
-
 .category-btn.active{background:#25D366}
 
+/* VIEW */
 .view{display:none;padding:10px;}
 .active-view{display:block}
 
+/* CARD */
 .card{
 background:white;
 border-radius:12px;
@@ -64,12 +64,12 @@ padding:10px;
 margin:10px 0;
 }
 
+/* CAROUSEL */
 .carousel{
 display:flex;
 overflow-x:auto;
 scroll-snap-type:x mandatory;
 }
-
 .carousel img{
 min-width:100%;
 height:300px;
@@ -77,7 +77,27 @@ object-fit:cover;
 scroll-snap-align:center;
 border-radius:10px;
 }
+.carousel::-webkit-scrollbar{display:none}
 
+/* TESTIMONIAL IMAGE */
+#testimonialCarousel img{
+object-fit:contain;
+background:#fff;
+}
+
+/* DOTS */
+.dots{text-align:center;margin-top:5px}
+.dot{
+height:8px;width:8px;
+background:#bbb;
+border-radius:50%;
+display:inline-block;
+margin:0 3px;
+cursor:pointer;
+}
+.dot.active{background:#25D366}
+
+/* PRICE */
 .price{
 background:#111;
 color:white;
@@ -87,6 +107,7 @@ border-radius:8px;
 margin-top:8px;
 }
 
+/* BUTTON */
 .buy-btn{
 background:#25D366;
 color:white;
@@ -98,6 +119,7 @@ margin-top:8px;
 cursor:pointer;
 }
 
+/* ADMIN */
 .admin{
 display:none;
 position:fixed;
@@ -124,6 +146,7 @@ background:green;
 color:white;
 border:none;
 margin-top:5px;
+cursor:pointer;
 }
 
 .del-btn{
@@ -149,13 +172,23 @@ BOB TEXTILE
 
 <!-- ABOUT -->
 <div id="aboutView" class="view active-view">
+
 <div class="card">
+
+<h3 style="text-align:center;">What Our Customers Say 💬</h3>
+
+<div class="carousel" id="testimonialCarousel"></div>
+<div class="dots" id="testimonialDots"></div>
+
+<hr>
+
 <h2>About Us</h2>
 <p>BOB TEXTILE is your trusted fashion store for quality fabrics and styles.</p>
+
 </div>
 </div>
 
-<!-- PRODUCT VIEW -->
+<!-- PRODUCTS -->
 <div id="productView" class="view"></div>
 
 <!-- ADMIN -->
@@ -178,22 +211,17 @@ BOB TEXTILE
 
 <hr>
 
-<h3>Add Category</h3>
-<input id="newCat">
-<button class="btn" onclick="addCategory()">Add</button>
-
-<h3>Delete Category</h3>
-<select id="catDelete"></select>
-<button class="del-btn" onclick="deleteCategory()">Delete</button>
+<h3>Testimonials</h3>
+<button class="btn" onclick="uploadTestimonial()">Upload Testimonial</button>
 
 <hr>
 
 <button class="del-btn" onclick="closeAdmin()">Close</button>
+
 </div>
 
 <script type="module">
 
-/* FIREBASE */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
 getFirestore,
@@ -204,7 +232,7 @@ deleteDoc,
 doc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-/* YOUR FIREBASE CONFIG */
+/* FIREBASE CONFIG */
 const firebaseConfig = {
 apiKey: "AIzaSyD40daowTCCVrKr1kWI6krf9nB7OHp8mWU",
 authDomain: "luxury-heaven-c24df.firebaseapp.com",
@@ -218,10 +246,8 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 /* STATE */
-let products=[];
-let categories=[];
-let images=[];
-let active="";
+let products=[],categories=[],images=[],active="";
+let testimonials=[],tIndex=0,tAuto;
 
 /* ADMIN */
 window.openAdmin=()=>admin.style.display="block";
@@ -231,73 +257,55 @@ window.closeAdmin=()=>admin.style.display="none";
 window.onload=()=>{
 loadCategories();
 loadProducts();
+loadTestimonials();
 };
 
 /* CATEGORIES */
 async function loadCategories(){
 categories=[];
-
 let snap=await getDocs(collection(db,"categories"));
-
-snap.forEach(d=>{
-categories.push(d.data().name);
-});
-
+snap.forEach(d=>categories.push(d.data().name));
 renderCategories();
 fillAdmin();
 }
 
 function renderCategories(){
-
-let bar=document.getElementById("categoryBar");
-bar.innerHTML="";
-
+categoryBar.innerHTML="";
 let about=document.createElement("div");
 about.className="category-btn active";
 about.innerText="ABOUT";
 about.onclick=()=>show("about",about);
-bar.appendChild(about);
+categoryBar.appendChild(about);
 
 categories.forEach(c=>{
 let btn=document.createElement("div");
 btn.className="category-btn";
 btn.innerText=c;
-
 btn.onclick=()=>show(c,btn);
-
-bar.appendChild(btn);
+categoryBar.appendChild(btn);
 });
 }
 
 function fillAdmin(){
 category.innerHTML="";
 delCat.innerHTML="";
-catDelete.innerHTML="";
-
 categories.forEach(c=>{
 category.innerHTML+=`<option>${c}</option>`;
 delCat.innerHTML+=`<option>${c}</option>`;
-catDelete.innerHTML+=`<option>${c}</option>`;
 });
 }
 
 /* PRODUCTS */
 async function loadProducts(){
 products=[];
-
 let snap=await getDocs(collection(db,"products"));
-
-snap.forEach(d=>{
-products.push({id:d.id,...d.data()});
-});
+snap.forEach(d=>products.push({id:d.id,...d.data()}));
 }
 
 /* SHOW */
 function show(type,btn){
-
 document.querySelectorAll(".category-btn").forEach(b=>b.classList.remove("active"));
 btn.classList.add("active");
-
 active=type;
 
 if(type==="about"){
@@ -308,36 +316,28 @@ return;
 
 aboutView.classList.remove("active-view");
 productView.classList.add("active-view");
-
 renderProducts();
 }
 
-/* RENDER */
+/* RENDER PRODUCTS */
 function renderProducts(){
-
 productView.innerHTML="";
-
 let list=products.filter(p=>p.category===active);
 
 list.forEach(p=>{
 productView.innerHTML+=`
 <div class="card">
-
 <div class="carousel">
 ${p.images.map(i=>`<img src="${i}">`).join("")}
 </div>
-
 <div class="price">₦${p.price}</div>
-
 <button class="buy-btn">BUY NOW</button>
-
 </div>`;
 });
 }
 
 /* SAVE PRODUCT */
 window.saveProduct=async()=>{
-
 await addDoc(collection(db,"products"),{
 name:pname.value,
 price:price.value,
@@ -345,7 +345,6 @@ category:category.value,
 images:images,
 date:Date.now()
 });
-
 images=[];
 loadProducts();
 }
@@ -359,38 +358,15 @@ loadAdminProducts();
 
 /* ADMIN LIST */
 window.loadAdminProducts=()=>{
-
 let cat=delCat.value;
 adminList.innerHTML="";
-
 products.filter(p=>p.category===cat)
 .forEach(p=>{
 adminList.innerHTML+=`
-<div>
-${p.name}
+<div>${p.name}
 <button class="del-btn" onclick="deleteProduct('${p.id}')">X</button>
 </div>`;
 });
-}
-
-/* CATEGORY */
-window.addCategory=async()=>{
-await addDoc(collection(db,"categories"),{
-name:newCat.value
-});
-loadCategories();
-}
-
-window.deleteCategory=async()=>{
-let snap=await getDocs(collection(db,"categories"));
-
-snap.forEach(async d=>{
-if(d.data().name===catDelete.value){
-await deleteDoc(doc(db,"categories",d.id));
-}
-});
-
-loadCategories();
 }
 
 /* CLOUDINARY */
@@ -400,8 +376,77 @@ cloudName:"db92r6j9z",
 uploadPreset:"ummuhalti",
 multiple:true
 },(e,r)=>{
+if(r.event==="success") images.push(r.info.secure_url);
+});
+};
+
+/* TESTIMONIALS */
+async function loadTestimonials(){
+testimonials=[];
+let snap=await getDocs(collection(db,"testimonials"));
+snap.forEach(d=>testimonials.push(d.data().image));
+renderTestimonials();
+}
+
+function renderTestimonials(){
+let box=document.getElementById("testimonialCarousel");
+let dots=document.getElementById("testimonialDots");
+
+box.innerHTML="";
+dots.innerHTML="";
+
+if(testimonials.length===0){
+box.innerHTML="<p>No testimonials</p>";
+return;
+}
+
+testimonials.forEach((img,i)=>{
+box.innerHTML+=`<img src="${img}">`;
+
+let d=document.createElement("span");
+d.className="dot"+(i===0?" active":"");
+d.onclick=()=>scrollTestimonial(i);
+dots.appendChild(d);
+});
+
+scrollTestimonial(0);
+startAuto();
+}
+
+function scrollTestimonial(i){
+let box=document.getElementById("testimonialCarousel");
+let dots=document.querySelectorAll("#testimonialDots .dot");
+
+box.scrollTo({left:box.clientWidth*i,behavior:"smooth"});
+
+dots.forEach(d=>d.classList.remove("active"));
+if(dots[i]) dots[i].classList.add("active");
+
+tIndex=i;
+}
+
+function startAuto(){
+clearInterval(tAuto);
+if(testimonials.length<=1)return;
+
+tAuto=setInterval(()=>{
+tIndex=(tIndex+1)%testimonials.length;
+scrollTestimonial(tIndex);
+},4000);
+}
+
+/* UPLOAD TESTIMONIAL */
+window.uploadTestimonial=()=>{
+cloudinary.openUploadWidget({
+cloudName:"db92r6j9z",
+uploadPreset:"ummuhalti",
+multiple:true
+},async(e,r)=>{
 if(r.event==="success"){
-images.push(r.info.secure_url);
+await addDoc(collection(db,"testimonials"),{
+image:r.info.secure_url
+});
+loadTestimonials();
 }
 });
 };
