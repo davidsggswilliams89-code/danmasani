@@ -7,20 +7,24 @@
 <script src="https://widget.cloudinary.com/v2.0/global/all.js"></script>
 
 <style>
-body{margin:0;font-family:Arial;background:#f5f5f5;padding-top:80px}
+body{margin:0;font-family:Arial;background:#f5f5f5;padding-top:85px}
 
+/* HEADER */
 .top{position:fixed;top:0;width:100%;height:45px;background:#111;color:white;display:flex;align-items:center;z-index:9999}
 .logo{height:45px}
-.marquee{margin-left:100px;animation:move 12s linear infinite;white-space:nowrap}
+.marquee{margin-left:90px;animation:move 12s linear infinite;white-space:nowrap}
 @keyframes move{0%{transform:translateX(100%)}100%{transform:translateX(-100%)}}
 
+/* CATEGORY */
 .bar{position:fixed;top:45px;width:100%;background:#222;display:flex;overflow-x:auto}
 .cat{color:white;padding:8px 12px;margin:5px;border-radius:20px;cursor:pointer}
 .cat.active{background:#25D366}
 
+/* VIEW */
 .view{display:none}
 .active-view{display:block}
 
+/* CARD */
 .card{background:white;margin:10px;padding:10px;border-radius:12px}
 
 .carousel{display:flex;overflow-x:auto;scroll-snap-type:x mandatory}
@@ -31,12 +35,10 @@ body{margin:0;font-family:Arial;background:#f5f5f5;padding-top:80px}
 
 .buy{width:100%;padding:10px;background:#25D366;color:white;border:none;margin-top:10px;border-radius:10px}
 
+/* ADMIN */
 .admin{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:white;z-index:99999;padding:10px;overflow:auto}
-
 input,select{width:100%;padding:10px;margin:5px 0}
-
 button{width:100%;padding:10px;border:none;border-radius:8px}
-
 .green{background:green;color:white}
 .red{background:red;color:white}
 </style>
@@ -53,6 +55,39 @@ button{width:100%;padding:10px;border:none;border-radius:8px}
 
 <!-- CATEGORY -->
 <div class="bar" id="bar"></div>
+
+<!-- ABOUT VIEW (RESTORED) -->
+<div id="aboutView" class="view active-view">
+
+<div class="card">
+<h3 style="text-align:center;">What Our Customers Say 💬</h3>
+<p style="text-align:center;color:#555;">
+“Luxury Heaven is trusted for quality fashion and fast delivery.”
+</p>
+
+<hr>
+
+<h3>Our Mission</h3>
+<p>To provide affordable, high quality fashion products for women.</p>
+
+<hr>
+
+<h3>About Us</h3>
+<p>Luxury Heaven by Aleesha is an online fashion store based in Nigeria.</p>
+
+<hr>
+
+<h3>Address</h3>
+<p>📍 Gusau, Zamfara State</p>
+
+<hr>
+
+<h3>Contact</h3>
+<p>📞 09114738932</p>
+
+</div>
+
+</div>
 
 <!-- PRODUCT VIEW -->
 <div id="view"></div>
@@ -80,9 +115,6 @@ button{width:100%;padding:10px;border:none;border-radius:8px}
 
 <hr>
 
-<h3>Testimonials</h3>
-<button class="green" onclick="uploadTestimonial()">Upload Testimonial</button>
-
 <button class="red" onclick="closeAdmin()">Close</button>
 
 </div>
@@ -104,196 +136,176 @@ appId: "1:277279766368:web:2f5858b54f58d1df629005"
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-let products = [];
-let categories = [];
-let images = [];   // IMPORTANT FIX
-let testimonials = [];
+let products=[];
+let categories=[];
+let images=[];
 
-const cloudName = "db92r6j9z";
-const uploadPreset = "ummuhalti";
-
-/* ================= LOAD ================= */
-
-window.onload = async () => {
-  await loadCategories();
-  await loadProducts();
+/* INIT */
+window.onload=async()=>{
+await loadCategories();
+await loadProducts();
 };
 
-/* ================= CATEGORY ================= */
+/* ================= CATEGORY FIX ================= */
 
 async function loadCategories(){
-  const snap = await getDocs(collection(db,"categories"));
 
-  categories = [];
+const snap = await getDocs(collection(db,"categories"));
 
-  snap.forEach(d=>{
-    categories.push(d.data().name);
-  });
+categories = [];
 
-  let bar = document.getElementById("bar");
-  let sel = document.getElementById("cat");
-  let del = document.getElementById("deleteCat");
+snap.forEach(d=>{
+categories.push(d.data().name);
+});
 
-  bar.innerHTML = "";
-  sel.innerHTML = "";
-  del.innerHTML = "";
+let bar = document.getElementById("bar");
+let sel = document.getElementById("cat");
+let del = document.getElementById("deleteCat");
 
-  categories.forEach(c=>{
-    bar.innerHTML += `<div class="cat" onclick="filter('${c}',this)">${c}</div>`;
-    sel.innerHTML += `<option value="${c}">${c}</option>`;
-    del.innerHTML += `<option value="${c}">${c}</option>`;
-  });
+bar.innerHTML = `<div class="cat active" onclick="showAbout(this)">ABOUT</div>`;
+sel.innerHTML = "";
+del.innerHTML = "";
+
+categories.forEach(c=>{
+bar.innerHTML += `<div class="cat" onclick="filterCat('${c}',this)">${c}</div>`;
+sel.innerHTML += `<option value="${c}">${c}</option>`;
+del.innerHTML += `<option value="${c}">${c}</option>`;
+});
 }
 
-/* ADD CATEGORY */
-window.addCategory = async function(){
-  let name = document.getElementById("newCat").value.trim();
-
-  if(!name){
-    alert("Enter category");
-    return;
-  }
-
-  await addDoc(collection(db,"categories"),{name});
-
-  document.getElementById("newCat").value="";
-
-  alert("Category added ✔");
-
-  loadCategories();
+/* ABOUT CLICK */
+window.showAbout = function(el){
+setActive(el);
+document.getElementById("aboutView").classList.add("active-view");
+document.getElementById("view").innerHTML="";
 };
 
-/* DELETE CATEGORY */
-window.deleteCategory = async function(){
-  let cat = document.getElementById("deleteCat").value;
+/* CATEGORY CLICK FIX */
+window.filterCat = function(cat,el){
 
-  const snap = await getDocs(collection(db,"categories"));
+setActive(el);
 
-  snap.forEach(async d=>{
-    if(d.data().name === cat){
-      await deleteDoc(doc(db,"categories",d.id));
-    }
-  });
+document.getElementById("aboutView").classList.remove("active-view");
 
-  alert("Category deleted ✔");
+let list = products.filter(p=>p.category===cat);
 
-  loadCategories();
+render(list);
 };
+
+function setActive(el){
+document.querySelectorAll(".cat").forEach(c=>c.classList.remove("active"));
+el.classList.add("active");
+}
 
 /* ================= PRODUCTS ================= */
 
 async function loadProducts(){
-  const snap = await getDocs(collection(db,"products"));
-  products = [];
-
-  snap.forEach(d=>products.push(d.data()));
-
-  render(products);
+const snap = await getDocs(collection(db,"products"));
+products=[];
+snap.forEach(d=>products.push(d.data()));
+render(products);
 }
 
 function render(list){
-  let view = document.getElementById("view");
-  view.innerHTML = "";
 
-  list.forEach((p,i)=>{
-    view.innerHTML += `
-    <div class="card">
-      <div class="carousel" id="car${i}">
-        ${(p.images||[]).map(img=>`<img src="${img}">`).join("")}
-      </div>
-      <div class="price">₦ ${p.price}</div>
-      <button class="buy" onclick="buyNow(${i})">BUY NOW</button>
-    </div>`;
-  });
+let view = document.getElementById("view");
+view.innerHTML="";
+
+list.forEach((p,i)=>{
+view.innerHTML+=`
+<div class="card">
+<div class="carousel">
+${(p.images||[]).map(img=>`<img src="${img}">`).join("")}
+</div>
+<div class="price">₦ ${p.price}</div>
+<button class="buy" onclick="buy(${i})">BUY NOW</button>
+</div>`;
+});
 }
 
 /* BUY */
-window.buyNow = function(i){
-  let p = products[i];
+window.buy = function(i){
+let p=products[i];
 
-  let msg = `Hello 👋,
+let msg=`Hello 👋
 
 🛍️ Product: ${p.name}
 💰 Price: ₦${p.price}
 🧵 Category: ${p.category}`;
 
-  window.open("https://wa.me/234911473893?text="+encodeURIComponent(msg));
-};
-
-/* ================= UPLOAD PRODUCT IMAGES ================= */
-
-window.upload = function(){
-  cloudinary.openUploadWidget({
-    cloudName,
-    uploadPreset
-  }, (error, result)=>{
-
-    if(result?.event === "success"){
-      images.push(result.info.secure_url);
-      alert("Image uploaded ✔");
-    }
-  });
-};
-
-/* ================= SAVE PRODUCT ================= */
-
-window.save = async function(){
-
-  if(images.length === 0){
-    alert("Upload images first");
-    return;
-  }
-
-  let product = {
-    name: document.getElementById("name").value,
-    price: document.getElementById("price").value,
-    category: document.getElementById("cat").value,
-    images: images,
-    date: Date.now()
-  };
-
-  await addDoc(collection(db,"products"),product);
-
-  alert("Product uploaded successfully ✔");
-
-  images = [];
-  document.getElementById("name").value="";
-  document.getElementById("price").value="";
-
-  loadProducts();
-};
-
-/* ================= TESTIMONIAL ================= */
-
-window.uploadTestimonial = function(){
-
-  cloudinary.openUploadWidget({
-    cloudName,
-    uploadPreset
-  }, async (error,result)=>{
-
-    if(result?.event==="success"){
-
-      await addDoc(collection(db,"testimonials"),{
-        image: result.info.secure_url,
-        date: Date.now()
-      });
-
-      alert("Testimonial uploaded ✔");
-    }
-  });
+window.open("https://wa.me/234911473893?text="+encodeURIComponent(msg));
 };
 
 /* ================= ADMIN ================= */
 
-window.openAdmin = function(){
-  if(prompt("Password") === "1234"){
-    document.getElementById("admin").style.display="block";
-  }
+window.upload = function(){
+cloudinary.openUploadWidget({
+cloudName:"db92r6j9z",
+uploadPreset:"ummuhalti"
+},(e,r)=>{
+if(r?.event==="success"){
+images.push(r.info.secure_url);
+alert("Image uploaded ✔");
+}
+});
 };
 
-window.closeAdmin = function(){
-  document.getElementById("admin").style.display="none";
+window.save = async function(){
+
+if(images.length===0){
+alert("Upload images first");
+return;
+}
+
+await addDoc(collection(db,"products"),{
+name:document.getElementById("name").value,
+price:document.getElementById("price").value,
+category:document.getElementById("cat").value,
+images:images,
+date:Date.now()
+});
+
+alert("Product saved ✔");
+
+images=[];
+
+loadProducts();
+};
+
+/* CATEGORY ADMIN */
+window.addCategory = async function(){
+let name=document.getElementById("newCat").value;
+
+await addDoc(collection(db,"categories"),{name});
+
+document.getElementById("newCat").value="";
+
+loadCategories();
+};
+
+window.deleteCategory = async function(){
+let cat=document.getElementById("deleteCat").value;
+
+const snap = await getDocs(collection(db,"categories"));
+
+snap.forEach(async d=>{
+if(d.data().name===cat){
+await deleteDoc(doc(db,"categories",d.id));
+}
+});
+
+loadCategories();
+};
+
+/* ADMIN */
+window.openAdmin=function(){
+if(prompt("Password")==="1234"){
+admin.style.display="block";
+}
+};
+
+window.closeAdmin=function(){
+admin.style.display="none";
 };
 
 </script>
