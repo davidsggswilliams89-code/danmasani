@@ -36,11 +36,9 @@ background:white;border-radius:12px;
 padding:10px;margin:10px 0;
 }
 
-/* IMAGE */
 .carousel{
 display:flex;
 overflow-x:auto;
-scroll-snap-type:x mandatory;
 }
 .carousel img{
 min-width:100%;
@@ -48,15 +46,6 @@ height:300px;
 object-fit:cover;
 border-radius:10px;
 }
-.carousel::-webkit-scrollbar{display:none}
-
-/* DOTS */
-.dots{text-align:center;margin-top:5px;}
-.dot{
-height:8px;width:8px;background:#bbb;
-border-radius:50%;display:inline-block;margin:0 3px;
-}
-.dot.active{background:#25D366;}
 
 .price{
 background:#111;color:white;padding:10px;
@@ -94,63 +83,26 @@ LUXURY HEAVEN
 
 <div class="category-bar" id="categoryBar"></div>
 
-<!-- ABOUT (RESTORED FULL) -->
+<!-- ABOUT -->
 <div id="aboutView" class="view active-view">
 <div class="card">
 
 <h3 style="text-align:center;">What Our Customers Say 💬</h3>
 <div class="carousel" id="testimonialCarousel"></div>
-<div class="dots" id="testimonialDots"></div>
+<div id="testimonialDots"></div>
 
 <hr>
 
 <h2 style="text-align:center;">✨ About Luxury Heaven</h2>
 
-<p style="line-height:1.7;">
-<strong>Luxury Heaven by Aleesha</strong> is your trusted destination for premium fashion items across Nigeria.
-
-<br><br>
-We specialize in high-quality women's fashion including:
-• Shoes  
-• Bags  
-• Abayas  
-• Hijabs  
-• Accessories  
-
-<br><br>
-Our mission is to provide elegance, confidence, and affordability to every woman.
-
-We focus on:
-✔ Quality products  
-✔ Fast response  
-✔ Reliable delivery  
-✔ Customer satisfaction  
-
-</p>
-
-<hr>
-
-<h3>📞 Contact Us</h3>
 <p>
-📱 WhatsApp: 09114738932<br>
-📍 Location: Nigeria (Online Store)<br>
-🚚 Delivery: Nationwide
+Luxury Heaven by Aleesha is your trusted online fashion store for premium women's wear across Nigeria.
 </p>
 
-<hr>
-
-<h3>💬 Chat With Us</h3>
-
-<a href="https://wa.me/2349114738932" target="_blank">
-<button class="buy-btn">
-<img src="https://cdn-icons-png.flaticon.com/512/733/733585.png" width="20">
-Chat on WhatsApp
-</button>
-</a>
-
 </div>
 </div>
 
+<!-- PRODUCTS -->
 <div id="productView" class="view"></div>
 
 <!-- ADMIN -->
@@ -180,12 +132,6 @@ Chat on WhatsApp
 
 <hr>
 
-<h3>Testimonials</h3>
-<button class="btn" onclick="uploadTestimonial()">Upload Testimonial</button>
-<div id="testimonialAdminList"></div>
-
-<hr>
-
 <button class="del-btn" onclick="closeAdmin()">Close</button>
 </div>
 
@@ -203,15 +149,130 @@ projectId:"luxury-heaven-c24df"
 
 const db = getFirestore(app);
 
-let categories=[],products=[],uploadedImages=[],testimonials=[];
-
-window.openAdmin=()=>{admin.style.display="block";loadAdminProducts();loadTestimonialAdmin();}
-window.closeAdmin=()=>admin.style.display="none";
+let categories=[],products=[],uploadedImages=[],active="about";
 
 window.onload=async()=>{
 await loadCategories();
 await loadProducts();
-await loadTestimonials();
+};
+
+/* CATEGORY LOAD */
+async function loadCategories(){
+categories=[];
+let snap=await getDocs(collection(db,"categories"));
+snap.forEach(d=>categories.push({id:d.id,...d.data()}));
+
+renderCategoryBar();
+fillAdminDropdowns();
+}
+
+/* CATEGORY BAR */
+function renderCategoryBar(){
+categoryBar.innerHTML="";
+
+let about=document.createElement("div");
+about.className="category-btn active";
+about.innerText="ABOUT";
+about.onclick=()=>show("about",about);
+categoryBar.appendChild(about);
+
+categories.forEach(c=>{
+let btn=document.createElement("div");
+btn.className="category-btn";
+btn.innerText=c.name;
+btn.onclick=()=>show(c.name,btn);
+categoryBar.appendChild(btn);
+});
+}
+
+/* SHOW VIEW */
+function show(type,btn){
+document.querySelectorAll(".category-btn").forEach(b=>b.classList.remove("active"));
+btn.classList.add("active");
+active=type;
+
+if(type==="about"){
+aboutView.classList.add("active-view");
+productView.classList.remove("active-view");
+return;
+}
+
+aboutView.classList.remove("active-view");
+productView.classList.add("active-view");
+
+renderProducts();
+}
+
+/* PRODUCTS */
+async function loadProducts(){
+products=[];
+let snap=await getDocs(collection(db,"products"));
+snap.forEach(d=>products.push({id:d.id,...d.data()}));
+}
+
+function renderProducts(){
+productView.innerHTML="";
+let list=products.filter(p=>p.category===active);
+
+list.forEach(p=>{
+productView.innerHTML+=`
+<div class="card">
+<div class="carousel">
+${p.images.map(img=>`<img src="${img}">`).join("")}
+</div>
+
+<div style="text-align:center;font-weight:bold;margin-top:10px;">
+${p.name}
+</div>
+
+<div class="price">₦${p.price}</div>
+
+<button class="buy-btn" onclick="buyNow('${p.name}','${p.price}','${p.category}')">
+BUY NOW
+</button>
+</div>`;
+});
+}
+
+/* BUY */
+window.buyNow=(name,price,cat)=>{
+let msg=`Hello 👋,
+
+🧵 ${cat}
+🛍️ ${name}
+💰 ₦${price}
+
+Is this available?`;
+
+window.open("https://wa.me/2349114738932?text="+encodeURIComponent(msg));
+};
+
+/* ADMIN */
+window.openAdmin=()=>admin.style.display="block";
+window.closeAdmin=()=>admin.style.display="none";
+
+/* DROPDOWNS */
+function fillAdminDropdowns(){
+category.innerHTML="";
+catDelete.innerHTML="";
+
+categories.forEach(c=>{
+category.innerHTML+=`<option value="${c.name}">${c.name}</option>`;
+catDelete.innerHTML+=`<option value="${c.id}">${c.name}</option>`;
+});
+}
+
+/* ADD CATEGORY */
+window.addCategory=async()=>{
+await addDoc(collection(db,"categories"),{name:newCat.value});
+newCat.value="";
+loadCategories();
+};
+
+/* DELETE CATEGORY */
+window.deleteCategory=async()=>{
+await deleteDoc(doc(db,"categories",catDelete.value));
+loadCategories();
 };
 
 /* CLOUDINARY */
@@ -223,7 +284,6 @@ multiple:true
 },(e,r)=>{
 if(r && r.event==="success"){
 uploadedImages.push(r.info.secure_url);
-alert("Uploaded");
 }
 });
 };
@@ -246,108 +306,7 @@ price.value="";
 loadProducts();
 };
 
-/* DELETE PRODUCT */
-function loadAdminProducts(){
-productList.innerHTML="";
-products.forEach(p=>{
-productList.innerHTML+=`
-<div>${p.name}
-<button class="del-btn" onclick="delProduct('${p.id}')">Delete</button>
-</div>`;
-});
-}
-
-window.delProduct=async(id)=>{
-await deleteDoc(doc(db,"products",id));
-loadProducts();
-loadAdminProducts();
-};
-
-/* CATEGORY */
-async function loadCategories(){
-categories=[];
-let snap=await getDocs(collection(db,"categories"));
-snap.forEach(d=>categories.push({id:d.id,...d.data()}));
-
-category.innerHTML="";
-catDelete.innerHTML="";
-
-categories.forEach(c=>{
-category.innerHTML+=`<option value="${c.name}">${c.name}</option>`;
-catDelete.innerHTML+=`<option value="${c.id}">${c.name}</option>`;
-});
-}
-
-/* ADD/DELETE CATEGORY */
-window.addCategory=async()=>{
-await addDoc(collection(db,"categories"),{name:newCat.value});
-newCat.value="";
-loadCategories();
-};
-
-window.deleteCategory=async()=>{
-await deleteDoc(doc(db,"categories",catDelete.value));
-loadCategories();
-};
-
-/* TESTIMONIAL */
-window.uploadTestimonial=()=>{
-cloudinary.openUploadWidget({
-cloudName:"db92r6j9z",
-uploadPreset:"ummuhalti"
-},async(e,r)=>{
-if(r && r.event==="success"){
-await addDoc(collection(db,"testimonials"),{image:r.info.secure_url});
-loadTestimonials();
-loadTestimonialAdmin();
-}
-});
-};
-
-async function loadTestimonials(){
-testimonials=[];
-let snap=await getDocs(collection(db,"testimonials"));
-snap.forEach(d=>testimonials.push({id:d.id,...d.data()}));
-
-testimonialCarousel.innerHTML="";
-testimonialDots.innerHTML="";
-
-testimonials.forEach((t,i)=>{
-testimonialCarousel.innerHTML+=`<img src="${t.image}">`;
-
-let dot=document.createElement("span");
-dot.className="dot"+(i===0?" active":"");
-dot.onclick=()=>scrollTestimonial(i);
-testimonialDots.appendChild(dot);
-});
-
-scrollTestimonial(0);
-}
-
-function scrollTestimonial(i){
-testimonialCarousel.scrollTo({left:testimonialCarousel.clientWidth*i,behavior:"smooth"});
-document.querySelectorAll(".dot").forEach(d=>d.classList.remove("active"));
-testimonialDots.children[i].classList.add("active");
-}
-
-/* ADMIN TESTIMONIAL */
-function loadTestimonialAdmin(){
-testimonialAdminList.innerHTML="";
-testimonials.forEach(t=>{
-testimonialAdminList.innerHTML+=`
-<div>
-<img src="${t.image}" width="50">
-<button class="del-btn" onclick="delTest('${t.id}')">Delete</button>
-</div>`;
-});
-}
-
-window.delTest=async(id)=>{
-await deleteDoc(doc(db,"testimonials",id));
-loadTestimonials();
-loadTestimonialAdmin();
-};
-
 </script>
+
 </body>
 </html>
