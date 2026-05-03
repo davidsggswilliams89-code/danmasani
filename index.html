@@ -25,6 +25,7 @@ background:#222;display:flex;overflow-x:auto;
 .category-btn{
 color:white;padding:6px 14px;margin:5px;
 border-radius:20px;cursor:pointer;
+white-space:nowrap;
 }
 .category-btn.active{background:#25D366;}
 
@@ -59,7 +60,6 @@ color:white;
 padding:5px 8px;
 font-size:12px;
 border-radius:6px;
-z-index:10;
 font-weight:bold;
 }
 
@@ -106,7 +106,7 @@ LUXURY HEAVEN
 
 <div class="category-bar" id="categoryBar"></div>
 
-<!-- ABOUT -->
+<!-- ABOUT (FIXED - ALWAYS WORKING) -->
 <div id="aboutView" class="view active-view">
 <div class="card">
 
@@ -118,21 +118,33 @@ LUXURY HEAVEN
 
 <h2 style="text-align:center;">✨ About Luxury Heaven</h2>
 
-<p style="text-align:center;line-height:1.6;">
-Luxury Heaven by Aleesha is your trusted fashion store in Nigeria.
-We sell shoes, bags, abayas, hijabs and accessories at affordable prices.
-We deliver nationwide with fast WhatsApp response.
+<p style="text-align:center;line-height:1.7;">
+<strong>Luxury Heaven</strong> is a premium fashion store in Nigeria offering
+high-quality women’s fashion items.
+<br><br>
+We sell shoes, bags, abayas, hijabs and accessories with modern stylish designs.
+<br><br>
+Our mission is to make fashion affordable, elegant and accessible to everyone.
+<br><br>
+We deliver nationwide with fast WhatsApp support.
 </p>
 
 <hr>
 
 <h3>📞 Contact</h3>
-<p>09114738932 (WhatsApp)</p>
+<p>WhatsApp: 09114738932</p>
+
+<a href="https://wa.me/2349114738932" target="_blank">
+<button class="buy-btn">
+<img src="https://cdn-icons-png.flaticon.com/512/733/733585.png" width="18">
+Chat on WhatsApp
+</button>
+</a>
 
 </div>
 </div>
 
-<!-- PRODUCTS -->
+<!-- PRODUCTS (FIXED SAFE LOAD) -->
 <div id="productView" class="view"></div>
 
 <!-- ADMIN -->
@@ -157,19 +169,13 @@ We deliver nationwide with fast WhatsApp response.
 
 <hr>
 
-<h3>Testimonials</h3>
-<button class="btn" onclick="uploadTestimonial()">Upload Testimonial</button>
-<div id="testimonialAdminList"></div>
-
-<hr>
-
 <button class="del-btn" onclick="closeAdmin()">Close</button>
 </div>
 
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, getDocs, addDoc } 
+import { getFirestore, collection, getDocs } 
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -184,75 +190,73 @@ appId: "1:468659293220:web:507832347dc70ab78ddcb1"
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-let products=[],categories=[],images=[],active="";
-let testimonials=[],tIndex=0;
+let products = [];
+let categories = [];
+let active = "";
 
-window.openAdmin=()=>admin.style.display="block";
-window.closeAdmin=()=>admin.style.display="none";
+window.openAdmin = () => admin.style.display="block";
+window.closeAdmin = () => admin.style.display="none";
 
-window.onload=()=>{
-loadCategories();
-loadProducts();
-loadTestimonials();
+/* SAFE INIT */
+window.onload = async () => {
+await loadCategories();
+await loadProducts();
+await loadTestimonials();
+show("about", document.querySelector(".category-btn"));
 };
 
-/* SAFE CATEGORIES */
+/* CATEGORY SAFE */
 async function loadCategories(){
-categories=[];
+categories = [];
+let snap = await getDocs(collection(db,"categories"));
 
-let snap=await getDocs(collection(db,"categories"));
-snap.forEach(d=>categories.push(d.data().name));
+snap.forEach(d => categories.push(d.data().name));
 
-if(categories.length===0){
-categories=["shadda","shoes","abayas","bags","caps","vail"];
-categories.forEach(async c=>{
-await addDoc(collection(db,"categories"),{name:c});
-});
-}
+let bar = document.getElementById("categoryBar");
+bar.innerHTML = "";
 
-renderCategories();
-}
-
-function renderCategories(){
-categoryBar.innerHTML="";
-
-let about=document.createElement("div");
+/* ABOUT BUTTON ALWAYS */
+let about = document.createElement("div");
 about.className="category-btn active";
 about.innerText="ABOUT";
 about.onclick=()=>show("about",about);
-categoryBar.appendChild(about);
+bar.appendChild(about);
 
+/* REAL CATEGORIES */
 categories.forEach(c=>{
 let btn=document.createElement("div");
 btn.className="category-btn";
 btn.innerText=c;
 btn.onclick=()=>show(c,btn);
-categoryBar.appendChild(btn);
+bar.appendChild(btn);
+});
+
+/* ADMIN DROPDOWN FIX */
+let sel=document.getElementById("category");
+let del=document.getElementById("catDelete");
+
+sel.innerHTML="";
+del.innerHTML="";
+
+categories.forEach(c=>{
+sel.innerHTML += `<option value="${c}">${c}</option>`;
+del.innerHTML += `<option value="${c}">${c}</option>`;
 });
 }
 
-/* PRODUCTS */
+/* PRODUCTS SAFE */
 async function loadProducts(){
-products=[];
-
-let snap=await getDocs(collection(db,"products"));
-snap.forEach(d=>products.push({id:d.id,...d.data()}));
-
-if(products.length===0){
-products=[{
-name:"Sample",
-price:"1000",
-category:"shadda",
-images:["https://via.placeholder.com/500"],
-date:Date.now()
-}];
-}
+products = [];
+let snap = await getDocs(collection(db,"products"));
+snap.forEach(d => products.push({id:d.id,...d.data()}));
 }
 
+/* VIEW */
 function show(type,btn){
 document.querySelectorAll(".category-btn").forEach(b=>b.classList.remove("active"));
 btn.classList.add("active");
-active=type;
+
+active = type;
 
 if(type==="about"){
 aboutView.classList.add("active-view");
@@ -262,22 +266,30 @@ return;
 
 aboutView.classList.remove("active-view");
 productView.classList.add("active-view");
+
 renderProducts();
 }
 
-/* RENDER */
+/* PRODUCTS SAFE RENDER */
 function renderProducts(){
 productView.innerHTML="";
-let list=products.filter(p=>p.category===active);
+
+let list = products.filter(p=>p.category===active);
+
+if(list.length===0){
+productView.innerHTML="<p style='text-align:center'>No products yet</p>";
+return;
+}
 
 list.forEach((p,i)=>{
 let isNew=(Date.now()-p.date)<86400000;
 
 productView.innerHTML+=`
 <div class="card">
+
 <div class="carousel car${i}">
 ${isNew?'<div class="new-badge">NEW</div>':''}
-${p.images.map(img=>`<img src="${img}">`).join("")}
+${(p.images||[]).map(img=>`<img src="${img}">`).join("")}
 </div>
 
 <div class="dots dots${i}"></div>
@@ -292,6 +304,7 @@ ${p.name}
 <img src="https://cdn-icons-png.flaticon.com/512/733/733585.png" width="18">
 BUY NOW
 </button>
+
 </div>`;
 });
 
@@ -305,7 +318,7 @@ let p=list[i];
 
 let car=document.querySelector(".car"+i);
 let index=Math.round(car.scrollLeft/car.clientWidth);
-let img=p.images[index]||p.images[0];
+let img=p.images?.[index]||p.images?.[0];
 
 let msg=`Hello 👋,
 
@@ -316,7 +329,9 @@ I want to order this Product:
 💰 Price: ₦${p.price}
 
 🖼️ Selected Image:
-${img}`;
+${img}
+
+Is this available? I want to buy.`;
 
 window.open("https://wa.me/2349114738932?text="+encodeURIComponent(msg));
 };
@@ -326,9 +341,11 @@ function setupCarousel(i,p){
 let car=document.querySelector(".car"+i);
 let dotsBox=document.querySelector(".dots"+i);
 
+if(!car)return;
+
 dotsBox.innerHTML="";
 
-p.images.forEach((_,x)=>{
+(p.images||[]).forEach((_,x)=>{
 let d=document.createElement("span");
 d.className="dot"+(x===0?" active":"");
 dotsBox.appendChild(d);
@@ -343,41 +360,7 @@ if(dots[index]) dots[index].classList.add("active");
 });
 }
 
-/* TESTIMONIAL */
-async function loadTestimonials(){
-testimonials=[];
-let snap=await getDocs(collection(db,"testimonials"));
-snap.forEach(d=>testimonials.push({id:d.id,image:d.data().image}));
-
-if(testimonials.length===0){
-testimonials=[{image:"https://via.placeholder.com/500"}];
-}
-
-renderTestimonials();
-}
-
-function renderTestimonials(){
-testimonialCarousel.innerHTML="";
-testimonialDots.innerHTML="";
-
-testimonials.forEach((t,i)=>{
-testimonialCarousel.innerHTML+=`<img src="${t.image}">`;
-let d=document.createElement("span");
-d.className="dot"+(i===0?" active":"");
-d.onclick=()=>scrollTestimonial(i);
-testimonialDots.appendChild(d);
-});
-
-scrollTestimonial(0);
-}
-
-function scrollTestimonial(i){
-testimonialCarousel.scrollTo({left:testimonialCarousel.clientWidth*i,behavior:"smooth"});
-document.querySelectorAll("#testimonialDots .dot").forEach(d=>d.classList.remove("active"));
-testimonialDots.children[i].classList.add("active");
-tIndex=i;
-}
-
 </script>
+
 </body>
 </html>
