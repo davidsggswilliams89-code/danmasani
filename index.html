@@ -45,6 +45,7 @@ height:300px;
 object-fit:cover;
 border-radius:10px;
 }
+
 .carousel::-webkit-scrollbar{display:none}
 
 .dots{text-align:center;margin-top:5px;}
@@ -78,6 +79,11 @@ input,select{width:100%;padding:10px;margin:5px 0;}
 
 .btn{width:100%;padding:10px;background:green;color:white;border:none;margin-top:5px;}
 .del-btn{background:red;color:white;border:none;padding:6px;margin-top:5px;}
+
+.admin-item{
+display:flex;align-items:center;gap:10px;
+background:#f2f2f2;padding:8px;margin:5px 0;border-radius:6px;
+}
 </style>
 </head>
 
@@ -105,36 +111,10 @@ LUXURY HEAVEN
 <p style="text-align:center;line-height:1.6;">
 <strong>Luxury Heaven by Aleesha</strong> is your trusted destination for premium fashion items across Nigeria.
 <br><br>
-We specialize in high-quality and affordable products including
-<strong>shoes, bags, abayas, hijabs, and stylish accessories</strong> designed to give you confidence and elegance.
+We specialize in shoes, bags, abayas, hijabs, and accessories designed to give you confidence and elegance.
 <br><br>
-Our goal is simple — to provide every woman with modern, classy, and comfortable fashion at the best prices.
-We carefully select our products to ensure quality, beauty, and satisfaction.
-<br><br>
-We operate fully online, making shopping easy, fast, and stress-free through WhatsApp ordering.
+We operate fully online with fast WhatsApp ordering and nationwide delivery.
 </p>
-
-<hr>
-
-<h3>📞 Contact Us</h3>
-
-<p style="line-height:1.8;">
-📱 <strong>Phone / WhatsApp:</strong> 09114738932<br>
-📍 <strong>Location:</strong> Nigeria (Online Store)<br>
-🚚 <strong>Delivery:</strong> Nationwide Available<br>
-🕒 <strong>Working Hours:</strong> Monday – Saturday (9:00AM – 6:00PM)
-</p>
-
-<hr>
-
-<h3>💬 Chat With Us</h3>
-
-<a href="https://wa.me/2349114738932" target="_blank" style="text-decoration:none;">
-  <button class="buy-btn">
-    <img src="https://cdn-icons-png.flaticon.com/512/733/733585.png" width="20">
-    Chat on WhatsApp
-  </button>
-</a>
 
 </div>
 </div>
@@ -156,7 +136,9 @@ We operate fully online, making shopping easy, fast, and stress-free through Wha
 <hr>
 
 <h3>Delete Product</h3>
-<div id="productList"></div>
+
+<select id="deleteCategory" onchange="loadDeleteProducts()"></select>
+<div id="deleteProductList"></div>
 
 <hr>
 
@@ -201,6 +183,7 @@ await loadProducts();
 await loadTestimonials();
 };
 
+/* CATEGORY LOAD */
 async function loadCategories(){
 categories=[];
 let snap=await getDocs(collection(db,"categories"));
@@ -221,127 +204,53 @@ btn.onclick=()=>show(c.name,btn);
 categoryBar.appendChild(btn);
 });
 
+/* FILL DROPDOWNS */
 category.innerHTML="";
 catDelete.innerHTML="";
+deleteCategory.innerHTML="";
+
 categories.forEach(c=>{
 category.innerHTML+=`<option value="${c.name}">${c.name}</option>`;
 catDelete.innerHTML+=`<option value="${c.id}">${c.name}</option>`;
+deleteCategory.innerHTML+=`<option value="${c.name}">${c.name}</option>`;
 });
 }
 
+/* PRODUCTS */
 async function loadProducts(){
 products=[];
 let snap=await getDocs(collection(db,"products"));
 snap.forEach(d=>products.push({id:d.id,...d.data()}));
 }
 
-function show(type,btn){
-document.querySelectorAll(".category-btn").forEach(b=>b.classList.remove("active"));
-btn.classList.add("active");
-active=type;
+/* DELETE PRODUCT LIST */
+window.loadDeleteProducts=()=>{
+let cat=deleteCategory.value;
+deleteProductList.innerHTML="";
 
-if(type==="about"){
-aboutView.classList.add("active-view");
-productView.classList.remove("active-view");
-return;
-}
-
-aboutView.classList.remove("active-view");
-productView.classList.add("active-view");
-
-renderProducts();
-}
-
-function renderProducts(){
-productView.innerHTML="";
-let list=products.filter(p=>p.category===active);
-
-list.forEach((p,i)=>{
-productView.innerHTML+=`
-<div class="card">
-<div class="carousel">
-${p.images.map(img=>`<img src="${img}">`).join("")}
-</div>
-
-<div style="text-align:center;font-weight:bold;margin-top:10px;">
-${p.name}
-</div>
-
-<div class="price">₦${p.price}</div>
-
-<button class="buy-btn" onclick="buyNow(${i})">
-<img src="https://cdn-icons-png.flaticon.com/512/733/733585.png" width="18">
-BUY NOW
-</button>
+products.filter(p=>p.category===cat).forEach(p=>{
+deleteProductList.innerHTML+=`
+<div class="admin-item">
+<img src="${p.images[0]}" width="50">
+<div style="flex:1">${p.name}</div>
+<button class="del-btn" onclick="deleteProduct('${p.id}')">Delete</button>
 </div>`;
 });
-}
-
-window.buyNow=(i)=>{
-let list=products.filter(p=>p.category===active);
-let p=list[i];
-
-let msg=`Hello 👋,
-
-🧵 ${p.category}
-🛍️ ${p.name}
-💰 ₦${p.price}
-
-Is this available?`;
-
-window.open("https://wa.me/2349114738932?text="+encodeURIComponent(msg));
 };
 
-window.uploadImages=()=>{
-cloudinary.openUploadWidget({
-cloudName:"db92r6j9z",
-uploadPreset:"ummuhalti",
-multiple:true
-},(e,r)=>{
-if(r && r.event==="success"){
-uploadedImages.push(r.info.secure_url);
-}
-});
+/* DELETE PRODUCT */
+window.deleteProduct=async(id)=>{
+await deleteDoc(doc(db,"products",id));
+await loadProducts();
+loadDeleteProducts();
 };
 
-window.saveProduct=async()=>{
-if(uploadedImages.length===0)return alert("Upload images first");
-
-await addDoc(collection(db,"products"),{
-name:pname.value,
-price:price.value,
-category:category.value,
-images:uploadedImages,
-date:Date.now()
-});
-
-uploadedImages=[];
-pname.value="";
-price.value="";
-loadProducts();
-};
-
-window.addCategory=async()=>{
-await addDoc(collection(db,"categories"),{name:newCat.value});
-newCat.value="";
-loadCategories();
-};
-
-window.deleteCategory=async()=>{
-await deleteDoc(doc(db,"categories",catDelete.value));
-loadCategories();
-};
-
+/* TESTIMONIAL */
 async function loadTestimonials(){
 testimonials=[];
 let snap=await getDocs(collection(db,"testimonials"));
 snap.forEach(d=>testimonials.push({id:d.id,...d.data()}));
 
-renderTestimonials();
-loadTestimonialAdmin();
-}
-
-function renderTestimonials(){
 testimonialCarousel.innerHTML="";
 testimonialDots.innerHTML="";
 
@@ -350,33 +259,19 @@ testimonialCarousel.innerHTML+=`<img src="${t.image}">`;
 
 let dot=document.createElement("span");
 dot.className="dot"+(i===0?" active":"");
-dot.onclick=()=>scrollTestimonial(i);
+dot.onclick=()=>testimonialCarousel.scrollTo({left:i*testimonialCarousel.clientWidth,behavior:"smooth"});
 testimonialDots.appendChild(dot);
 });
 
-scrollTestimonial(0);
+loadTestimonialAdmin();
 }
 
-function scrollTestimonial(i){
-testimonialCarousel.scrollTo({
-left:testimonialCarousel.clientWidth*i,
-behavior:"smooth"
-});
-
-document.querySelectorAll("#testimonialDots .dot")
-.forEach(d=>d.classList.remove("active"));
-
-if(testimonialDots.children[i]){
-testimonialDots.children[i].classList.add("active");
-}
-}
-
+/* ADMIN TESTIMONIAL */
 function loadTestimonialAdmin(){
 testimonialAdminList.innerHTML="";
-
 testimonials.forEach(t=>{
 testimonialAdminList.innerHTML+=`
-<div style="display:flex;align-items:center;gap:10px;margin:5px 0;">
+<div class="admin-item">
 <img src="${t.image}" width="50">
 <button class="del-btn" onclick="deleteTestimonial('${t.id}')">Delete</button>
 </div>`;
@@ -389,9 +284,7 @@ cloudName:"db92r6j9z",
 uploadPreset:"ummuhalti"
 },async(e,r)=>{
 if(r && r.event==="success"){
-await addDoc(collection(db,"testimonials"),{
-image:r.info.secure_url
-});
+await addDoc(collection(db,"testimonials"),{image:r.info.secure_url});
 loadTestimonials();
 }
 });
@@ -402,6 +295,7 @@ await deleteDoc(doc(db,"testimonials",id));
 loadTestimonials();
 };
 
+/* BASIC ADMIN */
 window.openAdmin=()=>admin.style.display="block";
 window.closeAdmin=()=>admin.style.display="none";
 
