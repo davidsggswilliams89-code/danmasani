@@ -109,11 +109,11 @@ LUXURY HEAVEN
 <h2 style="text-align:center;">✨ About Luxury Heaven</h2>
 
 <p style="text-align:center;line-height:1.6;">
-<strong>Luxury Heaven by Aleesha</strong> is your trusted destination for premium fashion items across Nigeria.
+Luxury Heaven by Aleesha is your trusted online fashion store for premium women’s wear across Nigeria.
 <br><br>
-We specialize in shoes, bags, abayas, hijabs, and accessories designed to give you confidence and elegance.
+We specialize in shoes, bags, abayas, hijabs, and accessories.
 <br><br>
-We operate fully online with fast WhatsApp ordering and nationwide delivery.
+Fast WhatsApp ordering & nationwide delivery.
 </p>
 
 </div>
@@ -136,7 +136,6 @@ We operate fully online with fast WhatsApp ordering and nationwide delivery.
 <hr>
 
 <h3>Delete Product</h3>
-
 <select id="deleteCategory" onchange="loadDeleteProducts()"></select>
 <div id="deleteProductList"></div>
 
@@ -166,12 +165,17 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc } 
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-const app = initializeApp({
-apiKey:"AIzaSyD40daowTCCVrKr1kWI6krf9nB7OHp8mWU",
-authDomain:"luxury-heaven-c24df.firebaseapp.com",
-projectId:"luxury-heaven-c24df"
-});
+/* 🔥 NEW FIREBASE CONFIG (UPDATED) */
+const firebaseConfig = {
+apiKey: "AIzaSyA6ZaMnWKJEvSUlJgh31tU6rj8CvuietuM",
+authDomain: "bob-26647.firebaseapp.com",
+projectId: "bob-26647",
+storageBucket: "bob-26647.firebasestorage.app",
+messagingSenderId: "468659293220",
+appId: "1:468659293220:web:507832347dc70ab78ddcb1"
+};
 
+const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 let categories=[],products=[],uploadedImages=[],active="about";
@@ -183,7 +187,7 @@ await loadProducts();
 await loadTestimonials();
 };
 
-/* CATEGORY LOAD */
+/* CATEGORY */
 async function loadCategories(){
 categories=[];
 let snap=await getDocs(collection(db,"categories"));
@@ -204,7 +208,6 @@ btn.onclick=()=>show(c.name,btn);
 categoryBar.appendChild(btn);
 });
 
-/* FILL DROPDOWNS */
 category.innerHTML="";
 catDelete.innerHTML="";
 deleteCategory.innerHTML="";
@@ -223,7 +226,7 @@ let snap=await getDocs(collection(db,"products"));
 snap.forEach(d=>products.push({id:d.id,...d.data()}));
 }
 
-/* DELETE PRODUCT LIST */
+/* DELETE PRODUCT */
 window.loadDeleteProducts=()=>{
 let cat=deleteCategory.value;
 deleteProductList.innerHTML="";
@@ -238,7 +241,6 @@ deleteProductList.innerHTML+=`
 });
 };
 
-/* DELETE PRODUCT */
 window.deleteProduct=async(id)=>{
 await deleteDoc(doc(db,"products",id));
 await loadProducts();
@@ -259,14 +261,12 @@ testimonialCarousel.innerHTML+=`<img src="${t.image}">`;
 
 let dot=document.createElement("span");
 dot.className="dot"+(i===0?" active":"");
-dot.onclick=()=>testimonialCarousel.scrollTo({left:i*testimonialCarousel.clientWidth,behavior:"smooth"});
 testimonialDots.appendChild(dot);
 });
 
 loadTestimonialAdmin();
 }
 
-/* ADMIN TESTIMONIAL */
 function loadTestimonialAdmin(){
 testimonialAdminList.innerHTML="";
 testimonials.forEach(t=>{
@@ -295,7 +295,6 @@ await deleteDoc(doc(db,"testimonials",id));
 loadTestimonials();
 };
 
-/* BASIC ADMIN */
 window.openAdmin=()=>admin.style.display="block";
 window.closeAdmin=()=>admin.style.display="none";
 
