@@ -9,10 +9,20 @@
 <style>
 body{margin:0;font-family:Arial;background:#f5f5f5;padding-top:80px;}
 
+/* HEADER */
 .top-bar{
 position:fixed;top:0;width:100%;height:45px;
 background:#111;color:white;display:flex;
 align-items:center;padding:0 10px;z-index:3000;
+}
+
+/* LOGO */
+.logo{
+height:45px;
+width:auto;
+object-fit:contain;
+display:block;
+margin-left:-10px; /* removes left padding gap */
 }
 
 .admin-icon{margin-left:auto;cursor:pointer;}
@@ -94,9 +104,17 @@ width:60px;height:60px;object-fit:cover;border-radius:8px;
 
 <body>
 
+<!-- HEADER WITH LOGO -->
 <div class="top-bar">
+
+<img src="logo.png" class="logo">
+
+<div style="margin-left:10px;font-weight:bold;">
 LUXURY HEAVEN
+</div>
+
 <div class="admin-icon" id="adminBtn">🔒</div>
+
 </div>
 
 <div class="category-bar" id="categoryBar"></div>
@@ -181,15 +199,12 @@ let categories=[],products=[],testimonials=[];
 let uploadedImages=[];
 let active="ABOUT";
 
-/* SAFE INIT */
 window.addEventListener("DOMContentLoaded", init);
 
 async function init(){
-
 await loadAll();
 renderCategories();
 
-/* EVENTS FIXED */
 adminBtn.onclick=openAdmin;
 closeAdmin.onclick=()=>admin.style.display="none";
 
@@ -202,13 +217,11 @@ uploadTestBtn.onclick=uploadTestimonial;
 deleteCatSelect.onchange=loadDeleteProducts;
 }
 
-/* PASSWORD */
 function openAdmin(){
 let p=prompt("Enter Password");
 if(p==="12345"){admin.style.display="block";}
 }
 
-/* LOAD */
 async function loadAll(){
 
 categories=[];products=[];testimonials=[];
@@ -227,7 +240,6 @@ renderTestimonials();
 renderCarousel();
 }
 
-/* CATEGORY BAR FIX */
 function renderCategories(){
 categoryBar.innerHTML="";
 
@@ -246,7 +258,6 @@ categoryBar.appendChild(btn);
 });
 }
 
-/* VIEW FIX */
 function show(type,btn){
 document.querySelectorAll(".category-btn").forEach(b=>b.classList.remove("active"));
 btn.classList.add("active");
@@ -263,7 +274,6 @@ renderProducts();
 }
 }
 
-/* PRODUCTS */
 function renderProducts(){
 productView.innerHTML="";
 products.filter(p=>p.category===active).forEach(p=>{
@@ -277,7 +287,6 @@ productView.innerHTML+=`
 });
 }
 
-/* DELETE */
 function loadDeleteProducts(){
 deleteProductBox.innerHTML="";
 products.filter(p=>p.category===deleteCatSelect.value).forEach(p=>{
@@ -295,7 +304,6 @@ await loadAll();
 loadDeleteProducts();
 };
 
-/* DROPDOWNS */
 function fillDropdowns(){
 pcat.innerHTML="";
 delCat.innerHTML="";
@@ -308,7 +316,6 @@ deleteCatSelect.innerHTML+=`<option value="${c.name}">${c.name}</option>`;
 });
 }
 
-/* CATEGORY */
 async function addCategory(){
 await addDoc(collection(db,"categories"),{name:newCat.value});
 location.reload();
@@ -319,7 +326,6 @@ await deleteDoc(doc(db,"categories",delCat.value));
 location.reload();
 }
 
-/* PRODUCT */
 async function saveProduct(){
 await addDoc(collection(db,"products"),{
 name:pname.value,
@@ -330,7 +336,6 @@ images:uploadedImages
 location.reload();
 }
 
-/* CLOUDINARY */
 function uploadImages(){
 uploadedImages=[];
 cloudinary.openUploadWidget({
@@ -345,7 +350,6 @@ preview.innerHTML=uploadedImages.map(i=>`<img src="${i}">`).join("");
 });
 }
 
-/* TESTIMONIAL */
 function renderTestimonials(){
 testimonialBox.innerHTML="";
 testimonials.forEach(t=>{
@@ -374,7 +378,6 @@ await deleteDoc(doc(db,"testimonials",id));
 await loadAll();
 };
 
-/* CAROUSEL */
 function renderCarousel(){
 testimonialCarousel.innerHTML="";
 testimonialDots.innerHTML="";
