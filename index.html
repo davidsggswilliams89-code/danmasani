@@ -7,24 +7,47 @@
 <script src="https://widget.cloudinary.com/v2.0/global/all.js"></script>
 
 <style>
-body{margin:0;font-family:Arial;background:#f5f5f5;padding-top:80px;}
-
-.top-bar{
-position:fixed;top:0;width:100%;height:45px;
-background:#111;color:white;display:flex;
-align-items:center;padding:0 10px;z-index:3000;
+body{
+margin:0;
+font-family:Arial;
+background:#f5f5f5;
+padding-top:80px;
 }
 
-.admin-icon{margin-left:auto;cursor:pointer;}
+.top-bar{
+position:fixed;
+top:0;
+width:100%;
+height:45px;
+background:#111;
+color:white;
+display:flex;
+align-items:center;
+padding:0 10px;
+z-index:3000;
+}
+
+.admin-icon{
+margin-left:auto;
+cursor:pointer;
+}
 
 .category-bar{
-position:fixed;top:45px;width:100%;height:40px;
-background:#222;display:flex;overflow-x:auto;
+position:fixed;
+top:45px;
+width:100%;
+height:40px;
+background:#222;
+display:flex;
+overflow-x:auto;
 }
 
 .category-btn{
-color:white;padding:6px 14px;margin:5px;
-border-radius:20px;cursor:pointer;
+color:white;
+padding:6px 14px;
+margin:5px;
+border-radius:20px;
+cursor:pointer;
 white-space:nowrap;
 }
 .category-btn.active{background:#25D366;}
@@ -33,21 +56,24 @@ white-space:nowrap;
 .active-view{display:block;}
 
 .card{
-background:white;border-radius:12px;
-padding:10px;margin:10px 0;
+background:white;
+border-radius:12px;
+padding:10px;
+margin:10px 0;
 }
 
-/* 🔥 CAROUSEL */
+/* 🔥 IMAGE CAROUSEL (INCREASED HEIGHT) */
 .carousel{
 display:flex;
 overflow-x:auto;
 scroll-snap-type:x mandatory;
 border-radius:10px;
+height:380px;
 }
 
 .carousel img{
 min-width:100%;
-height:300px;
+height:380px;
 object-fit:cover;
 scroll-snap-align:center;
 border-radius:10px;
@@ -74,11 +100,15 @@ background:#25D366;
 }
 
 .price{
-background:#111;color:white;padding:10px;
-text-align:center;border-radius:8px;
+background:#111;
+color:white;
+padding:10px;
+text-align:center;
+border-radius:8px;
 margin-top:8px;
 }
 
+/* 🔥 BUY BUTTON WITH WHATSAPP STYLE */
 .buy-btn{
 background:#25D366;
 color:white;
@@ -88,11 +118,20 @@ width:100%;
 border-radius:12px;
 margin-top:10px;
 font-weight:bold;
+
+display:flex;
+align-items:center;
+justify-content:center;
+gap:8px;
 }
 
 .admin{
-display:none;position:fixed;top:0;left:0;
-width:100%;height:100%;
+display:none;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
 background:white;
 z-index:9999;
 padding:10px;
@@ -134,20 +173,22 @@ border-radius:10px;
 
 <body>
 
-<!-- TOP -->
+<!-- TOP BAR -->
 <div class="top-bar">
 LUXURY HEAVEN
 <div class="admin-icon" onclick="openAdmin()">🔒</div>
 </div>
 
-<!-- CATEGORY -->
+<!-- CATEGORY BAR -->
 <div class="category-bar" id="categoryBar"></div>
 
 <!-- ABOUT -->
 <div id="aboutView" class="view active-view">
 <div class="card">
 <h2 style="text-align:center;">✨ About Luxury Heaven</h2>
-<p style="text-align:center;">Premium fashion store in Nigeria</p>
+<p style="text-align:center;">
+Premium fashion store in Nigeria
+</p>
 </div>
 </div>
 
@@ -227,6 +268,7 @@ async function loadCategories(){
 categories = [];
 
 let snap = await getDocs(collection(db,"categories"));
+
 snap.forEach(d=>{
 categories.push({id:d.id,...d.data()});
 });
@@ -279,7 +321,7 @@ bar.appendChild(btn);
 });
 }
 
-/* VIEW */
+/* VIEW SWITCH */
 function showView(type,btn){
 
 document.querySelectorAll(".category-btn")
@@ -331,7 +373,8 @@ ${(p.images||[]).map(img=>`<img src="${img}">`).join("")}
 <div class="price">₦${p.price}</div>
 
 <button class="buy-btn" onclick="buyNow(${i})">
-🛒 BUY NOW
+<img src="https://cdn-icons-png.flaticon.com/512/733/733585.png" width="18">
+BUY NOW
 </button>
 
 </div>
@@ -368,7 +411,7 @@ ${img}`;
 window.open("https://wa.me/2349114738932?text=" + encodeURIComponent(msg));
 };
 
-/* DOT CAROUSEL */
+/* CAROUSEL DOTS */
 function setupCarousel(i){
 
 let car = document.querySelector(".car"+i);
@@ -396,7 +439,7 @@ if(dots[index]) dots[index].classList.add("active");
 });
 }
 
-/* CLOUDINARY */
+/* CLOUDINARY UPLOAD */
 window.uploadImages = () => {
 
 uploadedImages = [];
