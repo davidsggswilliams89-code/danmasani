@@ -49,13 +49,11 @@ white-space:nowrap;
 }
 .category-btn.active{background:#25D366;}
 
-/* CLEAN VIEW SYSTEM (ONLY ONE RULE) */
 .view{
 display:none;
 padding:10px;
 }
 
-/* CARDS */
 .card{
 background:white;
 border-radius:12px;
@@ -63,7 +61,6 @@ padding:10px;
 margin:10px 0;
 }
 
-/* IMAGE */
 .carousel{
 display:flex;
 overflow-x:auto;
@@ -80,8 +77,6 @@ object-fit:cover;
 scroll-snap-align:center;
 border-radius:10px;
 }
-
-.carousel::-webkit-scrollbar{display:none;}
 
 .price{
 background:#111;
@@ -107,7 +102,6 @@ justify-content:center;
 gap:8px;
 }
 
-/* ADMIN */
 .admin{
 display:none;
 position:fixed;
@@ -180,13 +174,11 @@ LUXURY HEAVEN
 
 <div class="category-bar" id="categoryBar"></div>
 
-<!-- ABOUT (DEFAULT SHOW) -->
+<!-- ABOUT -->
 <div id="aboutView" class="view" style="display:block;">
 <div class="card">
 <h2 style="text-align:center;">✨ About Luxury Heaven</h2>
-<p style="text-align:center;">
-Premium fashion store in Nigeria. Shoes, bags, hijabs & accessories.
-</p>
+<p style="text-align:center;">Premium fashion store in Nigeria</p>
 </div>
 </div>
 
@@ -215,6 +207,7 @@ Premium fashion store in Nigeria. Shoes, bags, hijabs & accessories.
 
 <button class="btn" onclick="uploadImages()">Upload Images</button>
 <div class="preview" id="preview"></div>
+
 <button class="btn" onclick="saveProduct()">Save Product</button>
 
 <hr>
@@ -222,16 +215,6 @@ Premium fashion store in Nigeria. Shoes, bags, hijabs & accessories.
 <h4>Delete Products</h4>
 <select id="deleteCatSelect" onchange="loadDeleteProducts()"></select>
 <div id="deleteProductBox"></div>
-
-<hr>
-
-<h4>Testimonials</h4>
-<button class="btn" onclick="uploadTestimonial()">Upload Testimonial Image</button>
-<div id="testimonialBox"></div>
-
-<hr>
-
-<button class="del-btn" onclick="closeAdmin()">Close</button>
 
 </div>
 
@@ -253,8 +236,9 @@ appId: "1:468659293220:web:507832347dc70ab78ddcb1"
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-let categories=[],products=[],testimonials=[];
+let categories=[],products=[];
 let uploadedImages=[];
+let active="ABOUT";
 
 /* PASSWORD */
 const ADMIN_PASSWORD="12345";
@@ -276,10 +260,11 @@ await loadAll();
 renderCategories();
 };
 
-/* DATA */
+/* LOAD DATA */
 async function loadAll(){
 
-categories=[];products=[];testimonials=[];
+categories=[];
+products=[];
 
 let c=await getDocs(collection(db,"categories"));
 c.forEach(d=>categories.push({id:d.id,...d.data()}));
@@ -287,9 +272,10 @@ c.forEach(d=>categories.push({id:d.id,...d.data()}));
 let p=await getDocs(collection(db,"products"));
 p.forEach(d=>products.push({id:d.id,...d.data(),images:Array.isArray(d.data().images)?d.data().images:[]}));
 
+fillAdminDropdowns(); // ✅ FIX HERE
 }
 
-/* CATEGORY */
+/* CATEGORY BAR */
 function renderCategories(){
 let bar=document.getElementById("categoryBar");
 bar.innerHTML="";
@@ -309,11 +295,13 @@ bar.appendChild(btn);
 });
 }
 
-/* 🔥 FIXED VIEW SYSTEM */
+/* VIEW */
 function show(type,btn){
 
 document.querySelectorAll(".category-btn").forEach(b=>b.classList.remove("active"));
 btn.classList.add("active");
+
+active=type;
 
 if(type==="ABOUT"){
 aboutView.style.display="block";
@@ -324,16 +312,16 @@ return;
 aboutView.style.display="none";
 productView.style.display="block";
 
-renderProducts(type);
+renderProducts();
 }
 
 /* PRODUCTS */
-function renderProducts(cat){
+function renderProducts(){
 
 let box=document.getElementById("productView");
 box.innerHTML="";
 
-let list=products.filter(p=>p.category===cat);
+let list=products.filter(p=>p.category===active);
 
 list.forEach(p=>{
 box.innerHTML+=`
@@ -356,17 +344,35 @@ BUY NOW
 });
 }
 
-/* CATEGORY + PRODUCT FUNCTIONS */
+/* ADMIN DROPDOWNS FIX 🔥 */
+function fillAdminDropdowns(){
+
+pcat.innerHTML="";
+delCat.innerHTML="";
+deleteCatSelect.innerHTML="";
+
+categories.forEach(c=>{
+pcat.innerHTML+=`<option value="${c.name}">${c.name}</option>`;
+delCat.innerHTML+=`<option value="${c.id}">${c.name}</option>`;
+deleteCatSelect.innerHTML+=`<option value="${c.name}">${c.name}</option>`;
+});
+}
+
+/* CATEGORY */
 window.addCategory=async()=>{
 await addDoc(collection(db,"categories"),{name:newCat.value});
-location.reload();
+newCat.value="";
+await loadAll();
+renderCategories();
 };
 
 window.deleteCategory=async()=>{
 await deleteDoc(doc(db,"categories",delCat.value));
-location.reload();
+await loadAll();
+renderCategories();
 };
 
+/* PRODUCT */
 window.saveProduct=async()=>{
 await addDoc(collection(db,"products"),{
 name:pname.value,
@@ -375,7 +381,7 @@ category:pcat.value,
 images:uploadedImages,
 date:Date.now()
 });
-location.reload();
+await loadAll();
 };
 
 /* CLOUDINARY */
