@@ -105,24 +105,9 @@ HALAL TEXTILE
 <p style="text-align:center;line-height:1.6;">
 <strong>Luxury Heaven by Aleesha</strong> is your trusted destination for premium fashion items across Nigeria.
 <br><br>
-We specialize in high-quality and affordable products including
-<strong>shoes, bags, abayas, hijabs, and stylish accessories</strong> designed to give you confidence and elegance.
+We specialize in high-quality and affordable products including shoes, bags, abayas, hijabs, and stylish accessories.
 <br><br>
-Our goal is simple — to provide every woman with modern, classy, and comfortable fashion at the best prices.
-We carefully select our products to ensure quality, beauty, and satisfaction.
-<br><br>
-We operate fully online, making shopping easy, fast, and stress-free through WhatsApp ordering.
-</p>
-
-<hr>
-
-<h3>📞 Contact Us</h3>
-
-<p style="line-height:1.8;">
-📱 <strong>Phone / WhatsApp:</strong> 09114738932<br>
-📍 <strong>Location:</strong> Nigeria (Online Store)<br>
-🚚 <strong>Delivery:</strong> Nationwide Available<br>
-🕒 <strong>Working Hours:</strong> Monday – Saturday (9:00AM – 6:00PM)
+We operate fully online through WhatsApp ordering.
 </p>
 
 <hr>
@@ -130,10 +115,10 @@ We operate fully online, making shopping easy, fast, and stress-free through Wha
 <h3>💬 Chat With Us</h3>
 
 <a href="https://wa.me/2349114738932" target="_blank" style="text-decoration:none;">
-  <button class="buy-btn">
-    <img src="https://cdn-icons-png.flaticon.com/512/733/733585.png" width="20">
-    Chat on WhatsApp
-  </button>
+<button class="buy-btn">
+<img src="https://cdn-icons-png.flaticon.com/512/733/733585.png" width="20">
+Chat on WhatsApp
+</button>
 </a>
 
 </div>
@@ -185,9 +170,9 @@ import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc }
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const app = initializeApp({
-  apiKey: "AIzaSyA6ZaMnWKJEvSUlJgh31tU6rj8CvuietuM",
-  authDomain: "bob-26647.firebaseapp.com",
-  projectId: "bob-26647"
+apiKey: "AIzaSyA6ZaMnWKJEvSUlJgh31tU6rj8CvuietuM",
+authDomain: "bob-26647.firebaseapp.com",
+projectId: "bob-26647"
 });
 
 const db = getFirestore(app);
@@ -195,11 +180,15 @@ const db = getFirestore(app);
 let categories=[],products=[],uploadedImages=[],active="about";
 let testimonials=[];
 
+let categoryBar = document.getElementById("categoryBar");
+
 window.onload=async()=>{
 await loadCategories();
 await loadProducts();
 await loadTestimonials();
 };
+
+/* ---------------- CATEGORIES ---------------- */
 
 async function loadCategories(){
 categories=[];
@@ -207,6 +196,7 @@ let snap=await getDocs(collection(db,"categories"));
 snap.forEach(d=>categories.push({id:d.id,...d.data()}));
 
 categoryBar.innerHTML="";
+
 let about=document.createElement("div");
 about.className="category-btn active";
 about.innerText="ABOUT";
@@ -228,6 +218,8 @@ category.innerHTML+=`<option value="${c.name}">${c.name}</option>`;
 catDelete.innerHTML+=`<option value="${c.id}">${c.name}</option>`;
 });
 }
+
+/* ---------------- PRODUCTS ---------------- */
 
 async function loadProducts(){
 products=[];
@@ -259,8 +251,11 @@ let list=products.filter(p=>p.category===active);
 list.forEach((p,i)=>{
 productView.innerHTML+=`
 <div class="card">
-<div class="carousel">
-${p.images.map(img=>`<img src="${img}">`).join("")}
+
+<div class="carousel" id="carousel-${i}" data-index="0">
+${p.images.map((img,idx)=>`
+<img src="${img}" onclick="setImage(${i},${idx})">
+`).join("")}
 </div>
 
 <div style="text-align:center;font-weight:bold;margin-top:10px;">
@@ -273,24 +268,46 @@ ${p.name}
 <img src="https://cdn-icons-png.flaticon.com/512/733/733585.png" width="18">
 BUY NOW
 </button>
+
 </div>`;
 });
 }
 
-window.buyNow=(i)=>{
-let list=products.filter(p=>p.category===active);
-let p=list[i];
-
-let msg=`Hello 👋,
-
-🧵 ${p.category}
-🛍️ ${p.name}
-💰 ₦${p.price}
-
-Is this available?`;
-
-window.open("https://wa.me/2349114738932?text="+encodeURIComponent(msg));
+/* track selected image */
+window.setImage = (productIndex, imageIndex) => {
+let carousel = document.getElementById("carousel-" + productIndex);
+if(carousel){
+carousel.setAttribute("data-index", imageIndex);
+}
 };
+
+/* FIXED BUY BUTTON */
+window.buyNow = (i) => {
+let list = products.filter(p => p.category === active);
+let p = list[i];
+
+let carousel = document.getElementById("carousel-" + i);
+let imgIndex = carousel ? carousel.getAttribute("data-index") : 0;
+
+let selectedImage = p.images[imgIndex] || p.images[0];
+
+let msg = `Hello 👋,
+
+I want to order this Product:
+
+🧵 Category: ${p.category.toUpperCase()}
+🛍️ Product: ${p.name}
+💰 Price: ₦${p.price} per yard
+
+🖼️ Selected Image:
+${selectedImage}
+
+Is this available? I want to buy.`;
+
+window.open("https://wa.me/2349114738932?text=" + encodeURIComponent(msg));
+};
+
+/* ---------------- CLOUDINARY ---------------- */
 
 window.uploadImages=()=>{
 cloudinary.openUploadWidget({
@@ -303,6 +320,8 @@ uploadedImages.push(r.info.secure_url);
 }
 });
 };
+
+/* ---------------- SAVE PRODUCT ---------------- */
 
 window.saveProduct=async()=>{
 if(uploadedImages.length===0)return alert("Upload images first");
@@ -321,86 +340,7 @@ price.value="";
 loadProducts();
 };
 
-window.addCategory=async()=>{
-await addDoc(collection(db,"categories"),{name:newCat.value});
-newCat.value="";
-loadCategories();
-};
-
-window.deleteCategory=async()=>{
-await deleteDoc(doc(db,"categories",catDelete.value));
-loadCategories();
-};
-
-async function loadTestimonials(){
-testimonials=[];
-let snap=await getDocs(collection(db,"testimonials"));
-snap.forEach(d=>testimonials.push({id:d.id,...d.data()}));
-
-renderTestimonials();
-loadTestimonialAdmin();
-}
-
-function renderTestimonials(){
-testimonialCarousel.innerHTML="";
-testimonialDots.innerHTML="";
-
-testimonials.forEach((t,i)=>{
-testimonialCarousel.innerHTML+=`<img src="${t.image}">`;
-
-let dot=document.createElement("span");
-dot.className="dot"+(i===0?" active":"");
-dot.onclick=()=>scrollTestimonial(i);
-testimonialDots.appendChild(dot);
-});
-
-scrollTestimonial(0);
-}
-
-function scrollTestimonial(i){
-testimonialCarousel.scrollTo({
-left:testimonialCarousel.clientWidth*i,
-behavior:"smooth"
-});
-
-document.querySelectorAll("#testimonialDots .dot")
-.forEach(d=>d.classList.remove("active"));
-
-if(testimonialDots.children[i]){
-testimonialDots.children[i].classList.add("active");
-}
-}
-
-function loadTestimonialAdmin(){
-testimonialAdminList.innerHTML="";
-
-testimonials.forEach(t=>{
-testimonialAdminList.innerHTML+=`
-<div style="display:flex;align-items:center;gap:10px;margin:5px 0;">
-<img src="${t.image}" width="50">
-<button class="del-btn" onclick="deleteTestimonial('${t.id}')">Delete</button>
-</div>`;
-});
-}
-
-window.uploadTestimonial=()=>{
-cloudinary.openUploadWidget({
-cloudName:"db92r6j9z",
-uploadPreset:"ummuhalti"
-},async(e,r)=>{
-if(r && r.event==="success"){
-await addDoc(collection(db,"testimonials"),{
-image:r.info.secure_url
-});
-loadTestimonials();
-}
-});
-};
-
-window.deleteTestimonial=async(id)=>{
-await deleteDoc(doc(db,"testimonials",id));
-loadTestimonials();
-};
+/* ---------------- ADMIN ---------------- */
 
 window.openAdmin=()=>admin.style.display="block";
 window.closeAdmin=()=>admin.style.display="none";
