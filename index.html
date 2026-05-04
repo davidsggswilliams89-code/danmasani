@@ -32,26 +32,9 @@ white-space:nowrap;
 .view{display:none;padding:10px;}
 .active-view{display:block;}
 
-.card{
-background:white;border-radius:12px;
-padding:10px;margin:10px 0;
-}
+.card{background:white;border-radius:12px;padding:10px;margin:10px 0;}
 
-.carousel img{
-width:100%;border-radius:10px;margin-top:5px;
-}
-
-.price{
-background:#111;color:white;padding:10px;
-text-align:center;border-radius:8px;margin-top:8px;
-}
-
-.buy-btn{
-background:#25D366;color:white;
-padding:12px;border:none;width:100%;
-border-radius:12px;margin-top:10px;
-font-weight:bold;
-}
+.price{background:#111;color:white;padding:10px;text-align:center;border-radius:8px;}
 
 .admin{
 display:none;position:fixed;top:0;left:0;
@@ -63,31 +46,30 @@ input,select{width:100%;padding:10px;margin:5px 0;}
 
 .btn{width:100%;padding:10px;background:green;color:white;border:none;margin-top:5px;}
 .del-btn{background:red;color:white;border:none;padding:6px;margin-top:5px;}
+
+.preview img{
+width:100px;height:100px;object-fit:cover;
+margin:5px;border-radius:10px;
+}
 </style>
 </head>
 
 <body>
 
-<!-- TOP -->
 <div class="top-bar">
 LUXURY HEAVEN
 <div class="admin-icon" onclick="openAdmin()">🔒</div>
 </div>
 
-<!-- CATEGORY -->
 <div class="category-bar" id="categoryBar"></div>
 
-<!-- ABOUT -->
 <div id="aboutView" class="view active-view">
 <div class="card">
 <h2 style="text-align:center;">✨ About Luxury Heaven</h2>
-<p style="text-align:center;">
-Premium fashion store in Nigeria
-</p>
+<p style="text-align:center;">Premium fashion store in Nigeria</p>
 </div>
 </div>
 
-<!-- PRODUCTS -->
 <div id="productView" class="view"></div>
 
 <!-- ADMIN -->
@@ -95,18 +77,12 @@ Premium fashion store in Nigeria
 
 <h3>ADMIN PANEL</h3>
 
-<!-- CATEGORY -->
 <h4>Add Category</h4>
 <input id="newCat" placeholder="Category name">
 <button class="btn" onclick="addCategory()">Add Category</button>
 
-<h4>Delete Category</h4>
-<select id="delCat"></select>
-<button class="del-btn" onclick="deleteCategory()">Delete</button>
-
 <hr>
 
-<!-- PRODUCT -->
 <h4>Add Product</h4>
 
 <input id="pname" placeholder="Product name">
@@ -114,11 +90,11 @@ Premium fashion store in Nigeria
 
 <select id="pcat"></select>
 
-<input id="img1" placeholder="Image URL 1">
-<input id="img2" placeholder="Image URL 2 (optional)">
-<input id="img3" placeholder="Image URL 3 (optional)">
+<button class="btn" onclick="uploadImages()">📸 Upload Images</button>
 
-<button class="btn" onclick="addProduct()">Save Product</button>
+<div class="preview" id="preview"></div>
+
+<button class="btn" onclick="saveProduct()">Save Product</button>
 
 <hr>
 
@@ -129,7 +105,7 @@ Premium fashion store in Nigeria
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc }
+import { getFirestore, collection, getDocs, addDoc }
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -144,171 +120,98 @@ appId: "1:468659293220:web:507832347dc70ab78ddcb1"
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-let categories = [];
-let products = [];
-let active = "ABOUT";
+let categories=[];
+let products=[];
+let uploadedImages=[];
 
-/* ADMIN */
-window.openAdmin = ()=>admin.style.display="block";
-window.closeAdmin = ()=>admin.style.display="none";
+/* ADMIN OPEN/CLOSE */
+window.openAdmin=()=>admin.style.display="block";
+window.closeAdmin=()=>admin.style.display="none";
 
-/* INIT */
-window.onload = async ()=>{
+/* LOAD */
+window.onload=async()=>{
 await loadCategories();
 await loadProducts();
 renderCategoryBar();
 };
 
-/* LOAD CATEGORIES */
+/* CATEGORIES */
 async function loadCategories(){
 categories=[];
 let snap=await getDocs(collection(db,"categories"));
-snap.forEach(d=>categories.push({id:d.id,...d.data()}));
+snap.forEach(d=>categories.push(d.data().name));
+
+let sel=document.getElementById("pcat");
+sel.innerHTML="";
+categories.forEach(c=>{
+sel.innerHTML+=`<option>${c}</option>`;
+});
 }
 
-/* LOAD PRODUCTS */
+/* PRODUCTS */
 async function loadProducts(){
 products=[];
 let snap=await getDocs(collection(db,"products"));
 snap.forEach(d=>products.push(d.data()));
 }
 
-/* CATEGORY BAR */
+/* CATEGORY */
 function renderCategoryBar(){
-
 let bar=document.getElementById("categoryBar");
-bar.innerHTML="";
-
-/* ABOUT */
-let about=document.createElement("div");
-about.className="category-btn active";
-about.innerText="ABOUT";
-about.onclick=()=>show("ABOUT",about);
-bar.appendChild(about);
-
-/* CATEGORIES */
-categories.forEach(c=>{
-let btn=document.createElement("div");
-btn.className="category-btn";
-btn.innerText=c.name;
-btn.onclick=()=>show(c.name,btn);
-bar.appendChild(btn);
-});
-
-/* ADMIN DROPDOWN */
-let sel=document.getElementById("pcat");
-let del=document.getElementById("delCat");
-
-sel.innerHTML="";
-del.innerHTML="";
+bar.innerHTML="<div class='category-btn active'>ABOUT</div>";
 
 categories.forEach(c=>{
-sel.innerHTML+=`<option>${c.name}</option>`;
-del.innerHTML+=`<option value="${c.id}">${c.name}</option>`;
+bar.innerHTML+=`<div class='category-btn'>${c}</div>`;
 });
 }
 
-/* VIEW */
-function show(type,btn){
+/* ⭐ CLOUDINARY UPLOAD (MOBILE GALLERY) */
+window.uploadImages=()=>{
+cloudinary.openUploadWidget(
+{
+cloudName: "db92r6j9z",   // 🔴 PUT YOUR CLOUDINARY CLOUD NAME
+uploadPreset: "ummuhalti", // 🔴 PUT YOUR UPLOAD PRESET
+sources: ["local","camera"],
+multiple: true,
+resourceType: "image"
+},
+(error,result)=>{
+if(!error && result.event==="success"){
+uploadedImages.push(result.info.secure_url);
 
-document.querySelectorAll(".category-btn").forEach(b=>b.classList.remove("active"));
-btn.classList.add("active");
-
-active=type;
-
-document.getElementById("aboutView").classList.remove("active-view");
-document.getElementById("productView").classList.remove("active-view");
-
-if(type==="ABOUT"){
-document.getElementById("aboutView").classList.add("active-view");
-}else{
-document.getElementById("productView").classList.add("active-view");
-renderProducts();
+document.getElementById("preview").innerHTML =
+uploadedImages.map(img=>`<img src="${img}">`).join("");
 }
-}
-
-/* PRODUCTS */
-function renderProducts(){
-
-let box=document.getElementById("productView");
-box.innerHTML="";
-
-let list=products.filter(p=>p.category===active);
-
-if(list.length===0){
-box.innerHTML="<p style='text-align:center'>No products</p>";
-return;
-}
-
-list.forEach(p=>{
-box.innerHTML+=`
-<div class="card">
-
-<div class="carousel">
-${(p.images||[]).map(i=>`<img src="${i}">`).join("")}
-</div>
-
-<h3>${p.name}</h3>
-
-<div class="price">₦${p.price}</div>
-
-</div>`;
 });
-}
-
-/* ⭐ ADD CATEGORY */
-window.addCategory=async()=>{
-let name=document.getElementById("newCat").value;
-
-if(!name)return alert("Enter category");
-
-await addDoc(collection(db,"categories"),{
-name:name.trim(),
-createdAt:Date.now()
-});
-
-document.getElementById("newCat").value="";
-await loadCategories();
-renderCategoryBar();
-alert("Category added");
 };
 
-/* DELETE CATEGORY */
-window.deleteCategory=async()=>{
-let id=document.getElementById("delCat").value;
-
-await deleteDoc(doc(db,"categories",id));
-
-await loadCategories();
-renderCategoryBar();
-alert("Deleted");
-};
-
-/* ADD PRODUCT */
-window.addProduct=async()=>{
+/* SAVE PRODUCT */
+window.saveProduct=async()=>{
 
 let name=document.getElementById("pname").value;
 let price=document.getElementById("price").value;
 let cat=document.getElementById("pcat").value;
 
-let img1=document.getElementById("img1").value;
-let img2=document.getElementById("img2").value;
-let img3=document.getElementById("img3").value;
-
-if(!name||!price||!cat)return alert("Fill all");
+if(!name||!price||!cat||uploadedImages.length===0){
+alert("Fill all fields + upload images");
+return;
+}
 
 await addDoc(collection(db,"products"),{
 name,
 price,
 category:cat,
-images:[img1,img2,img3].filter(Boolean),
+images:uploadedImages,
 date:Date.now()
 });
 
-alert("Product added");
+alert("Product saved!");
+
 document.getElementById("pname").value="";
 document.getElementById("price").value="";
-}
+uploadedImages=[];
+document.getElementById("preview").innerHTML="";
+};
 
 </script>
 
