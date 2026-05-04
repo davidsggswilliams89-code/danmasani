@@ -34,7 +34,14 @@ white-space:nowrap;
 
 .card{background:white;border-radius:12px;padding:10px;margin:10px 0;}
 
-.price{background:#111;color:white;padding:10px;text-align:center;border-radius:8px;}
+.price{
+background:#111;color:white;padding:10px;
+text-align:center;border-radius:8px;
+}
+
+.carousel img{
+width:100%;border-radius:10px;margin-top:5px;
+}
 
 .admin{
 display:none;position:fixed;top:0;left:0;
@@ -48,21 +55,23 @@ input,select{width:100%;padding:10px;margin:5px 0;}
 .del-btn{background:red;color:white;border:none;padding:6px;margin-top:5px;}
 
 .preview img{
-width:100px;height:100px;object-fit:cover;
-margin:5px;border-radius:10px;
+width:80px;height:80px;object-fit:cover;margin:5px;border-radius:10px;
 }
 </style>
 </head>
 
 <body>
 
+<!-- TOP -->
 <div class="top-bar">
 LUXURY HEAVEN
 <div class="admin-icon" onclick="openAdmin()">🔒</div>
 </div>
 
+<!-- CATEGORY -->
 <div class="category-bar" id="categoryBar"></div>
 
+<!-- ABOUT -->
 <div id="aboutView" class="view active-view">
 <div class="card">
 <h2 style="text-align:center;">✨ About Luxury Heaven</h2>
@@ -70,6 +79,7 @@ LUXURY HEAVEN
 </div>
 </div>
 
+<!-- PRODUCTS -->
 <div id="productView" class="view"></div>
 
 <!-- ADMIN -->
@@ -77,12 +87,18 @@ LUXURY HEAVEN
 
 <h3>ADMIN PANEL</h3>
 
+<!-- CATEGORY -->
 <h4>Add Category</h4>
 <input id="newCat" placeholder="Category name">
 <button class="btn" onclick="addCategory()">Add Category</button>
 
+<h4>Delete Category</h4>
+<select id="delCat"></select>
+<button class="del-btn" onclick="deleteCategory()">Delete</button>
+
 <hr>
 
+<!-- PRODUCT -->
 <h4>Add Product</h4>
 
 <input id="pname" placeholder="Product name">
@@ -105,7 +121,7 @@ LUXURY HEAVEN
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, getDocs, addDoc }
+import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc }
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -120,79 +136,162 @@ appId: "1:468659293220:web:507832347dc70ab78ddcb1"
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-let categories=[];
-let products=[];
-let uploadedImages=[];
+let categories = [];
+let products = [];
+let uploadedImages = [];
+let active = "ABOUT";
 
-/* ADMIN OPEN/CLOSE */
-window.openAdmin=()=>admin.style.display="block";
-window.closeAdmin=()=>admin.style.display="none";
+/* OPEN ADMIN */
+window.openAdmin = () => admin.style.display="block";
+window.closeAdmin = () => admin.style.display="none";
 
-/* LOAD */
-window.onload=async()=>{
+/* INIT */
+window.onload = async () => {
 await loadCategories();
 await loadProducts();
 renderCategoryBar();
 };
 
-/* CATEGORIES */
+/* LOAD CATEGORIES */
 async function loadCategories(){
-categories=[];
-let snap=await getDocs(collection(db,"categories"));
-snap.forEach(d=>categories.push(d.data().name));
+categories = [];
+let snap = await getDocs(collection(db,"categories"));
 
-let sel=document.getElementById("pcat");
-sel.innerHTML="";
-categories.forEach(c=>{
-sel.innerHTML+=`<option>${c}</option>`;
+snap.forEach(d=>{
+categories.push({id:d.id,...d.data()});
 });
+
+let sel = document.getElementById("pcat");
+let del = document.getElementById("delCat");
+
+sel.innerHTML="";
+del.innerHTML="";
+
+categories.forEach(c=>{
+sel.innerHTML += `<option>${c.name}</option>`;
+del.innerHTML += `<option value="${c.id}">${c.name}</option>`;
+});
+}
+
+/* LOAD PRODUCTS */
+async function loadProducts(){
+products = [];
+let snap = await getDocs(collection(db,"products"));
+
+snap.forEach(d=>{
+let data = d.data();
+products.push({
+...data,
+images: Array.isArray(data.images) ? data.images : []
+});
+});
+}
+
+/* CATEGORY BAR */
+function renderCategoryBar(){
+
+let bar = document.getElementById("categoryBar");
+bar.innerHTML = "";
+
+let about = document.createElement("div");
+about.className = "category-btn active";
+about.innerText = "ABOUT";
+about.onclick = () => showView("ABOUT", about);
+bar.appendChild(about);
+
+categories.forEach(c=>{
+let btn = document.createElement("div");
+btn.className = "category-btn";
+btn.innerText = c.name;
+btn.onclick = () => showView(c.name, btn);
+bar.appendChild(btn);
+});
+}
+
+/* VIEW SWITCH */
+function showView(type,btn){
+
+document.querySelectorAll(".category-btn").forEach(b=>b.classList.remove("active"));
+btn.classList.add("active");
+
+active = type;
+
+aboutView.classList.remove("active-view");
+productView.classList.remove("active-view");
+
+if(type==="ABOUT"){
+aboutView.classList.add("active-view");
+}else{
+productView.classList.add("active-view");
+renderProducts();
+}
 }
 
 /* PRODUCTS */
-async function loadProducts(){
-products=[];
-let snap=await getDocs(collection(db,"products"));
-snap.forEach(d=>products.push(d.data()));
+function renderProducts(){
+
+let box = document.getElementById("productView");
+box.innerHTML = "";
+
+let list = products.filter(p =>
+(p.category || "").toLowerCase() === active.toLowerCase()
+);
+
+if(list.length === 0){
+box.innerHTML = "<p style='text-align:center'>No products yet</p>";
+return;
 }
 
-/* CATEGORY */
-function renderCategoryBar(){
-let bar=document.getElementById("categoryBar");
-bar.innerHTML="<div class='category-btn active'>ABOUT</div>";
+list.forEach(p=>{
 
-categories.forEach(c=>{
-bar.innerHTML+=`<div class='category-btn'>${c}</div>`;
+box.innerHTML += `
+<div class="card">
+
+<div class="carousel">
+${(p.images||[]).map(i=>`<img src="${i}">`).join("")}
+</div>
+
+<h3>${p.name}</h3>
+
+<div class="price">₦${p.price}</div>
+
+</div>
+`;
 });
 }
 
-/* ⭐ CLOUDINARY UPLOAD (MOBILE GALLERY) */
-window.uploadImages=()=>{
+/* ⭐ CLOUDINARY UPLOAD */
+window.uploadImages = () => {
+
+uploadedImages = [];
+
 cloudinary.openUploadWidget(
 {
-cloudName: "db92r6j9z",   // 🔴 PUT YOUR CLOUDINARY CLOUD NAME
-uploadPreset: "ummuhalti", // 🔴 PUT YOUR UPLOAD PRESET
+cloudName: "db92r6j9z",
+uploadPreset: "ummuhalti",
 sources: ["local","camera"],
 multiple: true,
 resourceType: "image"
 },
 (error,result)=>{
+
 if(!error && result.event==="success"){
 uploadedImages.push(result.info.secure_url);
 
 document.getElementById("preview").innerHTML =
-uploadedImages.map(img=>`<img src="${img}">`).join("");
+uploadedImages.map(i=>`<img src="${i}">`).join("");
 }
 });
 };
 
 /* SAVE PRODUCT */
-window.saveProduct=async()=>{
+window.saveProduct = async () => {
 
-let name=document.getElementById("pname").value;
-let price=document.getElementById("price").value;
-let cat=document.getElementById("pcat").value;
+let name = document.getElementById("pname").value;
+let price = document.getElementById("price").value;
+let cat = document.getElementById("pcat").value;
 
-if(!name||!price||!cat||uploadedImages.length===0){
+if(!name || !price || !cat || uploadedImages.length === 0){
 alert("Fill all fields + upload images");
 return;
 }
@@ -200,17 +299,51 @@ return;
 await addDoc(collection(db,"products"),{
 name,
 price,
-category:cat,
-images:uploadedImages,
-date:Date.now()
+category: cat,
+images: uploadedImages,
+date: Date.now()
 });
 
 alert("Product saved!");
 
-document.getElementById("pname").value="";
-document.getElementById("price").value="";
-uploadedImages=[];
-document.getElementById("preview").innerHTML="";
+uploadedImages = [];
+document.getElementById("preview").innerHTML = "";
+
+await loadProducts();
+renderCategoryBar();
+};
+
+/* ADD CATEGORY */
+window.addCategory = async () => {
+
+let name = document.getElementById("newCat").value;
+
+if(!name) return alert("Enter category");
+
+await addDoc(collection(db,"categories"),{
+name: name.trim(),
+createdAt: Date.now()
+});
+
+document.getElementById("newCat").value="";
+
+await loadCategories();
+renderCategoryBar();
+
+alert("Category added");
+};
+
+/* DELETE CATEGORY */
+window.deleteCategory = async () => {
+
+let id = document.getElementById("delCat").value;
+
+await deleteDoc(doc(db,"categories",id));
+
+await loadCategories();
+renderCategoryBar();
+
+alert("Deleted");
 };
 
 </script>
