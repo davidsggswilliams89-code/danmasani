@@ -15,9 +15,7 @@ background:#111;color:white;display:flex;
 align-items:center;padding:0 10px;z-index:3000;
 }
 
-.logo{
-height:45px;width:auto;object-fit:contain;margin-left:-10px;
-}
+.logo{height:45px;object-fit:contain;margin-left:-10px;}
 
 .admin-icon{margin-left:auto;cursor:pointer;}
 
@@ -75,12 +73,6 @@ input,select{width:100%;padding:10px;margin:5px 0;}
 
 .preview img{width:80px;height:80px;object-fit:cover;margin:5px;border-radius:10px;}
 
-.delete-card{
-display:flex;align-items:center;gap:10px;
-background:#fff;padding:8px;border-radius:10px;margin:5px 0;
-}
-.delete-card img{width:60px;height:60px;object-fit:cover;border-radius:8px;}
-
 .dot{display:inline-block;width:8px;height:8px;margin:0 3px;border-radius:50%;background:#bbb;}
 .dot.active{background:#25D366;}
 </style>
@@ -90,9 +82,7 @@ background:#fff;padding:8px;border-radius:10px;margin:5px 0;
 
 <div class="top-bar">
 <img src="logo.jpg" class="logo">
-<div style="margin-left:10px;font-weight:bold;">
-HALAL TEXTILE
-</div>
+<div style="margin-left:10px;font-weight:bold;">HALAL TEXTILE</div>
 <div class="admin-icon" id="adminBtn">🔒</div>
 </div>
 
@@ -101,41 +91,9 @@ HALAL TEXTILE
 <!-- ABOUT -->
 <div id="aboutView" class="view" style="display:block;">
 <div class="card">
-
 <h3 style="text-align:center;">What Our Customers Say 💬</h3>
 <div class="carousel" id="testimonialCarousel"></div>
 <div style="text-align:center;margin-top:5px;" id="testimonialDots"></div>
-
-<hr>
-
-<h2 style="text-align:center;">Welcome to HALAL TEXTILE 👋</h2>
-
-<p style="text-align:center;">
-Your trusted destination for premium fabrics, modern fashion styles, and quality textile products across Nigeria.
-</p>
-
-<hr>
-
-<h3>About Us</h3>
-<p>
-HALAL TEXTILE is a professional textile brand specializing in high-quality fabrics,
-traditional attire, and modern fashion designs. We are committed to delivering
-durable, stylish, and affordable materials to our customers.
-<br><br>
-We serve individuals, tailors, and fashion designers with premium materials
-that stand out in quality and style.
-</p>
-
-<hr>
-
-<h3>Contact & Business Info</h3>
-<p>
-📞 09114738932<br>
-🕒 Monday – Saturday (9:00AM – 6:00PM)<br>
-🚚 Nationwide delivery available<br>
-💬 Fast WhatsApp support
-</p>
-
 </div>
 </div>
 
@@ -158,8 +116,8 @@ that stand out in quality and style.
 <hr>
 
 <h4>Add Product</h4>
-<input id="pname">
-<input id="price">
+<input id="pname" placeholder="Product name">
+<input id="price" placeholder="Price">
 <select id="pcat"></select>
 
 <button class="btn" id="uploadBtn">Upload Images</button>
@@ -198,31 +156,13 @@ projectId:"bob-26647"
 
 const db = getFirestore(app);
 
+/* DOM */
 const aboutView = document.getElementById("aboutView");
 const productView = document.getElementById("productView");
 const categoryBar = document.getElementById("categoryBar");
 const admin = document.getElementById("admin");
 
-const adminBtn = document.getElementById("adminBtn");
-const closeAdmin = document.getElementById("closeAdmin");
-
-const newCat = document.getElementById("newCat");
-const delCat = document.getElementById("delCat");
-
-const pname = document.getElementById("pname");
-const price = document.getElementById("price");
-const pcat = document.getElementById("pcat");
-
-const preview = document.getElementById("preview");
-const deleteCatSelect = document.getElementById("deleteCatSelect");
-const deleteProductBox = document.getElementById("deleteProductBox");
-
-const testimonialCarousel = document.getElementById("testimonialCarousel");
-const testimonialDots = document.getElementById("testimonialDots");
-const testimonialBox = document.getElementById("testimonialBox");
-
 let categories=[],products=[],testimonials=[];
-let uploadedImages=[];
 let active="ABOUT";
 
 window.addEventListener("DOMContentLoaded", init);
@@ -231,25 +171,26 @@ async function init(){
 await loadAll();
 renderCategories();
 
-adminBtn.onclick=()=>admin.style.display="block";
-closeAdmin.onclick=()=>admin.style.display="none";
+document.getElementById("adminBtn").onclick=()=>admin.style.display="block";
+document.getElementById("closeAdmin").onclick=()=>admin.style.display="none";
 
 addCatBtn.onclick=addCategory;
 delCatBtn.onclick=deleteCategory;
 saveBtn.onclick=saveProduct;
-uploadBtn.onclick=uploadImages;
 uploadTestBtn.onclick=uploadTestimonial;
 
 deleteCatSelect.onchange=loadDeleteProducts;
 }
 
-window.buyNow = (name)=>{
+/* BUY BUTTON */
+window.buyNow=(name)=>{
 window.open(
 `https://wa.me/2349114738932?text=I want to order: ${encodeURIComponent(name)}`,
 "_blank"
 );
 };
 
+/* LOAD DATA */
 async function loadAll(){
 categories=[];products=[];testimonials=[];
 
@@ -264,9 +205,9 @@ t.forEach(d=>testimonials.push({id:d.id,...d.data()}));
 
 fillDropdowns();
 renderProducts();
-renderCarousel();
 }
 
+/* FIXED CATEGORY SYSTEM */
 function renderCategories(){
 categoryBar.innerHTML="";
 
@@ -276,6 +217,7 @@ aboutBtn.innerText="ABOUT";
 aboutBtn.onclick=()=>show("ABOUT",aboutBtn);
 categoryBar.appendChild(aboutBtn);
 
+/* categories */
 categories.forEach(c=>{
 let btn=document.createElement("div");
 btn.className="category-btn";
@@ -283,11 +225,19 @@ btn.innerText=c.name;
 btn.onclick=()=>show(c.name,btn);
 categoryBar.appendChild(btn);
 });
+
+/* auto select first category */
+if(categories.length > 0){
+active = categories[0].name;
+}
 }
 
+/* FIXED SHOW */
 function show(type,btn){
-document.querySelectorAll(".category-btn").forEach(b=>b.classList.remove("active"));
-btn.classList.add("active");
+document.querySelectorAll(".category-btn")
+.forEach(b=>b.classList.remove("active"));
+
+if(btn) btn.classList.add("active");
 
 active=type;
 
@@ -301,12 +251,26 @@ renderProducts();
 }
 }
 
+/* FIXED PRODUCTS */
 function renderProducts(){
 productView.innerHTML="";
-products.filter(p=>p.category===active).forEach(p=>{
+
+let filtered=products.filter(p=>p.category===active);
+
+if(filtered.length===0){
+productView.innerHTML=`<div class="card" style="text-align:center;">
+No products in this category yet.
+</div>`;
+return;
+}
+
+filtered.forEach(p=>{
 productView.innerHTML+=`
 <div class="card">
-<div class="carousel">${(p.images||[]).map(i=>`<img src="${i}">`).join("")}</div>
+<div class="carousel">
+${(p.images||[]).map(i=>`<img src="${i}">`).join("")}
+</div>
+
 <h3 style="text-align:center">${p.name}</h3>
 <div class="price">₦${p.price}</div>
 
