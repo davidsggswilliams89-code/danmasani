@@ -59,7 +59,7 @@ padding:10px;
 margin:10px 0;
 }
 
-/* 🔥 FIX 1: IMAGE FULL COVER (NO EMPTY SPACE) */
+/* IMAGE FIX */
 .carousel{
 display:flex;
 overflow-x:auto;
@@ -72,7 +72,7 @@ background:#000;
 .carousel img{
 min-width:100%;
 height:100%;
-object-fit:cover;   /* FULL COVER FIX */
+object-fit:cover;
 scroll-snap-align:center;
 border-radius:10px;
 }
@@ -165,8 +165,8 @@ margin:5px;
 border-radius:10px;
 }
 
-/* 🔥 TESTIMONIAL PREVIEW WITH DELETE SIDE */
-.test-row{
+/* DELETE LIST */
+.delete-card{
 display:flex;
 align-items:center;
 gap:10px;
@@ -176,13 +176,12 @@ border-radius:10px;
 margin:5px 0;
 }
 
-.test-row img{
+.delete-card img{
 width:60px;
 height:60px;
 object-fit:cover;
 border-radius:8px;
 }
-
 </style>
 </head>
 
@@ -211,26 +210,36 @@ LUXURY HEAVEN
 
 <h3>ADMIN PANEL</h3>
 
-<!-- CATEGORY -->
-<h4>Categories</h4>
-<select id="pcat" onchange="filterAdminImages()"></select>
+<!-- CATEGORY FIX 🔥 -->
+<h4>Add Category</h4>
+<input id="newCat" placeholder="Category name">
+<button class="btn" onclick="addCategory()">Add Category</button>
+
+<h4>Delete Category</h4>
+<select id="delCat"></select>
+<button class="del-btn" onclick="deleteCategory()">Delete Category</button>
+
+<hr>
 
 <!-- PRODUCT -->
 <h4>Add Product</h4>
 <input id="pname" placeholder="Product name">
 <input id="price" placeholder="Price">
+<select id="pcat"></select>
 
 <button class="btn" onclick="uploadImages()">Upload Images</button>
-
 <div class="preview" id="preview"></div>
 
 <button class="btn" onclick="saveProduct()">Save Product</button>
 
 <hr>
 
-<!-- 🔥 FIX 2: CATEGORY → SHOW IMAGES BELOW -->
-<h4>Category Images Preview</h4>
-<div id="categoryImageBox"></div>
+<!-- DELETE PRODUCT FIX 🔥 -->
+<h4>Delete Products by Category</h4>
+
+<select id="deleteCatSelect" onchange="loadDeleteProducts()"></select>
+
+<div id="deleteProductBox"></div>
 
 <hr>
 
@@ -367,28 +376,73 @@ BUY NOW
 list.forEach((p,i)=>setupCarousel(i));
 }
 
-/* CAROUSEL */
-function setupCarousel(i){
-let car=document.querySelector(".car"+i);
-let dotsBox=document.querySelector(".dots"+i);
-if(!car)return;
+/* DELETE PRODUCTS BY CATEGORY 🔥 */
+window.loadDeleteProducts=()=>{
+let cat=deleteCatSelect.value;
 
-dotsBox.innerHTML="";
-let imgs=car.querySelectorAll("img");
+let box=document.getElementById("deleteProductBox");
+box.innerHTML="";
 
-imgs.forEach((_,x)=>{
-let d=document.createElement("span");
-d.className="dot"+(x===0?" active":"");
-dotsBox.appendChild(d);
+products.filter(p=>p.category===cat).forEach(p=>{
+box.innerHTML+=`
+<div class="delete-card">
+<img src="${p.images?.[0]||''}">
+<div>
+<b>${p.name}</b><br>
+<button class="del-btn" onclick="deleteProduct('${p.id}')">Delete</button>
+</div>
+</div>`;
+});
+};
+
+/* DELETE PRODUCT */
+window.deleteProduct=async(id)=>{
+await deleteDoc(doc(db,"products",id));
+await loadAll();
+loadDeleteProducts();
+};
+
+/* CATEGORY ADD */
+window.addCategory=async()=>{
+await addDoc(collection(db,"categories"),{name:newCat.value});
+newCat.value="";
+await loadAll();
+renderCategoryBar();
+};
+
+/* CATEGORY DELETE */
+window.deleteCategory=async()=>{
+await deleteDoc(doc(db,"categories",delCat.value));
+await loadAll();
+renderCategoryBar();
+};
+
+/* PRODUCT SAVE */
+window.saveProduct=async()=>{
+await addDoc(collection(db,"products"),{
+name:pname.value,
+price:price.value,
+category:pcat.value,
+images:uploadedImages,
+date:Date.now()
+});
+await loadAll();
+};
+
+/* ADMIN FILL FIX */
+function fillAdmin(){
+
+pcat.innerHTML="";
+delCat.innerHTML="";
+deleteCatSelect.innerHTML="";
+
+categories.forEach(c=>{
+pcat.innerHTML+=`<option>${c.name}</option>`;
+delCat.innerHTML+=`<option value="${c.id}">${c.name}</option>`;
+deleteCatSelect.innerHTML+=`<option>${c.name}</option>`;
 });
 
-let dots=dotsBox.querySelectorAll(".dot");
-
-car.addEventListener("scroll",()=>{
-let index=Math.round(car.scrollLeft/car.clientWidth);
-dots.forEach(d=>d.classList.remove("active"));
-if(dots[index])dots[index].classList.add("active");
-});
+loadDeleteProducts();
 }
 
 /* CLOUDINARY PRODUCT */
@@ -407,7 +461,7 @@ preview.innerHTML=uploadedImages.map(i=>`<img src="${i}">`).join("");
 });
 };
 
-/* TESTIMONIAL IMAGE ONLY */
+/* TESTIMONIAL */
 window.uploadTestimonial=()=>{
 cloudinary.openUploadWidget({
 cloudName:"db92r6j9z",
@@ -422,63 +476,23 @@ renderTestimonialBox();
 });
 };
 
-/* 🔥 CATEGORY IMAGE FILTER PREVIEW */
-window.filterAdminImages=()=>{
-
-let cat=pcat.value;
-let box=document.getElementById("categoryImageBox");
-box.innerHTML="";
-
-products.filter(p=>p.category===cat).forEach(p=>{
-p.images.forEach(img=>{
-box.innerHTML+=`<img src="${img}" width="80" height="80" style="margin:5px;border-radius:8px;object-fit:cover;">`;
-});
-});
-};
-
-/* TESTIMONIAL BOX */
 function renderTestimonialBox(){
 let box=document.getElementById("testimonialBox");
 box.innerHTML="";
 
 testimonials.forEach((img,i)=>{
 box.innerHTML+=`
-<div class="test-row">
+<div class="delete-card">
 <img src="${img}">
 <button class="del-btn" onclick="deleteTestimonial(${i})">Delete</button>
 </div>`;
 });
 }
 
-/* SAVE PRODUCT */
-window.saveProduct=async()=>{
-await addDoc(collection(db,"products"),{
-name:pname.value,
-price:price.value,
-category:pcat.value,
-images:uploadedImages,
-date:Date.now()
-});
-await loadAll();
-};
-
-/* DELETE TESTIMONIAL */
 window.deleteTestimonial=(i)=>{
 testimonials.splice(i,1);
 renderTestimonialBox();
 };
-
-/* ADMIN FILL */
-function fillAdmin(){
-
-pcat.innerHTML="";
-
-categories.forEach(c=>{
-pcat.innerHTML+=`<option>${c.name}</option>`;
-});
-
-renderTestimonialBox();
-}
 
 </script>
 
