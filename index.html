@@ -46,7 +46,6 @@ z-index:9999;
 .category-bar{
 position:fixed;top:45px;width:100%;height:40px;
 background:#222;display:flex;overflow-x:auto;
-z-index:1000;
 }
 
 .category-btn{
@@ -62,6 +61,7 @@ background:white;border-radius:12px;
 padding:10px;margin:10px 0;
 }
 
+/* PRODUCT CAROUSEL */
 .carousel{
 display:flex;
 overflow-x:auto;
@@ -78,6 +78,7 @@ object-fit:cover;
 scroll-snap-align:center;
 }
 
+/* DOTS */
 .dot{
 width:8px;height:8px;
 border-radius:50%;
@@ -87,19 +88,34 @@ margin:0 3px;
 }
 .dot.active{background:#25D366;}
 
+/* PRICE */
 .price{
 background:#111;color:white;padding:10px;
 text-align:center;border-radius:8px;margin-top:8px;
 }
 
+/* BUY BUTTON */
 .buy-btn{
-background:#25D366;color:white;
-padding:12px;border:none;width:100%;
-border-radius:12px;margin-top:10px;
-display:flex;align-items:center;
-justify-content:center;gap:8px;font-weight:bold;
+background:#25D366;
+color:white;
+padding:12px;
+border:none;
+width:100%;
+border-radius:12px;
+margin-top:10px;
+display:flex;
+align-items:center;
+justify-content:center;
+gap:8px;
+font-weight:bold;
 }
 
+.buy-btn img{
+width:18px;
+height:18px;
+}
+
+/* ADMIN */
 .admin{
 display:none;
 position:fixed;top:0;left:0;
@@ -125,7 +141,6 @@ background:red;color:white;border:none;padding:6px;margin-top:5px;
 
 <body>
 
-<!-- HEADER -->
 <div class="top-bar">
 <div class="marquee">
 <span>LUXURY HEAVEN • PREMIUM FASHION • NEW COLLECTION • WHATSAPP ORDER AVAILABLE • </span>
@@ -134,13 +149,13 @@ background:red;color:white;border:none;padding:6px;margin-top:5px;
 <div class="admin-icon" id="adminBtn">🔒</div>
 </div>
 
-<!-- CATEGORY -->
 <div class="category-bar" id="categoryBar"></div>
 
 <!-- ABOUT -->
 <div id="aboutView" class="view" style="display:block;">
 <div class="card">
 <h3 style="text-align:center;">What Our Customers Say 💬</h3>
+
 <div class="carousel" id="testimonialCarousel"></div>
 <div style="text-align:center;margin-top:5px;" id="testimonialDots"></div>
 
@@ -165,7 +180,7 @@ background:red;color:white;border:none;padding:6px;margin-top:5px;
 
 <h4>Delete Category</h4>
 <select id="delCat"></select>
-<button class="btn" id="delCatBtn">Delete</button>
+<button class="btn" id="delCatBtn">Delete Category</button>
 
 <hr>
 
@@ -207,32 +222,28 @@ let categories=[],products=[],testimonials=[];
 let active="ABOUT";
 let uploadedImages=[];
 
-/* SAFE INIT FIX (THIS IS WHAT WAS BREAKING BEFORE) */
 window.addEventListener("DOMContentLoaded", async ()=>{
 
 await loadAll();
 renderCategories();
 
-/* SAFE EVENT BINDING */
-document.getElementById("adminBtn").onclick=()=>{
-let p=prompt("Enter Password");
-if(p==="12345"){
-document.getElementById("admin").style.display="block";
-}
-};
+adminBtn.onclick=openAdmin;
+closeAdmin.onclick=()=>admin.style.display="none";
 
-document.getElementById("closeAdmin").onclick=()=>{
-document.getElementById("admin").style.display="none";
-};
+addCatBtn.onclick=addCategory;
+delCatBtn.onclick=deleteCategory;
+saveBtn.onclick=saveProduct;
+uploadBtn.onclick=uploadImages;
 
-document.getElementById("addCatBtn").onclick=addCategory;
-document.getElementById("delCatBtn").onclick=deleteCategory;
-document.getElementById("saveBtn").onclick=saveProduct;
-document.getElementById("uploadBtn").onclick=uploadImages;
-
-document.getElementById("deleteCatSelect").onchange=loadDeleteProducts;
+deleteCatSelect.onchange=loadDeleteProducts;
 
 });
+
+/* ADMIN */
+function openAdmin(){
+let p=prompt("Enter Password");
+if(p==="12345") admin.style.display="block";
+}
 
 /* LOAD */
 async function loadAll(){
@@ -286,74 +297,78 @@ renderProducts();
 }
 }
 
-/* PRODUCTS */
+/* PRODUCTS WITH DOTS */
 function renderProducts(){
 productView.innerHTML="";
 
-products.filter(p=>p.category===active).forEach(p=>{
+let list=products.filter(p=>p.category===active);
+
+list.forEach((p,i)=>{
+
 productView.innerHTML+=`
 <div class="card">
 
-<div class="carousel">
-${(p.images||[]).map(i=>`<img src="${i}">`).join("")}
+<div class="carousel car${i}">
+${(p.images||[]).map(img=>`<img src="${img}">`).join("")}
 </div>
+
+<div style="text-align:center;margin-top:5px;" class="dots dots${i}"></div>
 
 <h3 style="text-align:center">${p.name}</h3>
 
 <div class="price">₦${p.price}</div>
 
-<button class="buy-btn">BUY NOW</button>
+<button class="buy-btn" onclick="buyNow(${i})">
+<img src="https://cdn-icons-png.flaticon.com/512/733/733585.png">
+BUY NOW
+</button>
 
 </div>`;
 });
+
+list.forEach((p,i)=>setupCarousel(i,p));
 }
 
-/* DROPDOWNS */
-function fillDropdowns(){
-pcat.innerHTML="";
-delCat.innerHTML="";
-deleteCatSelect.innerHTML="";
+/* DOT SYSTEM */
+function setupCarousel(i,p){
+let car=document.querySelector(".car"+i);
+let dotsBox=document.querySelector(".dots"+i);
 
-categories.forEach(c=>{
-pcat.innerHTML+=`<option value="${c.name}">${c.name}</option>`;
-delCat.innerHTML+=`<option value="${c.id}">${c.name}</option>`;
-deleteCatSelect.innerHTML+=`<option value="${c.name}">${c.name}</option>`;
+if(!car) return;
+
+dotsBox.innerHTML="";
+
+(p.images||[]).forEach((_,x)=>{
+let d=document.createElement("span");
+d.className="dot"+(x===0?" active":"");
+dotsBox.appendChild(d);
+});
+
+let dots=dotsBox.querySelectorAll(".dot");
+
+car.addEventListener("scroll",()=>{
+let index=Math.round(car.scrollLeft/car.clientWidth);
+dots.forEach(d=>d.classList.remove("active"));
+if(dots[index]) dots[index].classList.add("active");
 });
 }
 
-/* BASIC FUNCTIONS */
-async function addCategory(){
-await addDoc(collection(db,"categories"),{name:newCat.value});
-location.reload();
-}
+/* BUY BUTTON */
+window.buyNow=(i)=>{
+let list=products.filter(p=>p.category===active);
+let p=list[i];
 
-async function deleteCategory(){
-await deleteDoc(doc(db,"categories",delCat.value));
-location.reload();
-}
+let msg=`Hello 👋
 
-async function saveProduct(){
-await addDoc(collection(db,"products"),{
-name:pname.value,
-price:price.value,
-category:pcat.value,
-images:uploadedImages
-});
-location.reload();
-}
+I want to order:
 
-function uploadImages(){
-uploadedImages=[];
-cloudinary.openUploadWidget({
-cloudName:"db92r6j9z",
-uploadPreset:"ummuhalti",
-multiple:true
-},(e,r)=>{
-if(!e && r.event==="success"){
-uploadedImages.push(r.info.secure_url);
-}
-});
-}
+🛍️ ${p.name}
+💰 ₦${p.price}
+
+Please confirm availability.`;
+
+window.open("https://wa.me/234911473892?text="+encodeURIComponent(msg));
+};
 
 </script>
 
