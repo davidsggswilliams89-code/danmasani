@@ -27,10 +27,7 @@ padding:0 10px;
 z-index:3000;
 }
 
-.admin-icon{
-margin-left:auto;
-cursor:pointer;
-}
+.admin-icon{margin-left:auto;cursor:pointer;}
 
 .category-bar{
 position:fixed;
@@ -62,22 +59,23 @@ padding:10px;
 margin:10px 0;
 }
 
-/* 🔥 FIX IMAGE NO CROPPING */
+/* ✅ FIX 1: IMAGE FIT (NO CROPPING + CLEAN FIT) */
 .carousel{
 display:flex;
 overflow-x:auto;
 scroll-snap-type:x mandatory;
 border-radius:10px;
 height:380px;
+background:#000;
 }
 
 .carousel img{
 min-width:100%;
-height:380px;
-object-fit:contain; /* ✅ FIX: no cropping */
-background:black;
+height:100%;
+object-fit:contain;   /* ✅ IMPORTANT FIX */
 scroll-snap-align:center;
 border-radius:10px;
+background:#000;
 }
 
 .carousel::-webkit-scrollbar{display:none;}
@@ -158,12 +156,32 @@ padding:6px;
 margin-top:5px;
 }
 
+/* PREVIEW */
 .preview img{
 width:80px;
 height:80px;
 object-fit:cover;
 margin:5px;
 border-radius:10px;
+}
+
+/* PRODUCT DELETE CARDS */
+.delete-card{
+background:#fff;
+padding:10px;
+border-radius:10px;
+margin:10px 0;
+display:flex;
+gap:10px;
+align-items:center;
+}
+
+.delete-card img{
+width:60px;
+height:60px;
+object-fit:contain;
+background:#000;
+border-radius:8px;
 }
 </style>
 </head>
@@ -206,29 +224,32 @@ LUXURY HEAVEN
 
 <!-- PRODUCT -->
 <h4>Add Product</h4>
-
 <input id="pname" placeholder="Product name">
 <input id="price" placeholder="Price">
 <select id="pcat"></select>
 
 <button class="btn" onclick="uploadImages()">Upload Images</button>
 <div class="preview" id="preview"></div>
-<button class="btn" onclick="saveProduct()">Save Product</button>
 
-<h4>Delete Product</h4>
-<select id="delProduct"></select>
-<button class="del-btn" onclick="deleteProduct()">Delete Product</button>
+<button class="btn" onclick="saveProduct()">Save Product</button>
 
 <hr>
 
-<!-- TESTIMONIAL -->
-<h4>Add Testimonial</h4>
-<input id="ttext" placeholder="Customer review">
-<button class="btn" onclick="addTestimonial()">Add Testimonial</button>
+<!-- PRODUCT DELETE (FIXED UI) -->
+<h4>Delete Products</h4>
+<div id="deleteProducts"></div>
 
-<h4>Delete Testimonial</h4>
+<hr>
+
+<!-- TESTIMONIAL IMAGE ONLY -->
+<h4>Add Testimonial Image</h4>
+<button class="btn" onclick="uploadTestimonial()">Upload Testimonial Image</button>
+<div class="preview" id="testPreview"></div>
+<button class="btn" onclick="saveTestimonial()">Save Testimonial</button>
+
+<h4>Delete Testimonials</h4>
 <select id="delTestimonial"></select>
-<button class="del-btn" onclick="deleteTestimonial()">Delete Testimonial</button>
+<button class="del-btn" onclick="deleteTestimonial()">Delete</button>
 
 <hr>
 
@@ -255,21 +276,22 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 let categories=[],products=[],testimonials=[];
-let uploadedImages=[];
+let uploadedImages=[],uploadedTestimonial=[];
 let active="ABOUT";
 
 /* ADMIN */
 window.openAdmin=()=>admin.style.display="block";
 window.closeAdmin=()=>admin.style.display="none";
 
-/* INIT */
+/* LOAD ALL */
 window.onload=async()=>{
 await loadAll();
 renderCategoryBar();
 };
 
-/* LOAD ALL */
+/* LOAD */
 async function loadAll(){
+
 categories=[];products=[];testimonials=[];
 
 let c=await getDocs(collection(db,"categories"));
@@ -284,7 +306,7 @@ t.forEach(d=>testimonials.push({id:d.id,...d.data()}));
 fillAdmin();
 }
 
-/* CATEGORY BAR */
+/* CATEGORY */
 function renderCategoryBar(){
 let bar=document.getElementById("categoryBar");
 bar.innerHTML="";
@@ -331,6 +353,7 @@ box.innerHTML="";
 let list=products.filter(p=>(p.category||"").toLowerCase()===active.toLowerCase());
 
 list.forEach((p,i)=>{
+
 box.innerHTML+=`
 <div class="card">
 
@@ -379,20 +402,34 @@ if(dots[index])dots[index].classList.add("active");
 });
 }
 
-/* CLOUDINARY */
+/* CLOUDINARY PRODUCT */
 window.uploadImages=()=>{
 uploadedImages=[];
 cloudinary.openUploadWidget({
 cloudName:"db92r6j9z",
 uploadPreset:"ummuhalti",
 sources:["local","camera"],
-multiple:true,
-resourceType:"image"
+multiple:true
 },(e,r)=>{
 if(!e&&r.event==="success"){
 uploadedImages.push(r.info.secure_url);
-document.getElementById("preview").innerHTML=
-uploadedImages.map(i=>`<img src="${i}">`).join("");
+preview.innerHTML=uploadedImages.map(i=>`<img src="${i}">`).join("");
+}
+});
+};
+
+/* TESTIMONIAL IMAGE ONLY */
+window.uploadTestimonial=()=>{
+uploadedTestimonial=[];
+cloudinary.openUploadWidget({
+cloudName:"db92r6j9z",
+uploadPreset:"ummuhalti",
+sources:["local","camera"],
+multiple:false
+},(e,r)=>{
+if(!e&&r.event==="success"){
+uploadedTestimonial=[r.info.secure_url];
+testPreview.innerHTML=`<img src="${r.info.secure_url}">`;
 }
 });
 };
@@ -406,29 +443,28 @@ category:pcat.value,
 images:uploadedImages,
 date:Date.now()
 });
-alert("Saved");
 await loadAll();
 };
 
-/* ADD CATEGORY */
-window.addCategory=async()=>{
-await addDoc(collection(db,"categories"),{name:newCat.value});
-newCat.value="";
+/* SAVE TESTIMONIAL */
+window.saveTestimonial=async()=>{
+await addDoc(collection(db,"testimonials"),{
+image:uploadedTestimonial[0],
+date:Date.now()
+});
+await loadAll();
+};
+
+/* DELETE */
+window.deleteProduct=async(id)=>{
+await deleteDoc(doc(db,"products",id));
+await loadAll();
+};
+
+window.deleteCategory=async()=>{
+await deleteDoc(doc(db,"categories",delCat.value));
 await loadAll();
 renderCategoryBar();
-};
-
-/* DELETE PRODUCT */
-window.deleteProduct=async()=>{
-await deleteDoc(doc(db,"products",delProduct.value));
-await loadAll();
-};
-
-/* TESTIMONIAL */
-window.addTestimonial=async()=>{
-await addDoc(collection(db,"testimonials"),{text:ttext.value});
-ttext.value="";
-await loadAll();
 };
 
 window.deleteTestimonial=async()=>{
@@ -438,10 +474,11 @@ await loadAll();
 
 /* ADMIN FILL */
 function fillAdmin(){
+
 delCat.innerHTML="";
 pcat.innerHTML="";
-delProduct.innerHTML="";
 delTestimonial.innerHTML="";
+deleteProducts.innerHTML="";
 
 categories.forEach(c=>{
 delCat.innerHTML+=`<option value="${c.id}">${c.name}</option>`;
@@ -449,11 +486,18 @@ pcat.innerHTML+=`<option>${c.name}</option>`;
 });
 
 products.forEach(p=>{
-delProduct.innerHTML+=`<option value="${p.id}">${p.name}</option>`;
+deleteProducts.innerHTML+=`
+<div class="delete-card">
+<img src="${p.images?.[0]||''}">
+<div>
+<b>${p.name}</b><br>
+<button class="del-btn" onclick="deleteProduct('${p.id}')">Delete</button>
+</div>
+</div>`;
 });
 
 testimonials.forEach(t=>{
-delTestimonial.innerHTML+=`<option value="${t.id}">${t.text}</option>`;
+delTestimonial.innerHTML+=`<option value="${t.id}">${t.image}</option>`;
 });
 }
 
