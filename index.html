@@ -15,7 +15,7 @@ background:#111;color:white;display:flex;
 align-items:center;padding:0 10px;z-index:3000;
 }
 
-.admin-icon{margin-left:auto;cursor:pointer;z-index:9999;}
+.admin-icon{margin-left:auto;cursor:pointer;}
 
 .category-bar{
 position:fixed;top:45px;width:100%;height:40px;
@@ -69,7 +69,7 @@ padding:10px;text-align:center;
 border-radius:8px;margin-top:8px;
 }
 
-/* BUY */
+/* BUY BUTTON */
 .buy-btn{
 background:#25D366;color:white;
 padding:12px;border:none;width:100%;
@@ -78,18 +78,24 @@ display:flex;align-items:center;
 justify-content:center;gap:8px;font-weight:bold;
 }
 
+.buy-btn img{width:18px;height:18px;}
+
 /* ADMIN */
 .admin{
 display:none;
 position:fixed;top:0;left:0;
 width:100%;height:100%;
 background:white;
-z-index:99999;
+z-index:9999;
 padding:10px;
 overflow:auto;
 }
 
-input,select{width:100%;padding:10px;margin:5px 0;}
+input,select{
+width:100%;
+padding:10px;
+margin:5px 0;
+}
 
 .btn{
 width:100%;padding:10px;
@@ -115,7 +121,7 @@ background:red;color:white;border:none;padding:6px;margin-top:5px;
 <div id="aboutView" class="view" style="display:block;">
 <div class="card">
 <h3 style="text-align:center;">About Luxury Heaven</h3>
-<p style="text-align:center;">Premium fashion store</p>
+<p style="text-align:center;">Premium fashion store in Nigeria</p>
 </div>
 </div>
 
@@ -166,7 +172,7 @@ let categories=[],products=[];
 let active="ABOUT";
 let uploadedImages=[];
 
-/* SAFE INIT */
+/* TEMPO INIT */
 window.addEventListener("DOMContentLoaded", async ()=>{
 
 await loadData();
@@ -236,7 +242,7 @@ renderProducts();
 }
 }
 
-/* PRODUCTS + DOT FIX */
+/* PRODUCTS + DOTS */
 function renderProducts(){
 
 productView.innerHTML="";
@@ -259,7 +265,7 @@ ${(p.images||[]).map(img=>`<img src="${img}">`).join("")}
 <div class="price">₦${p.price}</div>
 
 <button class="buy-btn">
-<img src="https://cdn-icons-png.flaticon.com/512/733/733585.png" width="18">
+<img src="https://cdn-icons-png.flaticon.com/512/733/733585.png">
 BUY NOW
 </button>
 
@@ -294,7 +300,7 @@ if(dots[index]) dots[index].classList.add("active");
 });
 }
 
-/* BASIC FIREBASE OPS */
+/* FIREBASE */
 async function addCategory(){
 await addDoc(collection(db,"categories"),{name:newCat.value});
 location.reload();
