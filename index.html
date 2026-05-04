@@ -1,243 +1,410 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>HALAL TEXTILE</title>
+<title>LUXURY HEAVEN</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+<script src="https://widget.cloudinary.com/v2.0/global/all.js"></script>
 
 <style>
-body{margin:0;font-family:Arial;background:#f5f5f5;}
-.header{background:black;color:white;padding:10px;text-align:center;position:sticky;top:0;}
-.nav{display:flex;background:#222;}
-.nav button{flex:1;padding:12px;border:none;color:white;background:#222;}
-.nav button:hover{background:orange;}
-.section{display:none;padding:10px;}
-.active{display:block;}
-.product{background:white;margin:10px 0;padding:10px;border-radius:10px;}
-.product img{width:100%;border-radius:10px;}
-button{padding:8px;border:none;background:black;color:white;border-radius:5px;margin-top:5px;}
-button:hover{background:orange;}
-input{width:100%;padding:10px;margin:5px 0;}
+body{margin:0;font-family:Arial;background:#f5f5f5;padding-top:80px;}
+
+.top-bar{
+position:fixed;top:0;width:100%;height:45px;
+background:#111;color:white;display:flex;
+align-items:center;padding:0 10px;z-index:3000;
+}
+
+.admin-icon{margin-left:auto;cursor:pointer;}
+
+.category-bar{
+position:fixed;top:45px;width:100%;height:40px;
+background:#222;display:flex;overflow-x:auto;
+}
+
+.category-btn{
+color:white;padding:6px 14px;margin:5px;
+border-radius:20px;cursor:pointer;
+}
+.category-btn.active{background:#25D366;}
+
+.view{display:none;padding:10px;}
+.active-view{display:block;}
+
+.card{
+background:white;border-radius:12px;
+padding:10px;margin:10px 0;
+}
+
+.carousel{
+display:flex;overflow-x:auto;
+}
+.carousel img{
+min-width:100%;
+height:300px;
+object-fit:cover;
+border-radius:10px;
+}
+.carousel::-webkit-scrollbar{display:none}
+
+.dots{text-align:center;margin-top:5px;}
+.dot{
+height:8px;width:8px;background:#bbb;
+border-radius:50%;display:inline-block;margin:0 3px;
+}
+.dot.active{background:#25D366;}
+
+.price{
+background:#111;color:white;padding:10px;
+text-align:center;border-radius:8px;margin-top:8px;
+}
+
+.buy-btn{
+background:#25D366;color:white;
+padding:12px;border:none;width:100%;
+border-radius:12px;margin-top:10px;
+display:flex;align-items:center;
+justify-content:center;gap:8px;font-weight:bold;
+cursor:pointer;
+}
+
+.admin{
+display:none;position:fixed;top:0;left:0;
+width:100%;height:100%;background:white;
+z-index:9999;padding:10px;overflow:auto;
+}
+
+input,select{width:100%;padding:10px;margin:5px 0;}
+
+.btn{width:100%;padding:10px;background:green;color:white;border:none;margin-top:5px;}
+.del-btn{background:red;color:white;border:none;padding:6px;margin-top:5px;}
 </style>
 </head>
 
 <body>
 
-<div class="header">HALAL TEXTILE</div>
-
-<div class="nav">
-  <button onclick="showSection('shop')">Shop</button>
-  <button onclick="showSection('admin')">Admin</button>
-  <button onclick="showSection('about')">About</button>
-  <button onclick="logout()">Logout</button>
+<div class="top-bar">
+LUXURY HEAVEN
+<div class="admin-icon" onclick="openAdmin()">🔒</div>
 </div>
 
-<!-- SHOP -->
-<div id="shop" class="section active">
-
-<h3>Categories</h3>
-<button onclick="filterCategory('all')">All</button>
-<button onclick="filterCategory('shoes')">Shoes</button>
-<button onclick="filterCategory('bags')">Bags</button>
-<button onclick="filterCategory('clothes')">Clothes</button>
-
-<div id="products"></div>
-
-<h3>Testimonials</h3>
-<p>⭐⭐⭐⭐⭐ "Very good quality!"</p>
-<p>⭐⭐⭐⭐⭐ "Fast delivery!"</p>
-
-</div>
-
-<!-- LOGIN -->
-<div id="login" class="section">
-<h3>Admin Login</h3>
-<input id="email" placeholder="Email">
-<input id="password" type="password" placeholder="Password">
-<button onclick="login()">Login</button>
-</div>
-
-<!-- ADMIN -->
-<div id="admin" class="section">
-
-<h3>Add Product</h3>
-<input id="name" placeholder="Name">
-<input id="price" placeholder="Price">
-<input id="category" placeholder="Category (shoes/bags/clothes)">
-<input id="image" placeholder="Image URL">
-
-<button onclick="addProduct()">Add Product</button>
-
-<h3>All Products</h3>
-<div id="adminProducts"></div>
-
-</div>
+<div class="category-bar" id="categoryBar"></div>
 
 <!-- ABOUT -->
-<div id="about" class="section">
-<h3>About Us</h3>
-<p>HALAL TEXTILE provides quality fashion products across Nigeria.</p>
+<div id="aboutView" class="view active-view">
+<div class="card">
+
+<h3 style="text-align:center;">What Our Customers Say 💬</h3>
+<div class="carousel" id="testimonialCarousel"></div>
+<div class="dots" id="testimonialDots"></div>
+
+<hr>
+
+<h2 style="text-align:center;">✨ About Luxury Heaven</h2>
+
+<p style="text-align:center;line-height:1.6;">
+<strong>Luxury Heaven by Aleesha</strong> is your trusted destination for premium fashion items across Nigeria.
+<br><br>
+We specialize in high-quality and affordable products including
+<strong>shoes, bags, abayas, hijabs, and stylish accessories</strong> designed to give you confidence and elegance.
+<br><br>
+Our goal is simple — to provide every woman with modern, classy, and comfortable fashion at the best prices.
+We carefully select our products to ensure quality, beauty, and satisfaction.
+<br><br>
+We operate fully online, making shopping easy, fast, and stress-free through WhatsApp ordering.
+</p>
+
+<hr>
+
+<h3>📞 Contact Us</h3>
+
+<p style="line-height:1.8;">
+📱 <strong>Phone / WhatsApp:</strong> 09114738932<br>
+📍 <strong>Location:</strong> Nigeria (Online Store)<br>
+🚚 <strong>Delivery:</strong> Nationwide Available<br>
+🕒 <strong>Working Hours:</strong> Monday – Saturday (9:00AM – 6:00PM)
+</p>
+
+<hr>
+
+<h3>💬 Chat With Us</h3>
+
+<a href="https://wa.me/2349114738932" target="_blank" style="text-decoration:none;">
+  <button class="buy-btn">
+    <img src="https://cdn-icons-png.flaticon.com/512/733/733585.png" width="20">
+    Chat on WhatsApp
+  </button>
+</a>
+
+</div>
 </div>
 
-<script>
-const firebaseConfig = {
+<!-- PRODUCTS -->
+<div id="productView" class="view"></div>
+
+<!-- ADMIN -->
+<div class="admin" id="admin">
+<h3>Admin Panel</h3>
+
+<input id="pname" placeholder="Product name">
+<input id="price" placeholder="Price">
+<select id="category"></select>
+
+<button class="btn" onclick="uploadImages()">Upload Images</button>
+<button class="btn" onclick="saveProduct()">Save Product</button>
+
+<hr>
+
+<h3>Delete Product</h3>
+<div id="productList"></div>
+
+<hr>
+
+<h3>Categories</h3>
+<input id="newCat" placeholder="New category">
+<button class="btn" onclick="addCategory()">Add Category</button>
+
+<select id="catDelete"></select>
+<button class="del-btn" onclick="deleteCategory()">Delete Category</button>
+
+<hr>
+
+<h3>Testimonials</h3>
+<button class="btn" onclick="uploadTestimonial()">Upload Testimonial</button>
+<div id="testimonialAdminList"></div>
+
+<hr>
+
+<button class="del-btn" onclick="closeAdmin()">Close</button>
+</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc } 
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const app = initializeApp({
   apiKey: "AIzaSyA6ZaMnWKJEvSUlJgh31tU6rj8CvuietuM",
   authDomain: "bob-26647.firebaseapp.com",
-  projectId: "bob-26647",
-  storageBucket: "bob-26647.firebasestorage.app",
-  messagingSenderId: "468659293220",
-  appId: "1:468659293220:web:507832347dc70ab78ddcb1"
+  projectId: "bob-26647"
+});
+
+const db = getFirestore(app);
+
+let categories=[],products=[],uploadedImages=[],active="about";
+let testimonials=[];
+
+window.onload=async()=>{
+await loadCategories();
+await loadProducts();
+await loadTestimonials();
 };
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-const auth = firebase.auth();
+async function loadCategories(){
+categories=[];
+let snap=await getDocs(collection(db,"categories"));
+snap.forEach(d=>categories.push({id:d.id,...d.data()}));
 
-let allProducts = [];
-let isAdmin = false;
+categoryBar.innerHTML="";
+let about=document.createElement("div");
+about.className="category-btn active";
+about.innerText="ABOUT";
+about.onclick=()=>show("about",about);
+categoryBar.appendChild(about);
 
-/* NAVIGATION */
-function showSection(id){
-document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
-
-if(id==="admin" && !isAdmin){
-document.getElementById("login").classList.add("active");
-}else{
-document.getElementById(id).classList.add("active");
-}
-}
-
-/* LOGIN */
-function login(){
-const email = document.getElementById("email").value.trim();
-const password = document.getElementById("password").value.trim();
-
-if(!email || !password){
-alert("Enter login details");
-return;
-}
-
-auth.signInWithEmailAndPassword(email,password)
-.then(()=>alert("Login successful"))
-.catch(e=>alert(e.message));
-}
-
-/* LOGOUT */
-function logout(){
-auth.signOut();
-}
-
-/* AUTH STATE */
-auth.onAuthStateChanged(user=>{
-if(user){
-isAdmin = true;
-showSection("admin");
-}else{
-isAdmin = false;
-showSection("shop");
-}
+categories.forEach(c=>{
+let btn=document.createElement("div");
+btn.className="category-btn";
+btn.innerText=c.name;
+btn.onclick=()=>show(c.name,btn);
+categoryBar.appendChild(btn);
 });
 
-/* ADD PRODUCT */
-function addProduct(){
-const name = document.getElementById("name").value.trim();
-const price = document.getElementById("price").value.trim();
-const category = document.getElementById("category").value.trim().toLowerCase();
-const image = document.getElementById("image").value.trim();
+category.innerHTML="";
+catDelete.innerHTML="";
+categories.forEach(c=>{
+category.innerHTML+=`<option value="${c.name}">${c.name}</option>`;
+catDelete.innerHTML+=`<option value="${c.id}">${c.name}</option>`;
+});
+}
 
-if(!name || !price || !category || !image){
-alert("Fill all fields");
+async function loadProducts(){
+products=[];
+let snap=await getDocs(collection(db,"products"));
+snap.forEach(d=>products.push({id:d.id,...d.data()}));
+}
+
+function show(type,btn){
+document.querySelectorAll(".category-btn").forEach(b=>b.classList.remove("active"));
+btn.classList.add("active");
+active=type;
+
+if(type==="about"){
+aboutView.classList.add("active-view");
+productView.classList.remove("active-view");
 return;
 }
 
-db.collection("products").add({
-name,price,category,
-images:[image],
+aboutView.classList.remove("active-view");
+productView.classList.add("active-view");
+
+renderProducts();
+}
+
+function renderProducts(){
+productView.innerHTML="";
+let list=products.filter(p=>p.category===active);
+
+list.forEach((p,i)=>{
+productView.innerHTML+=`
+<div class="card">
+<div class="carousel">
+${p.images.map(img=>`<img src="${img}">`).join("")}
+</div>
+
+<div style="text-align:center;font-weight:bold;margin-top:10px;">
+${p.name}
+</div>
+
+<div class="price">₦${p.price}</div>
+
+<button class="buy-btn" onclick="buyNow(${i})">
+<img src="https://cdn-icons-png.flaticon.com/512/733/733585.png" width="18">
+BUY NOW
+</button>
+</div>`;
+});
+}
+
+window.buyNow=(i)=>{
+let list=products.filter(p=>p.category===active);
+let p=list[i];
+
+let msg=`Hello 👋,
+
+🧵 ${p.category}
+🛍️ ${p.name}
+💰 ₦${p.price}
+
+Is this available?`;
+
+window.open("https://wa.me/2349114738932?text="+encodeURIComponent(msg));
+};
+
+window.uploadImages=()=>{
+cloudinary.openUploadWidget({
+cloudName:"db92r6j9z",
+uploadPreset:"ummuhalti",
+multiple:true
+},(e,r)=>{
+if(r && r.event==="success"){
+uploadedImages.push(r.info.secure_url);
+}
+});
+};
+
+window.saveProduct=async()=>{
+if(uploadedImages.length===0)return alert("Upload images first");
+
+await addDoc(collection(db,"products"),{
+name:pname.value,
+price:price.value,
+category:category.value,
+images:uploadedImages,
 date:Date.now()
-}).then(()=>{
-alert("Product Added");
-clearInputs();
-loadProducts();
 });
-}
 
-function clearInputs(){
-name.value="";
+uploadedImages=[];
+pname.value="";
 price.value="";
-category.value="";
-image.value="";
-}
-
-/* LOAD PRODUCTS */
-function loadProducts(){
-db.collection("products").orderBy("date","desc").get().then(snapshot=>{
-allProducts = [];
-snapshot.forEach(doc=>{
-let p = doc.data();
-p.id = doc.id;
-allProducts.push(p);
-});
-renderProducts(allProducts);
-renderAdmin();
-});
-}
-
-/* RENDER SHOP */
-function renderProducts(list){
-const container = document.getElementById("products");
-container.innerHTML = "";
-
-list.forEach(p=>{
-container.innerHTML += `
-<div class="product">
-<img src="${p.images[0]}">
-<h4>${p.name}</h4>
-<p>₦${p.price}</p>
-<a href="https://wa.me/2349114738932?text=${encodeURIComponent("I want "+p.name)}">
-<button>Buy on WhatsApp</button>
-</a>
-</div>
-`;
-});
-}
-
-/* RENDER ADMIN */
-function renderAdmin(){
-const container = document.getElementById("adminProducts");
-container.innerHTML = "";
-
-allProducts.forEach(p=>{
-container.innerHTML += `
-<div>
-${p.name} - ₦${p.price}
-<button onclick="deleteProduct('${p.id}')">Delete</button>
-</div>
-`;
-});
-}
-
-/* DELETE */
-function deleteProduct(id){
-db.collection("products").doc(id).delete().then(()=>{
 loadProducts();
+};
+
+window.addCategory=async()=>{
+await addDoc(collection(db,"categories"),{name:newCat.value});
+newCat.value="";
+loadCategories();
+};
+
+window.deleteCategory=async()=>{
+await deleteDoc(doc(db,"categories",catDelete.value));
+loadCategories();
+};
+
+async function loadTestimonials(){
+testimonials=[];
+let snap=await getDocs(collection(db,"testimonials"));
+snap.forEach(d=>testimonials.push({id:d.id,...d.data()}));
+
+renderTestimonials();
+loadTestimonialAdmin();
+}
+
+function renderTestimonials(){
+testimonialCarousel.innerHTML="";
+testimonialDots.innerHTML="";
+
+testimonials.forEach((t,i)=>{
+testimonialCarousel.innerHTML+=`<img src="${t.image}">`;
+
+let dot=document.createElement("span");
+dot.className="dot"+(i===0?" active":"");
+dot.onclick=()=>scrollTestimonial(i);
+testimonialDots.appendChild(dot);
+});
+
+scrollTestimonial(0);
+}
+
+function scrollTestimonial(i){
+testimonialCarousel.scrollTo({
+left:testimonialCarousel.clientWidth*i,
+behavior:"smooth"
+});
+
+document.querySelectorAll("#testimonialDots .dot")
+.forEach(d=>d.classList.remove("active"));
+
+if(testimonialDots.children[i]){
+testimonialDots.children[i].classList.add("active");
+}
+}
+
+function loadTestimonialAdmin(){
+testimonialAdminList.innerHTML="";
+
+testimonials.forEach(t=>{
+testimonialAdminList.innerHTML+=`
+<div style="display:flex;align-items:center;gap:10px;margin:5px 0;">
+<img src="${t.image}" width="50">
+<button class="del-btn" onclick="deleteTestimonial('${t.id}')">Delete</button>
+</div>`;
 });
 }
 
-/* FILTER */
-function filterCategory(cat){
-if(cat === "all"){
-renderProducts(allProducts);
-}else{
-const filtered = allProducts.filter(p=>p.category === cat);
-renderProducts(filtered);
+window.uploadTestimonial=()=>{
+cloudinary.openUploadWidget({
+cloudName:"db92r6j9z",
+uploadPreset:"ummuhalti"
+},async(e,r)=>{
+if(r && r.event==="success"){
+await addDoc(collection(db,"testimonials"),{
+image:r.info.secure_url
+});
+loadTestimonials();
 }
-}
+});
+};
 
-/* INIT */
-loadProducts();
+window.deleteTestimonial=async(id)=>{
+await deleteDoc(doc(db,"testimonials",id));
+loadTestimonials();
+};
+
+window.openAdmin=()=>admin.style.display="block";
+window.closeAdmin=()=>admin.style.display="none";
+
 </script>
 
 </body>
