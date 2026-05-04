@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -37,53 +38,6 @@ background:white;border-radius:12px;
 padding:10px;margin:10px 0;
 }
 
-.carousel{
-display:flex;
-overflow-x:auto;
-scroll-snap-type:x mandatory;
-}
-.carousel img{
-min-width:100%;
-height:300px;
-object-fit:cover;
-scroll-snap-align:center;
-border-radius:10px;
-}
-.carousel::-webkit-scrollbar{display:none}
-
-.new-badge{
-position:absolute;
-top:10px;
-left:10px;
-background:red;
-color:white;
-padding:5px 8px;
-font-size:12px;
-border-radius:6px;
-font-weight:bold;
-}
-
-.dots{text-align:center;margin-top:5px;}
-.dot{
-height:8px;width:8px;background:#bbb;
-border-radius:50%;display:inline-block;margin:0 3px;
-}
-.dot.active{background:#25D366;}
-
-.price{
-background:#111;color:white;padding:10px;
-text-align:center;border-radius:8px;margin-top:8px;
-}
-
-.buy-btn{
-background:#25D366;color:white;
-padding:12px;border:none;width:100%;
-border-radius:12px;margin-top:10px;
-display:flex;align-items:center;
-justify-content:center;gap:8px;font-weight:bold;
-cursor:pointer;
-}
-
 .admin{
 display:none;position:fixed;top:0;left:0;
 width:100%;height:100%;background:white;
@@ -99,24 +53,29 @@ input,select{width:100%;padding:10px;margin:5px 0;}
 
 <body>
 
+<!-- TOP BAR -->
 <div class="top-bar">
 LUXURY HEAVEN
 <div class="admin-icon" onclick="openAdmin()">🔒</div>
 </div>
 
+<!-- CATEGORY BAR -->
 <div class="category-bar" id="categoryBar"></div>
 
-<!-- ABOUT -->
+<!-- ABOUT VIEW -->
 <div id="aboutView" class="view active-view">
 <div class="card">
 <h2 style="text-align:center;">✨ About Luxury Heaven</h2>
-<p style="text-align:center;">
-Premium fashion store in Nigeria
+
+<p style="text-align:center;line-height:1.6;">
+Luxury Heaven is a premium fashion store in Nigeria offering stylish shoes, bags and accessories.
+<br><br>
+We deliver nationwide with trusted service.
 </p>
 </div>
 </div>
 
-<!-- PRODUCTS -->
+<!-- PRODUCT VIEW -->
 <div id="productView" class="view"></div>
 
 <!-- ADMIN -->
@@ -124,16 +83,7 @@ Premium fashion store in Nigeria
 
 <h3>Admin Panel</h3>
 
-<input id="pname" placeholder="Product name">
-<input id="price" placeholder="Price">
-<select id="category"></select>
-
-<button class="btn" onclick="uploadImages()">Upload Images</button>
-<button class="btn" onclick="saveProduct()">Save Product</button>
-
-<hr>
-
-<h3>Add Category</h3>
+<h4>Add Category</h4>
 <input id="newCat" placeholder="New category name">
 <button class="btn" onclick="addCategory()">Add Category</button>
 
@@ -145,7 +95,7 @@ Premium fashion store in Nigeria
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, getDocs, addDoc } 
+import { getFirestore, collection, getDocs, addDoc }
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -161,28 +111,80 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 let categories = [];
+let active = "ABOUT";
 
 window.openAdmin = () => admin.style.display="block";
 window.closeAdmin = () => admin.style.display="none";
 
+/* INIT */
+window.onload = async () => {
+await loadCategories();
+setupDefaultView();
+};
+
 /* LOAD CATEGORIES */
 async function loadCategories(){
+
 categories = [];
 
 let snap = await getDocs(collection(db,"categories"));
-
 snap.forEach(d => categories.push(d.data().name));
 
-let sel = document.getElementById("category");
-sel.innerHTML = "";
+renderCategoryBar();
+}
 
+/* CATEGORY BAR */
+function renderCategoryBar(){
+
+let bar = document.getElementById("categoryBar");
+bar.innerHTML = "";
+
+/* ABOUT BUTTON */
+let about = document.createElement("div");
+about.className = "category-btn active";
+about.innerText = "ABOUT";
+about.onclick = () => showView("ABOUT", about);
+bar.appendChild(about);
+
+/* REAL CATEGORIES */
 categories.forEach(c=>{
-sel.innerHTML += `<option value="${c}">${c}</option>`;
+let btn = document.createElement("div");
+btn.className = "category-btn";
+btn.innerText = c;
+btn.onclick = () => showView(c, btn);
+bar.appendChild(btn);
 });
 }
 
-/* ⭐ FIXED ADD CATEGORY FUNCTION */
+/* VIEW SWITCH */
+function showView(type, btn){
+
+document.querySelectorAll(".category-btn")
+.forEach(b=>b.classList.remove("active"));
+
+btn.classList.add("active");
+
+active = type;
+
+document.getElementById("aboutView").classList.remove("active-view");
+document.getElementById("productView").classList.remove("active-view");
+
+if(type === "ABOUT"){
+document.getElementById("aboutView").classList.add("active-view");
+}else{
+document.getElementById("productView").classList.add("active-view");
+renderProducts();
+}
+}
+
+/* DEFAULT */
+function setupDefaultView(){
+document.getElementById("aboutView").classList.add("active-view");
+}
+
+/* ⭐ ADD CATEGORY (FIXED) */
 window.addCategory = async () => {
+
 let name = document.getElementById("newCat").value;
 
 if(!name){
@@ -190,28 +192,23 @@ alert("Enter category name");
 return;
 }
 
-try{
 await addDoc(collection(db,"categories"),{
 name:name.trim(),
 createdAt:Date.now()
 });
 
-alert("Category added successfully");
+alert("Category added!");
 
 document.getElementById("newCat").value="";
 
 await loadCategories();
+};
 
-}catch(err){
-console.log(err);
-alert("Error adding category");
+/* PRODUCTS (EMPTY SAFE) */
+function renderProducts(){
+let box = document.getElementById("productView");
+box.innerHTML = "<p style='text-align:center'>No products loaded yet</p>";
 }
-};
-
-/* INIT */
-window.onload = async () => {
-await loadCategories();
-};
 
 </script>
 
