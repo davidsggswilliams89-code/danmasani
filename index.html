@@ -9,14 +9,51 @@
 <style>
 body{margin:0;font-family:Arial;background:#f5f5f5;padding-top:80px;}
 
+/* TOP BAR */
 .top-bar{
-position:fixed;top:0;width:100%;height:45px;
-background:#111;color:white;display:flex;
-align-items:center;padding:0 10px;z-index:3000;
+position:fixed;
+top:0;
+width:100%;
+height:45px;
+background:#111;
+color:white;
+display:flex;
+align-items:center;
+padding:0 10px;
+z-index:3000;
+overflow:hidden;
 }
 
-.admin-icon{margin-left:auto;cursor:pointer;}
+/* MOVING TEXT */
+.marquee{
+position:absolute;
+left:0;
+width:100%;
+overflow:hidden;
+white-space:nowrap;
+}
 
+.marquee span{
+display:inline-block;
+padding-left:100%;
+animation:scrollText 12s linear infinite;
+font-weight:bold;
+}
+
+@keyframes scrollText{
+0%{transform:translateX(0);}
+100%{transform:translateX(-100%);}
+}
+
+/* ADMIN ICON ALWAYS ON TOP */
+.admin-icon{
+margin-left:auto;
+cursor:pointer;
+position:relative;
+z-index:10;
+}
+
+/* CATEGORY */
 .category-bar{
 position:fixed;top:45px;width:100%;height:40px;
 background:#222;display:flex;overflow-x:auto;
@@ -28,6 +65,7 @@ border-radius:20px;cursor:pointer;white-space:nowrap;
 }
 .category-btn.active{background:#25D366;}
 
+/* VIEW */
 .view{display:none;padding:10px;}
 
 .card{
@@ -35,6 +73,7 @@ background:white;border-radius:12px;
 padding:10px;margin:10px 0;
 }
 
+/* PRODUCT CAROUSEL */
 .carousel{
 display:flex;
 overflow-x:auto;
@@ -43,6 +82,7 @@ height:380px;
 background:#000;
 border-radius:10px;
 }
+
 .carousel img{
 min-width:100%;
 height:100%;
@@ -50,18 +90,23 @@ object-fit:cover;
 scroll-snap-align:center;
 }
 
+/* DOTS */
 .dot{
 display:inline-block;
-width:8px;height:8px;margin:0 3px;
-border-radius:50%;background:#bbb;
+width:8px;height:8px;
+margin:0 3px;
+border-radius:50%;
+background:#bbb;
 }
 .dot.active{background:#25D366;}
 
+/* PRICE */
 .price{
 background:#111;color:white;padding:10px;
 text-align:center;border-radius:8px;margin-top:8px;
 }
 
+/* BUY BUTTON */
 .buy-btn{
 background:#25D366;color:white;
 padding:12px;border:none;width:100%;
@@ -70,6 +115,7 @@ display:flex;align-items:center;
 justify-content:center;gap:8px;font-weight:bold;
 }
 
+/* ADMIN */
 .admin{
 display:none;position:fixed;top:0;left:0;
 width:100%;height:100%;background:white;
@@ -90,6 +136,7 @@ margin:5px;border-radius:10px;
 display:flex;align-items:center;gap:10px;
 background:#fff;padding:8px;border-radius:10px;margin:5px 0;
 }
+
 .delete-card img{
 width:60px;height:60px;object-fit:cover;border-radius:8px;
 }
@@ -98,11 +145,18 @@ width:60px;height:60px;object-fit:cover;border-radius:8px;
 
 <body>
 
+<!-- TOP HEADER -->
 <div class="top-bar">
-LUXURY HEAVEN
-<div class="admin-icon" id="adminBtn">🔒</div>
+
+<div class="marquee">
+<span>LUXURY HEAVEN • PREMIUM FASHION • NEW COLLECTION • WHATSAPP ORDER AVAILABLE • </span>
 </div>
 
+<div class="admin-icon" id="adminBtn">🔒</div>
+
+</div>
+
+<!-- CATEGORY -->
 <div class="category-bar" id="categoryBar"></div>
 
 <!-- ABOUT -->
@@ -110,6 +164,7 @@ LUXURY HEAVEN
 <div class="card">
 
 <h3 style="text-align:center;">What Our Customers Say 💬</h3>
+
 <div class="carousel" id="testimonialCarousel"></div>
 <div style="text-align:center;margin-top:5px;" id="testimonialDots"></div>
 
@@ -188,6 +243,7 @@ let active="ABOUT";
 window.addEventListener("DOMContentLoaded", init);
 
 async function init(){
+
 await loadAll();
 renderCategories();
 
@@ -203,12 +259,15 @@ uploadTestBtn.onclick=uploadTestimonial;
 deleteCatSelect.onchange=loadDeleteProducts;
 }
 
+/* ADMIN */
 function openAdmin(){
 let p=prompt("Enter Password");
 if(p==="12345"){admin.style.display="block";}
 }
 
+/* LOAD */
 async function loadAll(){
+
 categories=[];products=[];testimonials=[];
 
 let c=await getDocs(collection(db,"categories"));
@@ -225,6 +284,7 @@ renderTestimonials();
 renderCarousel();
 }
 
+/* CATEGORY */
 function renderCategories(){
 categoryBar.innerHTML="";
 
@@ -243,6 +303,7 @@ categoryBar.appendChild(btn);
 });
 }
 
+/* VIEW */
 function show(type,btn){
 document.querySelectorAll(".category-btn").forEach(b=>b.classList.remove("active"));
 btn.classList.add("active");
@@ -259,13 +320,15 @@ renderProducts();
 }
 }
 
-/* ✅ PRODUCT CAROUSEL WITH DOTS */
+/* PRODUCTS + DOTS */
 function renderProducts(){
+
 productView.innerHTML="";
 
 let list=products.filter(p=>p.category===active);
 
 list.forEach((p,i)=>{
+
 productView.innerHTML+=`
 <div class="card">
 
@@ -287,14 +350,15 @@ BUY NOW
 </div>`;
 });
 
-list.forEach((p,i)=>setupProductCarousel(i,p));
+list.forEach((p,i)=>setupCarousel(i,p));
 }
 
-function setupProductCarousel(i,p){
+function setupCarousel(i,p){
+
 let car=document.querySelector(".car"+i);
 let dotsBox=document.querySelector(".dots"+i);
 
-if(!car)return;
+if(!car) return;
 
 dotsBox.innerHTML="";
 
@@ -313,105 +377,9 @@ if(dots[index]) dots[index].classList.add("active");
 });
 }
 
-/* DELETE */
-function loadDeleteProducts(){
-deleteProductBox.innerHTML="";
-products.filter(p=>p.category===deleteCatSelect.value).forEach(p=>{
-deleteProductBox.innerHTML+=`
-<div class="delete-card">
-<span>${p.name}</span>
-<button class="del-btn" onclick="deleteProduct('${p.id}')">Delete</button>
-</div>`;
-});
-}
-
-window.deleteProduct=async(id)=>{
-await deleteDoc(doc(db,"products",id));
-await loadAll();
-loadDeleteProducts();
-};
-
-/* DROPDOWNS */
-function fillDropdowns(){
-pcat.innerHTML="";
-delCat.innerHTML="";
-deleteCatSelect.innerHTML="";
-
-categories.forEach(c=>{
-pcat.innerHTML+=`<option value="${c.name}">${c.name}</option>`;
-delCat.innerHTML+=`<option value="${c.id}">${c.name}</option>`;
-deleteCatSelect.innerHTML+=`<option value="${c.name}">${c.name}</option>`;
-});
-}
-
-/* CATEGORY */
-async function addCategory(){
-await addDoc(collection(db,"categories"),{name:newCat.value});
-location.reload();
-}
-
-async function deleteCategory(){
-await deleteDoc(doc(db,"categories",delCat.value));
-location.reload();
-}
-
-/* PRODUCT */
-async function saveProduct(){
-await addDoc(collection(db,"products"),{
-name:pname.value,
-price:price.value,
-category:pcat.value,
-images:uploadedImages
-});
-location.reload();
-}
-
-/* CLOUDINARY */
-function uploadImages(){
-uploadedImages=[];
-cloudinary.openUploadWidget({
-cloudName:"db92r6j9z",
-uploadPreset:"ummuhalti",
-multiple:true
-},(e,r)=>{
-if(!e&&r.event==="success"){
-uploadedImages.push(r.info.secure_url);
-preview.innerHTML=uploadedImages.map(i=>`<img src="${i}">`).join("");
-}
-});
-}
-
-/* TESTIMONIAL */
-function renderTestimonials(){
-testimonialBox.innerHTML="";
-testimonials.forEach(t=>{
-testimonialBox.innerHTML+=`
-<div class="delete-card">
-<img src="${t.image}">
-<button class="del-btn" onclick="deleteTestimonial('${t.id}')">Delete</button>
-</div>`;
-});
-}
-
-function uploadTestimonial(){
-cloudinary.openUploadWidget({
-cloudName:"db92r6j9z",
-uploadPreset:"ummuhalti"
-},async(e,r)=>{
-if(!e&&r.event==="success"){
-await addDoc(collection(db,"testimonials"),{image:r.info.secure_url});
-await loadAll();
-}
-});
-}
-
-window.deleteTestimonial=async(id)=>{
-await deleteDoc(doc(db,"testimonials",id));
-await loadAll();
-};
-
 /* TESTIMONIAL CAROUSEL */
 function renderCarousel(){
+
 testimonialCarousel.innerHTML="";
 testimonialDots.innerHTML="";
 
