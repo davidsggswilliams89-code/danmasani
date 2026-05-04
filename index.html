@@ -13,35 +13,9 @@ body{margin:0;font-family:Arial;background:#f5f5f5;padding-top:80px;}
 position:fixed;top:0;width:100%;height:45px;
 background:#111;color:white;display:flex;
 align-items:center;padding:0 10px;z-index:3000;
-overflow:hidden;
 }
 
-.marquee{
-position:absolute;
-left:0;
-width:100%;
-white-space:nowrap;
-overflow:hidden;
-}
-
-.marquee span{
-display:inline-block;
-padding-left:100%;
-animation:scrollText 12s linear infinite;
-font-weight:bold;
-}
-
-@keyframes scrollText{
-0%{transform:translateX(0);}
-100%{transform:translateX(-100%);}
-}
-
-.admin-icon{
-margin-left:auto;
-cursor:pointer;
-position:relative;
-z-index:9999;
-}
+.admin-icon{margin-left:auto;cursor:pointer;z-index:9999;}
 
 .category-bar{
 position:fixed;top:45px;width:100%;height:40px;
@@ -61,7 +35,7 @@ background:white;border-radius:12px;
 padding:10px;margin:10px 0;
 }
 
-/* PRODUCT CAROUSEL */
+/* CAROUSEL */
 .carousel{
 display:flex;
 overflow-x:auto;
@@ -90,29 +64,18 @@ margin:0 3px;
 
 /* PRICE */
 .price{
-background:#111;color:white;padding:10px;
-text-align:center;border-radius:8px;margin-top:8px;
+background:#111;color:white;
+padding:10px;text-align:center;
+border-radius:8px;margin-top:8px;
 }
 
-/* BUY BUTTON */
+/* BUY */
 .buy-btn{
-background:#25D366;
-color:white;
-padding:12px;
-border:none;
-width:100%;
-border-radius:12px;
-margin-top:10px;
-display:flex;
-align-items:center;
-justify-content:center;
-gap:8px;
-font-weight:bold;
-}
-
-.buy-btn img{
-width:18px;
-height:18px;
+background:#25D366;color:white;
+padding:12px;border:none;width:100%;
+border-radius:12px;margin-top:10px;
+display:flex;align-items:center;
+justify-content:center;gap:8px;font-weight:bold;
 }
 
 /* ADMIN */
@@ -142,10 +105,7 @@ background:red;color:white;border:none;padding:6px;margin-top:5px;
 <body>
 
 <div class="top-bar">
-<div class="marquee">
-<span>LUXURY HEAVEN • PREMIUM FASHION • NEW COLLECTION • WHATSAPP ORDER AVAILABLE • </span>
-</div>
-
+<div>LUXURY HEAVEN</div>
 <div class="admin-icon" id="adminBtn">🔒</div>
 </div>
 
@@ -154,15 +114,8 @@ background:red;color:white;border:none;padding:6px;margin-top:5px;
 <!-- ABOUT -->
 <div id="aboutView" class="view" style="display:block;">
 <div class="card">
-<h3 style="text-align:center;">What Our Customers Say 💬</h3>
-
-<div class="carousel" id="testimonialCarousel"></div>
-<div style="text-align:center;margin-top:5px;" id="testimonialDots"></div>
-
-<hr>
-
-<h2 style="text-align:center;">✨ About Luxury Heaven</h2>
-<p style="text-align:center;">Premium fashion store in Nigeria.</p>
+<h3 style="text-align:center;">About Luxury Heaven</h3>
+<p style="text-align:center;">Premium fashion store</p>
 </div>
 </div>
 
@@ -174,29 +127,20 @@ background:red;color:white;border:none;padding:6px;margin-top:5px;
 
 <h3>ADMIN PANEL</h3>
 
-<h4>Add Category</h4>
-<input id="newCat">
+<input id="newCat" placeholder="Category">
 <button class="btn" id="addCatBtn">Add Category</button>
 
-<h4>Delete Category</h4>
 <select id="delCat"></select>
-<button class="btn" id="delCatBtn">Delete Category</button>
+<button class="del-btn" id="delCatBtn">Delete Category</button>
 
 <hr>
 
-<h4>Add Product</h4>
-<input id="pname">
-<input id="price">
+<input id="pname" placeholder="Product name">
+<input id="price" placeholder="Price">
 <select id="pcat"></select>
 
 <button class="btn" id="uploadBtn">Upload Images</button>
 <button class="btn" id="saveBtn">Save Product</button>
-
-<hr>
-
-<h4>Delete Products</h4>
-<select id="deleteCatSelect"></select>
-<div id="deleteProductBox"></div>
 
 <hr>
 
@@ -218,16 +162,22 @@ projectId:"bob-26647"
 
 const db = getFirestore(app);
 
-let categories=[],products=[],testimonials=[];
+let categories=[],products=[];
 let active="ABOUT";
 let uploadedImages=[];
 
+/* SAFE INIT */
 window.addEventListener("DOMContentLoaded", async ()=>{
 
-await loadAll();
+await loadData();
 renderCategories();
 
-adminBtn.onclick=openAdmin;
+/* ADMIN */
+adminBtn.onclick=()=>{
+let p=prompt("Password");
+if(p==="12345") admin.style.display="block";
+};
+
 closeAdmin.onclick=()=>admin.style.display="none";
 
 addCatBtn.onclick=addCategory;
@@ -235,19 +185,11 @@ delCatBtn.onclick=deleteCategory;
 saveBtn.onclick=saveProduct;
 uploadBtn.onclick=uploadImages;
 
-deleteCatSelect.onchange=loadDeleteProducts;
-
 });
 
-/* ADMIN */
-function openAdmin(){
-let p=prompt("Enter Password");
-if(p==="12345") admin.style.display="block";
-}
-
 /* LOAD */
-async function loadAll(){
-categories=[];products=[];testimonials=[];
+async function loadData(){
+categories=[];products=[];
 
 let c=await getDocs(collection(db,"categories"));
 c.forEach(d=>categories.push({id:d.id,...d.data()}));
@@ -255,10 +197,7 @@ c.forEach(d=>categories.push({id:d.id,...d.data()}));
 let p=await getDocs(collection(db,"products"));
 p.forEach(d=>products.push({id:d.id,...d.data()}));
 
-let t=await getDocs(collection(db,"testimonials"));
-t.forEach(d=>testimonials.push({id:d.id,...d.data()}));
-
-fillDropdowns();
+fill();
 }
 
 /* CATEGORY */
@@ -268,20 +207,20 @@ categoryBar.innerHTML="";
 let about=document.createElement("div");
 about.className="category-btn active";
 about.innerText="ABOUT";
-about.onclick=()=>show("ABOUT",about);
+about.onclick=()=>switchView("ABOUT",about);
 categoryBar.appendChild(about);
 
 categories.forEach(c=>{
 let btn=document.createElement("div");
 btn.className="category-btn";
 btn.innerText=c.name;
-btn.onclick=()=>show(c.name,btn);
+btn.onclick=()=>switchView(c.name,btn);
 categoryBar.appendChild(btn);
 });
 }
 
 /* VIEW */
-function show(type,btn){
+function switchView(type,btn){
 document.querySelectorAll(".category-btn").forEach(b=>b.classList.remove("active"));
 btn.classList.add("active");
 
@@ -297,8 +236,9 @@ renderProducts();
 }
 }
 
-/* PRODUCTS WITH DOTS */
+/* PRODUCTS + DOT FIX */
 function renderProducts(){
+
 productView.innerHTML="";
 
 let list=products.filter(p=>p.category===active);
@@ -318,19 +258,20 @@ ${(p.images||[]).map(img=>`<img src="${img}">`).join("")}
 
 <div class="price">₦${p.price}</div>
 
-<button class="buy-btn" onclick="buyNow(${i})">
-<img src="https://cdn-icons-png.flaticon.com/512/733/733585.png">
+<button class="buy-btn">
+<img src="https://cdn-icons-png.flaticon.com/512/733/733585.png" width="18">
 BUY NOW
 </button>
 
 </div>`;
 });
 
-list.forEach((p,i)=>setupCarousel(i,p));
+list.forEach((p,i)=>setupDots(i,p));
 }
 
 /* DOT SYSTEM */
-function setupCarousel(i,p){
+function setupDots(i,p){
+
 let car=document.querySelector(".car"+i);
 let dotsBox=document.querySelector(".dots"+i);
 
@@ -353,22 +294,39 @@ if(dots[index]) dots[index].classList.add("active");
 });
 }
 
-/* BUY BUTTON */
-window.buyNow=(i)=>{
-let list=products.filter(p=>p.category===active);
-let p=list[i];
+/* BASIC FIREBASE OPS */
+async function addCategory(){
+await addDoc(collection(db,"categories"),{name:newCat.value});
+location.reload();
+}
 
-let msg=`Hello 👋
+async function deleteCategory(){
+await deleteDoc(doc(db,"categories",delCat.value));
+location.reload();
+}
 
-I want to order:
+async function saveProduct(){
+await addDoc(collection(db,"products"),{
+name:pname.value,
+price:price.value,
+category:pcat.value,
+images:uploadedImages
+});
+location.reload();
+}
 
-🛍️ ${p.name}
-💰 ₦${p.price}
-
-Please confirm availability.`;
-
-window.open("https://wa.me/234911473892?text="+encodeURIComponent(msg));
-};
+function uploadImages(){
+uploadedImages=[];
+cloudinary.openUploadWidget({
+cloudName:"db92r6j9z",
+uploadPreset:"ummuhalti",
+multiple:true
+},(e,r)=>{
+if(!e && r.event==="success"){
+uploadedImages.push(r.info.secure_url);
+}
+});
+}
 
 </script>
 
