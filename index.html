@@ -35,7 +35,6 @@ background:white;border-radius:12px;
 padding:10px;margin:10px 0;
 }
 
-/* CAROUSEL */
 .carousel{
 display:flex;
 overflow-x:auto;
@@ -44,7 +43,6 @@ height:380px;
 background:#000;
 border-radius:10px;
 }
-
 .carousel img{
 min-width:100%;
 height:100%;
@@ -52,24 +50,17 @@ object-fit:cover;
 scroll-snap-align:center;
 }
 
-/* DOTS */
 .dot{
-width:8px;height:8px;
-border-radius:50%;
-background:#bbb;
-display:inline-block;
-margin:0 3px;
+display:inline-block;width:8px;height:8px;
+margin:0 3px;border-radius:50%;background:#bbb;
 }
 .dot.active{background:#25D366;}
 
-/* PRICE */
 .price{
-background:#111;color:white;
-padding:10px;text-align:center;
-border-radius:8px;margin-top:8px;
+background:#111;color:white;padding:10px;
+text-align:center;border-radius:8px;margin-top:8px;
 }
 
-/* BUY BUTTON */
 .buy-btn{
 background:#25D366;color:white;
 padding:12px;border:none;width:100%;
@@ -78,32 +69,25 @@ display:flex;align-items:center;
 justify-content:center;gap:8px;font-weight:bold;
 }
 
-.buy-btn img{width:18px;height:18px;}
-
-/* ADMIN */
 .admin{
-display:none;
-position:fixed;top:0;left:0;
-width:100%;height:100%;
-background:white;
-z-index:9999;
-padding:10px;
-overflow:auto;
+display:none;position:fixed;top:0;left:0;
+width:100%;height:100%;background:white;
+z-index:9999;padding:10px;overflow:auto;
 }
 
-input,select{
-width:100%;
-padding:10px;
-margin:5px 0;
-}
+input,select{width:100%;padding:10px;margin:5px 0;}
 
-.btn{
-width:100%;padding:10px;
-background:green;color:white;border:none;margin-top:5px;
-}
+.btn{width:100%;padding:10px;background:green;color:white;border:none;margin-top:5px;}
+.del-btn{background:red;color:white;border:none;padding:6px;margin-top:5px;}
 
-.del-btn{
-background:red;color:white;border:none;padding:6px;margin-top:5px;
+.preview img{width:80px;height:80px;object-fit:cover;margin:5px;border-radius:10px;}
+
+.delete-card{
+display:flex;align-items:center;gap:10px;
+background:#fff;padding:8px;border-radius:10px;margin:5px 0;
+}
+.delete-card img{
+width:60px;height:60px;object-fit:cover;border-radius:8px;
 }
 </style>
 </head>
@@ -111,7 +95,7 @@ background:red;color:white;border:none;padding:6px;margin-top:5px;
 <body>
 
 <div class="top-bar">
-<div>LUXURY HEAVEN</div>
+LUXURY HEAVEN
 <div class="admin-icon" id="adminBtn">🔒</div>
 </div>
 
@@ -120,8 +104,18 @@ background:red;color:white;border:none;padding:6px;margin-top:5px;
 <!-- ABOUT -->
 <div id="aboutView" class="view" style="display:block;">
 <div class="card">
-<h3 style="text-align:center;">About Luxury Heaven</h3>
-<p style="text-align:center;">Premium fashion store in Nigeria</p>
+
+<h3 style="text-align:center;">What Our Customers Say 💬</h3>
+<div class="carousel" id="testimonialCarousel"></div>
+<div style="text-align:center;margin-top:5px;" id="testimonialDots"></div>
+
+<hr>
+
+<h2 style="text-align:center;">✨ About Luxury Heaven</h2>
+<p style="text-align:center;line-height:1.7;">
+Premium fashion store in Nigeria.
+</p>
+
 </div>
 </div>
 
@@ -133,20 +127,36 @@ background:red;color:white;border:none;padding:6px;margin-top:5px;
 
 <h3>ADMIN PANEL</h3>
 
-<input id="newCat" placeholder="Category">
+<h4>Add Category</h4>
+<input id="newCat">
 <button class="btn" id="addCatBtn">Add Category</button>
 
+<h4>Delete Category</h4>
 <select id="delCat"></select>
 <button class="del-btn" id="delCatBtn">Delete Category</button>
 
 <hr>
 
-<input id="pname" placeholder="Product name">
-<input id="price" placeholder="Price">
+<h4>Add Product</h4>
+<input id="pname">
+<input id="price">
 <select id="pcat"></select>
 
 <button class="btn" id="uploadBtn">Upload Images</button>
+<div class="preview" id="preview"></div>
 <button class="btn" id="saveBtn">Save Product</button>
+
+<hr>
+
+<h4>Delete Products</h4>
+<select id="deleteCatSelect"></select>
+<div id="deleteProductBox"></div>
+
+<hr>
+
+<h4>Testimonials</h4>
+<button class="btn" id="uploadTestBtn">Upload Testimonial</button>
+<div id="testimonialBox"></div>
 
 <hr>
 
@@ -165,37 +175,43 @@ apiKey:"AIzaSyA6ZaMnWKJEvSUlJgh31tU6rj8CvuietuM",
 authDomain:"bob-26647.firebaseapp.com",
 projectId:"bob-26647"
 });
-
 const db = getFirestore(app);
 
-let categories=[],products=[];
-let active="ABOUT";
+let categories=[],products=[],testimonials=[];
 let uploadedImages=[];
+let active="ABOUT";
 
-/* TEMPO INIT */
-window.addEventListener("DOMContentLoaded", async ()=>{
+/* SAFE INIT */
+window.addEventListener("DOMContentLoaded", init);
 
-await loadData();
+async function init(){
+
+await loadAll();
 renderCategories();
 
-/* ADMIN */
-adminBtn.onclick=()=>{
-let p=prompt("Password");
-if(p==="12345") admin.style.display="block";
-};
-
+/* EVENTS FIXED */
+adminBtn.onclick=openAdmin;
 closeAdmin.onclick=()=>admin.style.display="none";
 
 addCatBtn.onclick=addCategory;
 delCatBtn.onclick=deleteCategory;
 saveBtn.onclick=saveProduct;
 uploadBtn.onclick=uploadImages;
+uploadTestBtn.onclick=uploadTestimonial;
 
-});
+deleteCatSelect.onchange=loadDeleteProducts;
+}
+
+/* PASSWORD */
+function openAdmin(){
+let p=prompt("Enter Password");
+if(p==="12345"){admin.style.display="block";}
+}
 
 /* LOAD */
-async function loadData(){
-categories=[];products=[];
+async function loadAll(){
+
+categories=[];products=[];testimonials=[];
 
 let c=await getDocs(collection(db,"categories"));
 c.forEach(d=>categories.push({id:d.id,...d.data()}));
@@ -203,30 +219,35 @@ c.forEach(d=>categories.push({id:d.id,...d.data()}));
 let p=await getDocs(collection(db,"products"));
 p.forEach(d=>products.push({id:d.id,...d.data()}));
 
-fill();
+let t=await getDocs(collection(db,"testimonials"));
+t.forEach(d=>testimonials.push({id:d.id,...d.data()}));
+
+fillDropdowns();
+renderTestimonials();
+renderCarousel();
 }
 
-/* CATEGORY */
+/* CATEGORY BAR FIX */
 function renderCategories(){
 categoryBar.innerHTML="";
 
-let about=document.createElement("div");
-about.className="category-btn active";
-about.innerText="ABOUT";
-about.onclick=()=>switchView("ABOUT",about);
-categoryBar.appendChild(about);
+let aboutBtn=document.createElement("div");
+aboutBtn.className="category-btn active";
+aboutBtn.innerText="ABOUT";
+aboutBtn.onclick=()=>show("ABOUT",aboutBtn);
+categoryBar.appendChild(aboutBtn);
 
 categories.forEach(c=>{
 let btn=document.createElement("div");
 btn.className="category-btn";
 btn.innerText=c.name;
-btn.onclick=()=>switchView(c.name,btn);
+btn.onclick=()=>show(c.name,btn);
 categoryBar.appendChild(btn);
 });
 }
 
-/* VIEW */
-function switchView(type,btn){
+/* VIEW FIX */
+function show(type,btn){
 document.querySelectorAll(".category-btn").forEach(b=>b.classList.remove("active"));
 btn.classList.add("active");
 
@@ -242,65 +263,52 @@ renderProducts();
 }
 }
 
-/* PRODUCTS + DOTS */
+/* PRODUCTS */
 function renderProducts(){
-
 productView.innerHTML="";
-
-let list=products.filter(p=>p.category===active);
-
-list.forEach((p,i)=>{
-
+products.filter(p=>p.category===active).forEach(p=>{
 productView.innerHTML+=`
 <div class="card">
-
-<div class="carousel car${i}">
-${(p.images||[]).map(img=>`<img src="${img}">`).join("")}
-</div>
-
-<div style="text-align:center;margin-top:5px;" class="dots dots${i}"></div>
-
+<div class="carousel">${(p.images||[]).map(i=>`<img src="${i}">`).join("")}</div>
 <h3 style="text-align:center">${p.name}</h3>
-
 <div class="price">₦${p.price}</div>
-
-<button class="buy-btn">
-<img src="https://cdn-icons-png.flaticon.com/512/733/733585.png">
-BUY NOW
-</button>
-
+<button class="buy-btn">BUY NOW</button>
 </div>`;
 });
-
-list.forEach((p,i)=>setupDots(i,p));
 }
 
-/* DOT SYSTEM */
-function setupDots(i,p){
-
-let car=document.querySelector(".car"+i);
-let dotsBox=document.querySelector(".dots"+i);
-
-if(!car) return;
-
-dotsBox.innerHTML="";
-
-(p.images||[]).forEach((_,x)=>{
-let d=document.createElement("span");
-d.className="dot"+(x===0?" active":"");
-dotsBox.appendChild(d);
-});
-
-let dots=dotsBox.querySelectorAll(".dot");
-
-car.addEventListener("scroll",()=>{
-let index=Math.round(car.scrollLeft/car.clientWidth);
-dots.forEach(d=>d.classList.remove("active"));
-if(dots[index]) dots[index].classList.add("active");
+/* DELETE */
+function loadDeleteProducts(){
+deleteProductBox.innerHTML="";
+products.filter(p=>p.category===deleteCatSelect.value).forEach(p=>{
+deleteProductBox.innerHTML+=`
+<div class="delete-card">
+<span>${p.name}</span>
+<button class="del-btn" onclick="deleteProduct('${p.id}')">Delete</button>
+</div>`;
 });
 }
 
-/* FIREBASE */
+window.deleteProduct=async(id)=>{
+await deleteDoc(doc(db,"products",id));
+await loadAll();
+loadDeleteProducts();
+};
+
+/* DROPDOWNS */
+function fillDropdowns(){
+pcat.innerHTML="";
+delCat.innerHTML="";
+deleteCatSelect.innerHTML="";
+
+categories.forEach(c=>{
+pcat.innerHTML+=`<option value="${c.name}">${c.name}</option>`;
+delCat.innerHTML+=`<option value="${c.id}">${c.name}</option>`;
+deleteCatSelect.innerHTML+=`<option value="${c.name}">${c.name}</option>`;
+});
+}
+
+/* CATEGORY */
 async function addCategory(){
 await addDoc(collection(db,"categories"),{name:newCat.value});
 location.reload();
@@ -311,6 +319,7 @@ await deleteDoc(doc(db,"categories",delCat.value));
 location.reload();
 }
 
+/* PRODUCT */
 async function saveProduct(){
 await addDoc(collection(db,"products"),{
 name:pname.value,
@@ -321,6 +330,7 @@ images:uploadedImages
 location.reload();
 }
 
+/* CLOUDINARY */
 function uploadImages(){
 uploadedImages=[];
 cloudinary.openUploadWidget({
@@ -328,9 +338,61 @@ cloudName:"db92r6j9z",
 uploadPreset:"ummuhalti",
 multiple:true
 },(e,r)=>{
-if(!e && r.event==="success"){
+if(!e&&r.event==="success"){
 uploadedImages.push(r.info.secure_url);
+preview.innerHTML=uploadedImages.map(i=>`<img src="${i}">`).join("");
 }
+});
+}
+
+/* TESTIMONIAL */
+function renderTestimonials(){
+testimonialBox.innerHTML="";
+testimonials.forEach(t=>{
+testimonialBox.innerHTML+=`
+<div class="delete-card">
+<img src="${t.image}">
+<button class="del-btn" onclick="deleteTestimonial('${t.id}')">Delete</button>
+</div>`;
+});
+}
+
+function uploadTestimonial(){
+cloudinary.openUploadWidget({
+cloudName:"db92r6j9z",
+uploadPreset:"ummuhalti"
+},async(e,r)=>{
+if(!e&&r.event==="success"){
+await addDoc(collection(db,"testimonials"),{image:r.info.secure_url});
+await loadAll();
+}
+});
+}
+
+window.deleteTestimonial=async(id)=>{
+await deleteDoc(doc(db,"testimonials",id));
+await loadAll();
+};
+
+/* CAROUSEL */
+function renderCarousel(){
+testimonialCarousel.innerHTML="";
+testimonialDots.innerHTML="";
+
+testimonials.forEach((t,i)=>{
+testimonialCarousel.innerHTML+=`<img src="${t.image}">`;
+
+let d=document.createElement("span");
+d.className="dot"+(i===0?" active":"");
+testimonialDots.appendChild(d);
+});
+
+let dots=document.querySelectorAll(".dot");
+
+testimonialCarousel.addEventListener("scroll",()=>{
+let index=Math.round(testimonialCarousel.scrollLeft/testimonialCarousel.clientWidth);
+dots.forEach(d=>d.classList.remove("active"));
+if(dots[index]) dots[index].classList.add("active");
 });
 }
 
