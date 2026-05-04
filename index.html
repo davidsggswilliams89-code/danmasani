@@ -32,30 +32,102 @@ white-space:nowrap;
 .view{display:none;padding:10px;}
 .active-view{display:block;}
 
-.card{background:white;border-radius:12px;padding:10px;margin:10px 0;}
+.card{
+background:white;border-radius:12px;
+padding:10px;margin:10px 0;
+}
+
+/* 🔥 CAROUSEL */
+.carousel{
+display:flex;
+overflow-x:auto;
+scroll-snap-type:x mandatory;
+border-radius:10px;
+}
+
+.carousel img{
+min-width:100%;
+height:300px;
+object-fit:cover;
+scroll-snap-align:center;
+border-radius:10px;
+}
+
+.carousel::-webkit-scrollbar{display:none;}
+
+.dots{
+text-align:center;
+margin-top:5px;
+}
+
+.dot{
+height:8px;
+width:8px;
+background:#bbb;
+border-radius:50%;
+display:inline-block;
+margin:0 3px;
+}
+
+.dot.active{
+background:#25D366;
+}
 
 .price{
 background:#111;color:white;padding:10px;
 text-align:center;border-radius:8px;
+margin-top:8px;
 }
 
-.carousel img{
-width:100%;border-radius:10px;margin-top:5px;
+.buy-btn{
+background:#25D366;
+color:white;
+padding:12px;
+border:none;
+width:100%;
+border-radius:12px;
+margin-top:10px;
+font-weight:bold;
 }
 
 .admin{
 display:none;position:fixed;top:0;left:0;
-width:100%;height:100%;background:white;
-z-index:9999;padding:10px;overflow:auto;
+width:100%;height:100%;
+background:white;
+z-index:9999;
+padding:10px;
+overflow:auto;
 }
 
-input,select{width:100%;padding:10px;margin:5px 0;}
+input,select{
+width:100%;
+padding:10px;
+margin:5px 0;
+}
 
-.btn{width:100%;padding:10px;background:green;color:white;border:none;margin-top:5px;}
-.del-btn{background:red;color:white;border:none;padding:6px;margin-top:5px;}
+.btn{
+width:100%;
+padding:10px;
+background:green;
+color:white;
+border:none;
+margin-top:5px;
+}
+
+.del-btn{
+background:red;
+color:white;
+border:none;
+padding:6px;
+margin-top:5px;
+}
 
 .preview img{
-width:80px;height:80px;object-fit:cover;margin:5px;border-radius:10px;
+width:80px;
+height:80px;
+object-fit:cover;
+margin:5px;
+border-radius:10px;
 }
 </style>
 </head>
@@ -87,7 +159,6 @@ LUXURY HEAVEN
 
 <h3>ADMIN PANEL</h3>
 
-<!-- CATEGORY -->
 <h4>Add Category</h4>
 <input id="newCat" placeholder="Category name">
 <button class="btn" onclick="addCategory()">Add Category</button>
@@ -98,7 +169,6 @@ LUXURY HEAVEN
 
 <hr>
 
-<!-- PRODUCT -->
 <h4>Add Product</h4>
 
 <input id="pname" placeholder="Product name">
@@ -141,7 +211,7 @@ let products = [];
 let uploadedImages = [];
 let active = "ABOUT";
 
-/* OPEN ADMIN */
+/* ADMIN */
 window.openAdmin = () => admin.style.display="block";
 window.closeAdmin = () => admin.style.display="none";
 
@@ -155,8 +225,8 @@ renderCategoryBar();
 /* LOAD CATEGORIES */
 async function loadCategories(){
 categories = [];
-let snap = await getDocs(collection(db,"categories"));
 
+let snap = await getDocs(collection(db,"categories"));
 snap.forEach(d=>{
 categories.push({id:d.id,...d.data()});
 });
@@ -176,6 +246,7 @@ del.innerHTML += `<option value="${c.id}">${c.name}</option>`;
 /* LOAD PRODUCTS */
 async function loadProducts(){
 products = [];
+
 let snap = await getDocs(collection(db,"products"));
 
 snap.forEach(d=>{
@@ -208,10 +279,12 @@ bar.appendChild(btn);
 });
 }
 
-/* VIEW SWITCH */
+/* VIEW */
 function showView(type,btn){
 
-document.querySelectorAll(".category-btn").forEach(b=>b.classList.remove("active"));
+document.querySelectorAll(".category-btn")
+.forEach(b=>b.classList.remove("active"));
+
 btn.classList.add("active");
 
 active = type;
@@ -227,7 +300,7 @@ renderProducts();
 }
 }
 
-/* PRODUCTS */
+/* PRODUCTS WITH CAROUSEL */
 function renderProducts(){
 
 let box = document.getElementById("productView");
@@ -242,25 +315,88 @@ box.innerHTML = "<p style='text-align:center'>No products yet</p>";
 return;
 }
 
-list.forEach(p=>{
+list.forEach((p,i)=>{
 
 box.innerHTML += `
 <div class="card">
 
-<div class="carousel">
-${(p.images||[]).map(i=>`<img src="${i}">`).join("")}
+<div class="carousel car${i}">
+${(p.images||[]).map(img=>`<img src="${img}">`).join("")}
 </div>
 
-<h3>${p.name}</h3>
+<div class="dots dots${i}"></div>
+
+<h3 style="text-align:center">${p.name}</h3>
 
 <div class="price">₦${p.price}</div>
+
+<button class="buy-btn" onclick="buyNow(${i})">
+🛒 BUY NOW
+</button>
 
 </div>
 `;
 });
+
+list.forEach((p,i)=>setupCarousel(i));
 }
 
-/* ⭐ CLOUDINARY UPLOAD */
+/* BUY NOW */
+window.buyNow = (i) => {
+
+let list = products.filter(p =>
+(p.category || "").toLowerCase() === active.toLowerCase()
+);
+
+let p = list[i];
+
+let car = document.querySelector(".car"+i);
+let index = Math.round(car.scrollLeft / car.clientWidth);
+let img = p.images?.[index] || p.images?.[0];
+
+let msg = `Hello 👋
+
+I want to order:
+
+🛍️ ${p.name}
+📂 ${p.category}
+💰 ₦${p.price}
+
+🖼️ Image:
+${img}`;
+
+window.open("https://wa.me/2349114738932?text=" + encodeURIComponent(msg));
+};
+
+/* DOT CAROUSEL */
+function setupCarousel(i){
+
+let car = document.querySelector(".car"+i);
+let dotsBox = document.querySelector(".dots"+i);
+
+if(!car) return;
+
+dotsBox.innerHTML = "";
+
+let imgs = car.querySelectorAll("img");
+
+imgs.forEach((_,x)=>{
+let d = document.createElement("span");
+d.className = "dot" + (x===0?" active":"");
+dotsBox.appendChild(d);
+});
+
+let dots = dotsBox.querySelectorAll(".dot");
+
+car.addEventListener("scroll", () => {
+let index = Math.round(car.scrollLeft / car.clientWidth);
+
+dots.forEach(d=>d.classList.remove("active"));
+if(dots[index]) dots[index].classList.add("active");
+});
+}
+
+/* CLOUDINARY */
 window.uploadImages = () => {
 
 uploadedImages = [];
@@ -291,8 +427,8 @@ let name = document.getElementById("pname").value;
 let price = document.getElementById("price").value;
 let cat = document.getElementById("pcat").value;
 
-if(!name || !price || !cat || uploadedImages.length === 0){
-alert("Fill all fields + upload images");
+if(!name || !price || !cat || uploadedImages.length===0){
+alert("Fill all fields");
 return;
 }
 
@@ -304,7 +440,7 @@ images: uploadedImages,
 date: Date.now()
 });
 
-alert("Product saved!");
+alert("Saved!");
 
 uploadedImages = [];
 document.getElementById("preview").innerHTML = "";
@@ -313,15 +449,13 @@ await loadProducts();
 renderCategoryBar();
 };
 
-/* ADD CATEGORY */
+/* CATEGORY */
 window.addCategory = async () => {
 
 let name = document.getElementById("newCat").value;
 
-if(!name) return alert("Enter category");
-
 await addDoc(collection(db,"categories"),{
-name: name.trim(),
+name,
 createdAt: Date.now()
 });
 
@@ -329,11 +463,9 @@ document.getElementById("newCat").value="";
 
 await loadCategories();
 renderCategoryBar();
-
-alert("Category added");
 };
 
-/* DELETE CATEGORY */
+/* DELETE */
 window.deleteCategory = async () => {
 
 let id = document.getElementById("delCat").value;
@@ -342,8 +474,6 @@ await deleteDoc(doc(db,"categories",id));
 
 await loadCategories();
 renderCategoryBar();
-
-alert("Deleted");
 };
 
 </script>
