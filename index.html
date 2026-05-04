@@ -14,7 +14,6 @@ background:#f5f5f5;
 padding-top:80px;
 }
 
-/* TOP BAR */
 .top-bar{
 position:fixed;
 top:0;
@@ -30,7 +29,6 @@ z-index:3000;
 
 .admin-icon{margin-left:auto;cursor:pointer;}
 
-/* CATEGORY BAR */
 .category-bar{
 position:fixed;
 top:45px;
@@ -51,13 +49,10 @@ white-space:nowrap;
 }
 .category-btn.active{background:#25D366;}
 
-/* VIEWS */
+/* CLEAN VIEW SYSTEM (ONLY ONE RULE) */
 .view{
 display:none;
 padding:10px;
-}
-.active-view{
-display:block;
 }
 
 /* CARDS */
@@ -68,7 +63,7 @@ padding:10px;
 margin:10px 0;
 }
 
-/* IMAGE FIX */
+/* IMAGE */
 .carousel{
 display:flex;
 overflow-x:auto;
@@ -88,7 +83,6 @@ border-radius:10px;
 
 .carousel::-webkit-scrollbar{display:none;}
 
-/* PRICE */
 .price{
 background:#111;
 color:white;
@@ -98,7 +92,6 @@ border-radius:8px;
 margin-top:8px;
 }
 
-/* BUY BUTTON */
 .buy-btn{
 background:#25D366;
 color:white;
@@ -151,7 +144,6 @@ padding:6px;
 margin-top:5px;
 }
 
-/* PREVIEW */
 .preview img{
 width:80px;
 height:80px;
@@ -160,7 +152,6 @@ margin:5px;
 border-radius:10px;
 }
 
-/* DELETE CARD */
 .delete-card{
 display:flex;
 align-items:center;
@@ -182,17 +173,15 @@ border-radius:8px;
 
 <body>
 
-<!-- TOP BAR -->
 <div class="top-bar">
 LUXURY HEAVEN
 <div class="admin-icon" onclick="openAdmin()">🔒</div>
 </div>
 
-<!-- CATEGORY -->
 <div class="category-bar" id="categoryBar"></div>
 
-<!-- ABOUT -->
-<div id="aboutView" class="view active-view">
+<!-- ABOUT (DEFAULT SHOW) -->
+<div id="aboutView" class="view" style="display:block;">
 <div class="card">
 <h2 style="text-align:center;">✨ About Luxury Heaven</h2>
 <p style="text-align:center;">
@@ -209,7 +198,6 @@ Premium fashion store in Nigeria. Shoes, bags, hijabs & accessories.
 
 <h3>ADMIN PANEL</h3>
 
-<!-- CATEGORY -->
 <h4>Add Category</h4>
 <input id="newCat" placeholder="Category name">
 <button class="btn" onclick="addCategory()">Add Category</button>
@@ -220,7 +208,6 @@ Premium fashion store in Nigeria. Shoes, bags, hijabs & accessories.
 
 <hr>
 
-<!-- PRODUCT -->
 <h4>Add Product</h4>
 <input id="pname" placeholder="Product name">
 <input id="price" placeholder="Price">
@@ -232,10 +219,15 @@ Premium fashion store in Nigeria. Shoes, bags, hijabs & accessories.
 
 <hr>
 
-<!-- DELETE PRODUCTS -->
 <h4>Delete Products</h4>
 <select id="deleteCatSelect" onchange="loadDeleteProducts()"></select>
 <div id="deleteProductBox"></div>
+
+<hr>
+
+<h4>Testimonials</h4>
+<button class="btn" onclick="uploadTestimonial()">Upload Testimonial Image</button>
+<div id="testimonialBox"></div>
 
 <hr>
 
@@ -261,16 +253,15 @@ appId: "1:468659293220:web:507832347dc70ab78ddcb1"
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-let categories=[],products=[];
+let categories=[],products=[],testimonials=[];
 let uploadedImages=[];
-let active="ABOUT";
 
-/* 🔐 PASSWORD */
+/* PASSWORD */
 const ADMIN_PASSWORD="12345";
 
 window.openAdmin=()=>{
-let pass = prompt("Enter Admin Password");
-if(pass===ADMIN_PASSWORD){
+let p=prompt("Enter Password");
+if(p===ADMIN_PASSWORD){
 admin.style.display="block";
 }else{
 alert("Wrong Password");
@@ -285,11 +276,10 @@ await loadAll();
 renderCategories();
 };
 
-/* LOAD DATA */
+/* DATA */
 async function loadAll(){
 
-categories=[];
-products=[];
+categories=[];products=[];testimonials=[];
 
 let c=await getDocs(collection(db,"categories"));
 c.forEach(d=>categories.push({id:d.id,...d.data()}));
@@ -297,10 +287,9 @@ c.forEach(d=>categories.push({id:d.id,...d.data()}));
 let p=await getDocs(collection(db,"products"));
 p.forEach(d=>products.push({id:d.id,...d.data(),images:Array.isArray(d.data().images)?d.data().images:[]}));
 
-fillAdmin();
 }
 
-/* CATEGORY BAR */
+/* CATEGORY */
 function renderCategories(){
 let bar=document.getElementById("categoryBar");
 bar.innerHTML="";
@@ -320,13 +309,11 @@ bar.appendChild(btn);
 });
 }
 
-/* VIEW SWITCH FIX */
+/* 🔥 FIXED VIEW SYSTEM */
 function show(type,btn){
 
 document.querySelectorAll(".category-btn").forEach(b=>b.classList.remove("active"));
 btn.classList.add("active");
-
-active=type;
 
 if(type==="ABOUT"){
 aboutView.style.display="block";
@@ -337,24 +324,23 @@ return;
 aboutView.style.display="none";
 productView.style.display="block";
 
-renderProducts();
+renderProducts(type);
 }
 
 /* PRODUCTS */
-function renderProducts(){
+function renderProducts(cat){
 
 let box=document.getElementById("productView");
 box.innerHTML="";
 
-let list=products.filter(p=>p.category===active);
+let list=products.filter(p=>p.category===cat);
 
-list.forEach((p,i)=>{
-
+list.forEach(p=>{
 box.innerHTML+=`
 <div class="card">
 
 <div class="carousel">
-${(p.images||[]).map(img=>`<img src="${img}">`).join("")}
+${(p.images||[]).map(i=>`<img src="${i}">`).join("")}
 </div>
 
 <h3 style="text-align:center">${p.name}</h3>
@@ -370,45 +356,17 @@ BUY NOW
 });
 }
 
-/* DELETE PRODUCTS */
-window.loadDeleteProducts=()=>{
-let cat=deleteCatSelect.value;
-let box=document.getElementById("deleteProductBox");
-box.innerHTML="";
-
-products.filter(p=>p.category===cat).forEach(p=>{
-box.innerHTML+=`
-<div class="delete-card">
-<img src="${p.images?.[0]||''}">
-<div>
-<b>${p.name}</b><br>
-<button class="del-btn" onclick="deleteProduct('${p.id}')">Delete</button>
-</div>
-</div>`;
-});
-};
-
-window.deleteProduct=async(id)=>{
-await deleteDoc(doc(db,"products",id));
-await loadAll();
-loadDeleteProducts();
-};
-
-/* CATEGORY */
+/* CATEGORY + PRODUCT FUNCTIONS */
 window.addCategory=async()=>{
 await addDoc(collection(db,"categories"),{name:newCat.value});
-newCat.value="";
-await loadAll();
-renderCategories();
+location.reload();
 };
 
 window.deleteCategory=async()=>{
 await deleteDoc(doc(db,"categories",delCat.value));
-await loadAll();
-renderCategories();
+location.reload();
 };
 
-/* SAVE PRODUCT */
 window.saveProduct=async()=>{
 await addDoc(collection(db,"products"),{
 name:pname.value,
@@ -417,7 +375,7 @@ category:pcat.value,
 images:uploadedImages,
 date:Date.now()
 });
-await loadAll();
+location.reload();
 };
 
 /* CLOUDINARY */
