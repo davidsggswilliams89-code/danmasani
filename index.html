@@ -141,36 +141,21 @@ object-fit:cover;
 margin:5px;
 border-radius:10px;
 }
-
-.delete-card{
-display:flex;
-align-items:center;
-gap:10px;
-background:#fff;
-padding:8px;
-border-radius:10px;
-margin:5px 0;
-}
-
-.delete-card img{
-width:70px;
-height:70px;
-object-fit:cover;
-border-radius:8px;
-}
 </style>
 </head>
 
 <body>
 
+<!-- TOP -->
 <div class="top-bar">
 LUXURY HEAVEN
 <div class="admin-icon" onclick="openAdmin()">🔒</div>
 </div>
 
+<!-- CATEGORY -->
 <div class="category-bar" id="categoryBar"></div>
 
-<!-- ABOUT -->
+<!-- ABOUT (FIXED) -->
 <div id="aboutView" class="view" style="display:block;">
 <div class="card">
 <h2 style="text-align:center;">✨ About Luxury Heaven</h2>
@@ -178,7 +163,7 @@ LUXURY HEAVEN
 </div>
 </div>
 
-<!-- PRODUCTS -->
+<!-- PRODUCTS (FIXED) -->
 <div id="productView" class="view"></div>
 
 <!-- ADMIN -->
@@ -208,22 +193,10 @@ LUXURY HEAVEN
 
 <hr>
 
-<!-- 🔥 FIXED DELETE PRODUCT SECTION -->
 <h4>Delete Products</h4>
-
 <select id="deleteCatSelect" onchange="loadDeleteProducts()"></select>
 
 <div id="deleteProductBox"></div>
-
-<hr>
-
-<h4>Testimonials</h4>
-<button class="btn" onclick="uploadTestimonial()">Upload Testimonial</button>
-<div id="testimonialBox"></div>
-
-<hr>
-
-<button class="del-btn" onclick="closeAdmin()">Close</button>
 
 </div>
 
@@ -245,7 +218,7 @@ appId: "1:468659293220:web:507832347dc70ab78ddcb1"
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-let categories=[],products=[],testimonials=[];
+let categories=[],products=[];
 let uploadedImages=[];
 let active="ABOUT";
 
@@ -274,7 +247,6 @@ async function loadAll(){
 
 categories=[];
 products=[];
-testimonials=[];
 
 let c=await getDocs(collection(db,"categories"));
 c.forEach(d=>categories.push({id:d.id,...d.data()}));
@@ -282,14 +254,10 @@ c.forEach(d=>categories.push({id:d.id,...d.data()}));
 let p=await getDocs(collection(db,"products"));
 p.forEach(d=>products.push({id:d.id,...d.data(),images:Array.isArray(d.data().images)?d.data().images:[]}));
 
-let t=await getDocs(collection(db,"testimonials"));
-t.forEach(d=>testimonials.push({id:d.id,...d.data()}));
-
 fillAdminDropdowns();
-renderTestimonials();
 }
 
-/* CATEGORY */
+/* CATEGORY BAR */
 function renderCategories(){
 let bar=document.getElementById("categoryBar");
 bar.innerHTML="";
@@ -309,7 +277,7 @@ bar.appendChild(btn);
 });
 }
 
-/* VIEW */
+/* FIXED VIEW SYSTEM */
 function show(type,btn){
 
 document.querySelectorAll(".category-btn").forEach(b=>b.classList.remove("active"));
@@ -329,7 +297,7 @@ productView.style.display="block";
 renderProducts();
 }
 
-/* PRODUCTS */
+/* PRODUCTS FIXED */
 function renderProducts(){
 
 let box=document.getElementById("productView");
@@ -358,7 +326,7 @@ BUY NOW
 });
 }
 
-/* 🔥 FIXED DELETE PRODUCT PREVIEW */
+/* DELETE PRODUCTS FIXED */
 window.loadDeleteProducts=()=>{
 
 let cat = deleteCatSelect.value;
@@ -368,26 +336,16 @@ box.innerHTML="";
 
 let list = products.filter(p=>p.category===cat);
 
-if(list.length===0){
-box.innerHTML="<p>No products in this category</p>";
-return;
-}
-
 list.forEach(p=>{
 box.innerHTML+=`
-<div class="delete-card">
+<div style="background:#fff;padding:10px;margin:5px 0;border-radius:8px;display:flex;justify-content:space-between;align-items:center;">
 
-<img src="${p.images?.[0]||''}">
-
-<div style="flex:1">
+<div>
 <b>${p.name}</b><br>
-<small>₦${p.price}</small><br>
-
-<button class="del-btn" onclick="deleteProduct('${p.id}')">
-Delete
-</button>
-
+<small>₦${p.price}</small>
 </div>
+
+<button class="del-btn" onclick="deleteProduct('${p.id}')">Delete</button>
 
 </div>
 `;
@@ -400,7 +358,7 @@ await loadAll();
 loadDeleteProducts();
 };
 
-/* CATEGORY */
+/* CATEGORY + PRODUCT */
 window.addCategory=async()=>{
 await addDoc(collection(db,"categories"),{name:newCat.value});
 location.reload();
@@ -411,7 +369,6 @@ await deleteDoc(doc(db,"categories",delCat.value));
 location.reload();
 };
 
-/* PRODUCT */
 window.saveProduct=async()=>{
 await addDoc(collection(db,"products"),{
 name:pname.value,
