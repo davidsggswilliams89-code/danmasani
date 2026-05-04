@@ -9,7 +9,6 @@
 <style>
 body{margin:0;font-family:Arial;background:#f5f5f5;padding-top:80px;}
 
-/* TOP BAR */
 .top-bar{
 position:fixed;
 top:0;
@@ -24,13 +23,12 @@ z-index:3000;
 overflow:hidden;
 }
 
-/* MOVING TEXT */
 .marquee{
 position:absolute;
 left:0;
 width:100%;
-overflow:hidden;
 white-space:nowrap;
+overflow:hidden;
 }
 
 .marquee span{
@@ -45,7 +43,6 @@ font-weight:bold;
 100%{transform:translateX(-100%);}
 }
 
-/* ADMIN ICON ALWAYS ON TOP */
 .admin-icon{
 margin-left:auto;
 cursor:pointer;
@@ -53,27 +50,35 @@ position:relative;
 z-index:10;
 }
 
-/* CATEGORY */
 .category-bar{
-position:fixed;top:45px;width:100%;height:40px;
-background:#222;display:flex;overflow-x:auto;
+position:fixed;
+top:45px;
+width:100%;
+height:40px;
+background:#222;
+display:flex;
+overflow-x:auto;
 }
 
 .category-btn{
-color:white;padding:6px 14px;margin:5px;
-border-radius:20px;cursor:pointer;white-space:nowrap;
+color:white;
+padding:6px 14px;
+margin:5px;
+border-radius:20px;
+cursor:pointer;
+white-space:nowrap;
 }
 .category-btn.active{background:#25D366;}
 
-/* VIEW */
 .view{display:none;padding:10px;}
 
 .card{
-background:white;border-radius:12px;
-padding:10px;margin:10px 0;
+background:white;
+border-radius:12px;
+padding:10px;
+margin:10px 0;
 }
 
-/* PRODUCT CAROUSEL */
 .carousel{
 display:flex;
 overflow-x:auto;
@@ -90,91 +95,101 @@ object-fit:cover;
 scroll-snap-align:center;
 }
 
-/* DOTS */
 .dot{
 display:inline-block;
-width:8px;height:8px;
+width:8px;
+height:8px;
 margin:0 3px;
 border-radius:50%;
 background:#bbb;
 }
 .dot.active{background:#25D366;}
 
-/* PRICE */
 .price{
-background:#111;color:white;padding:10px;
-text-align:center;border-radius:8px;margin-top:8px;
+background:#111;
+color:white;
+padding:10px;
+text-align:center;
+border-radius:8px;
+margin-top:8px;
 }
 
-/* BUY BUTTON */
 .buy-btn{
-background:#25D366;color:white;
-padding:12px;border:none;width:100%;
-border-radius:12px;margin-top:10px;
-display:flex;align-items:center;
-justify-content:center;gap:8px;font-weight:bold;
+background:#25D366;
+color:white;
+padding:12px;
+border:none;
+width:100%;
+border-radius:12px;
+margin-top:10px;
+display:flex;
+align-items:center;
+justify-content:center;
+gap:8px;
+font-weight:bold;
 }
 
-/* ADMIN */
 .admin{
-display:none;position:fixed;top:0;left:0;
-width:100%;height:100%;background:white;
-z-index:9999;padding:10px;overflow:auto;
+display:none;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:white;
+z-index:9999;
+padding:10px;
+overflow:auto;
 }
 
-input,select{width:100%;padding:10px;margin:5px 0;}
-
-.btn{width:100%;padding:10px;background:green;color:white;border:none;margin-top:5px;}
-.del-btn{background:red;color:white;border:none;padding:6px;margin-top:5px;}
-
-.preview img{
-width:80px;height:80px;object-fit:cover;
-margin:5px;border-radius:10px;
+input,select{
+width:100%;
+padding:10px;
+margin:5px 0;
 }
 
-.delete-card{
-display:flex;align-items:center;gap:10px;
-background:#fff;padding:8px;border-radius:10px;margin:5px 0;
+.btn{
+width:100%;
+padding:10px;
+background:green;
+color:white;
+border:none;
+margin-top:5px;
 }
 
-.delete-card img{
-width:60px;height:60px;object-fit:cover;border-radius:8px;
+.del-btn{
+background:red;
+color:white;
+border:none;
+padding:6px;
+margin-top:5px;
 }
 </style>
 </head>
 
 <body>
 
-<!-- TOP HEADER -->
 <div class="top-bar">
-
 <div class="marquee">
-<span>LUXURY HEAVEN • PREMIUM FASHION • NEW COLLECTION • WHATSAPP ORDER AVAILABLE • </span>
+<span>LUXURY HEAVEN • PREMIUM FASHION • NEW ARRIVALS • WHATSAPP ORDER AVAILABLE • </span>
 </div>
 
 <div class="admin-icon" id="adminBtn">🔒</div>
-
 </div>
 
-<!-- CATEGORY -->
 <div class="category-bar" id="categoryBar"></div>
 
 <!-- ABOUT -->
 <div id="aboutView" class="view" style="display:block;">
 <div class="card">
-
 <h3 style="text-align:center;">What Our Customers Say 💬</h3>
-
 <div class="carousel" id="testimonialCarousel"></div>
 <div style="text-align:center;margin-top:5px;" id="testimonialDots"></div>
 
 <hr>
 
 <h2 style="text-align:center;">✨ About Luxury Heaven</h2>
-<p style="text-align:center;line-height:1.7;">
-Premium fashion store in Nigeria.
-</p>
-
+<p style="text-align:center;">Premium fashion store in Nigeria.</p>
 </div>
 </div>
 
@@ -202,7 +217,6 @@ Premium fashion store in Nigeria.
 <select id="pcat"></select>
 
 <button class="btn" id="uploadBtn">Upload Images</button>
-<div class="preview" id="preview"></div>
 <button class="btn" id="saveBtn">Save Product</button>
 
 <hr>
@@ -210,12 +224,6 @@ Premium fashion store in Nigeria.
 <h4>Delete Products</h4>
 <select id="deleteCatSelect"></select>
 <div id="deleteProductBox"></div>
-
-<hr>
-
-<h4>Testimonials</h4>
-<button class="btn" id="uploadTestBtn">Upload Testimonial</button>
-<div id="testimonialBox"></div>
 
 <hr>
 
@@ -234,40 +242,40 @@ apiKey:"AIzaSyA6ZaMnWKJEvSUlJgh31tU6rj8CvuietuM",
 authDomain:"bob-26647.firebaseapp.com",
 projectId:"bob-26647"
 });
+
 const db = getFirestore(app);
 
 let categories=[],products=[],testimonials=[];
-let uploadedImages=[];
 let active="ABOUT";
+let uploadedImages=[];
 
-window.addEventListener("DOMContentLoaded", init);
-
-async function init(){
+/* SAFE DOM INIT FIX */
+window.addEventListener("DOMContentLoaded", async()=>{
 
 await loadAll();
 renderCategories();
 
-adminBtn.onclick=openAdmin;
-closeAdmin.onclick=()=>admin.style.display="none";
+/* FIXED EVENTS (THIS WAS BROKEN BEFORE) */
+document.getElementById("adminBtn").onclick=openAdmin;
+document.getElementById("closeAdmin").onclick=()=>admin.style.display="none";
 
-addCatBtn.onclick=addCategory;
-delCatBtn.onclick=deleteCategory;
-saveBtn.onclick=saveProduct;
-uploadBtn.onclick=uploadImages;
-uploadTestBtn.onclick=uploadTestimonial;
+document.getElementById("addCatBtn").onclick=addCategory;
+document.getElementById("delCatBtn").onclick=deleteCategory;
+document.getElementById("saveBtn").onclick=saveProduct;
+document.getElementById("uploadBtn").onclick=uploadImages;
 
-deleteCatSelect.onchange=loadDeleteProducts;
-}
+document.getElementById("deleteCatSelect").onchange=loadDeleteProducts;
+
+});
 
 /* ADMIN */
 function openAdmin(){
 let p=prompt("Enter Password");
-if(p==="12345"){admin.style.display="block";}
+if(p==="12345") admin.style.display="block";
 }
 
 /* LOAD */
 async function loadAll(){
-
 categories=[];products=[];testimonials=[];
 
 let c=await getDocs(collection(db,"categories"));
@@ -280,19 +288,17 @@ let t=await getDocs(collection(db,"testimonials"));
 t.forEach(d=>testimonials.push({id:d.id,...d.data()}));
 
 fillDropdowns();
-renderTestimonials();
-renderCarousel();
 }
 
 /* CATEGORY */
 function renderCategories(){
 categoryBar.innerHTML="";
 
-let aboutBtn=document.createElement("div");
-aboutBtn.className="category-btn active";
-aboutBtn.innerText="ABOUT";
-aboutBtn.onclick=()=>show("ABOUT",aboutBtn);
-categoryBar.appendChild(aboutBtn);
+let about=document.createElement("div");
+about.className="category-btn active";
+about.innerText="ABOUT";
+about.onclick=()=>show("ABOUT",about);
+categoryBar.appendChild(about);
 
 categories.forEach(c=>{
 let btn=document.createElement("div");
@@ -320,83 +326,73 @@ renderProducts();
 }
 }
 
-/* PRODUCTS + DOTS */
+/* PRODUCTS */
 function renderProducts(){
-
 productView.innerHTML="";
-
-let list=products.filter(p=>p.category===active);
-
-list.forEach((p,i)=>{
-
+products.filter(p=>p.category===active).forEach(p=>{
 productView.innerHTML+=`
 <div class="card">
 
-<div class="carousel car${i}">
-${(p.images||[]).map(img=>`<img src="${img}">`).join("")}
+<div class="carousel">
+${(p.images||[]).map(i=>`<img src="${i}">`).join("")}
 </div>
-
-<div style="text-align:center;margin-top:5px;" class="dots dots${i}"></div>
 
 <h3 style="text-align:center">${p.name}</h3>
 
 <div class="price">₦${p.price}</div>
 
 <button class="buy-btn">
-<img src="https://cdn-icons-png.flaticon.com/512/733/733585.png" width="18">
 BUY NOW
 </button>
 
 </div>`;
 });
-
-list.forEach((p,i)=>setupCarousel(i,p));
 }
 
-function setupCarousel(i,p){
+/* DROPDOWNS */
+function fillDropdowns(){
+pcat.innerHTML="";
+delCat.innerHTML="";
+deleteCatSelect.innerHTML="";
 
-let car=document.querySelector(".car"+i);
-let dotsBox=document.querySelector(".dots"+i);
-
-if(!car) return;
-
-dotsBox.innerHTML="";
-
-(p.images||[]).forEach((_,x)=>{
-let d=document.createElement("span");
-d.className="dot"+(x===0?" active":"");
-dotsBox.appendChild(d);
-});
-
-let dots=dotsBox.querySelectorAll(".dot");
-
-car.addEventListener("scroll",()=>{
-let index=Math.round(car.scrollLeft/car.clientWidth);
-dots.forEach(d=>d.classList.remove("active"));
-if(dots[index]) dots[index].classList.add("active");
+categories.forEach(c=>{
+pcat.innerHTML+=`<option value="${c.name}">${c.name}</option>`;
+delCat.innerHTML+=`<option value="${c.id}">${c.name}</option>`;
+deleteCatSelect.innerHTML+=`<option value="${c.name}">${c.name}</option>`;
 });
 }
 
-/* TESTIMONIAL CAROUSEL */
-function renderCarousel(){
+/* SIMPLE SAFE STUBS */
+async function addCategory(){
+await addDoc(collection(db,"categories"),{name:newCat.value});
+location.reload();
+}
 
-testimonialCarousel.innerHTML="";
-testimonialDots.innerHTML="";
+async function deleteCategory(){
+await deleteDoc(doc(db,"categories",delCat.value));
+location.reload();
+}
 
-testimonials.forEach((t,i)=>{
-testimonialCarousel.innerHTML+=`<img src="${t.image}">`;
-
-let d=document.createElement("span");
-d.className="dot"+(i===0?" active":"");
-testimonialDots.appendChild(d);
+async function saveProduct(){
+await addDoc(collection(db,"products"),{
+name:pname.value,
+price:price.value,
+category:pcat.value,
+images:uploadedImages
 });
+location.reload();
+}
 
-let dots=document.querySelectorAll("#testimonialDots .dot");
-
-testimonialCarousel.addEventListener("scroll",()=>{
-let index=Math.round(testimonialCarousel.scrollLeft/testimonialCarousel.clientWidth);
-dots.forEach(d=>d.classList.remove("active"));
-if(dots[index]) dots[index].classList.add("active");
+function uploadImages(){
+uploadedImages=[];
+cloudinary.openUploadWidget({
+cloudName:"db92r6j9z",
+uploadPreset:"ummuhalti",
+multiple:true
+},(e,r)=>{
+if(!e && r.event==="success"){
+uploadedImages.push(r.info.secure_url);
+}
 });
 }
 
