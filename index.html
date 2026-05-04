@@ -14,6 +14,7 @@ background:#f5f5f5;
 padding-top:80px;
 }
 
+/* TOP BAR */
 .top-bar{
 position:fixed;
 top:0;
@@ -29,6 +30,7 @@ z-index:3000;
 
 .admin-icon{margin-left:auto;cursor:pointer;}
 
+/* CATEGORY BAR */
 .category-bar{
 position:fixed;
 top:45px;
@@ -49,9 +51,16 @@ white-space:nowrap;
 }
 .category-btn.active{background:#25D366;}
 
-.view{display:none;padding:10px;}
-.active-view{display:block;}
+/* VIEWS */
+.view{
+display:none;
+padding:10px;
+}
+.active-view{
+display:block;
+}
 
+/* CARDS */
 .card{
 background:white;
 border-radius:12px;
@@ -79,6 +88,7 @@ border-radius:10px;
 
 .carousel::-webkit-scrollbar{display:none;}
 
+/* PRICE */
 .price{
 background:#111;
 color:white;
@@ -88,6 +98,7 @@ border-radius:8px;
 margin-top:8px;
 }
 
+/* BUY BUTTON */
 .buy-btn{
 background:#25D366;
 color:white;
@@ -103,6 +114,7 @@ justify-content:center;
 gap:8px;
 }
 
+/* ADMIN */
 .admin{
 display:none;
 position:fixed;
@@ -139,6 +151,7 @@ padding:6px;
 margin-top:5px;
 }
 
+/* PREVIEW */
 .preview img{
 width:80px;
 height:80px;
@@ -147,6 +160,7 @@ margin:5px;
 border-radius:10px;
 }
 
+/* DELETE CARD */
 .delete-card{
 display:flex;
 align-items:center;
@@ -168,22 +182,26 @@ border-radius:8px;
 
 <body>
 
+<!-- TOP BAR -->
 <div class="top-bar">
 LUXURY HEAVEN
 <div class="admin-icon" onclick="openAdmin()">🔒</div>
 </div>
 
+<!-- CATEGORY -->
 <div class="category-bar" id="categoryBar"></div>
 
-<!-- 🔥 FIXED ABOUT VIEW -->
+<!-- ABOUT -->
 <div id="aboutView" class="view active-view">
 <div class="card">
 <h2 style="text-align:center;">✨ About Luxury Heaven</h2>
-<p style="text-align:center;">Premium fashion store in Nigeria</p>
+<p style="text-align:center;">
+Premium fashion store in Nigeria. Shoes, bags, hijabs & accessories.
+</p>
 </div>
 </div>
 
-<!-- 🔥 FIXED PRODUCT VIEW -->
+<!-- PRODUCTS -->
 <div id="productView" class="view"></div>
 
 <!-- ADMIN -->
@@ -191,6 +209,7 @@ LUXURY HEAVEN
 
 <h3>ADMIN PANEL</h3>
 
+<!-- CATEGORY -->
 <h4>Add Category</h4>
 <input id="newCat" placeholder="Category name">
 <button class="btn" onclick="addCategory()">Add Category</button>
@@ -201,6 +220,7 @@ LUXURY HEAVEN
 
 <hr>
 
+<!-- PRODUCT -->
 <h4>Add Product</h4>
 <input id="pname" placeholder="Product name">
 <input id="price" placeholder="Price">
@@ -208,14 +228,18 @@ LUXURY HEAVEN
 
 <button class="btn" onclick="uploadImages()">Upload Images</button>
 <div class="preview" id="preview"></div>
-
 <button class="btn" onclick="saveProduct()">Save Product</button>
 
 <hr>
 
+<!-- DELETE PRODUCTS -->
 <h4>Delete Products</h4>
 <select id="deleteCatSelect" onchange="loadDeleteProducts()"></select>
 <div id="deleteProductBox"></div>
+
+<hr>
+
+<button class="del-btn" onclick="closeAdmin()">Close</button>
 
 </div>
 
@@ -241,12 +265,12 @@ let categories=[],products=[];
 let uploadedImages=[];
 let active="ABOUT";
 
-/* PASSWORD */
+/* 🔐 PASSWORD */
 const ADMIN_PASSWORD="12345";
 
 window.openAdmin=()=>{
-let p=prompt("Enter Password");
-if(p===ADMIN_PASSWORD){
+let pass = prompt("Enter Admin Password");
+if(pass===ADMIN_PASSWORD){
 admin.style.display="block";
 }else{
 alert("Wrong Password");
@@ -264,7 +288,8 @@ renderCategories();
 /* LOAD DATA */
 async function loadAll(){
 
-categories=[];products=[];
+categories=[];
+products=[];
 
 let c=await getDocs(collection(db,"categories"));
 c.forEach(d=>categories.push({id:d.id,...d.data()}));
@@ -295,7 +320,7 @@ bar.appendChild(btn);
 });
 }
 
-/* 🔥 FIXED VIEW SWITCH */
+/* VIEW SWITCH FIX */
 function show(type,btn){
 
 document.querySelectorAll(".category-btn").forEach(b=>b.classList.remove("active"));
@@ -324,6 +349,7 @@ box.innerHTML="";
 let list=products.filter(p=>p.category===active);
 
 list.forEach((p,i)=>{
+
 box.innerHTML+=`
 <div class="card">
 
@@ -371,6 +397,7 @@ loadDeleteProducts();
 /* CATEGORY */
 window.addCategory=async()=>{
 await addDoc(collection(db,"categories"),{name:newCat.value});
+newCat.value="";
 await loadAll();
 renderCategories();
 };
