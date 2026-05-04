@@ -49,11 +49,8 @@ white-space:nowrap;
 }
 .category-btn.active{background:#25D366;}
 
-.view{
-display:none;
-padding:10px;
-}
-
+/* VIEW SYSTEM */
+.view{display:none;padding:10px;}
 .card{
 background:white;
 border-radius:12px;
@@ -61,13 +58,14 @@ padding:10px;
 margin:10px 0;
 }
 
+/* IMAGE */
 .carousel{
 display:flex;
 overflow-x:auto;
 scroll-snap-type:x mandatory;
-border-radius:10px;
 height:380px;
 background:#000;
+border-radius:10px;
 }
 
 .carousel img{
@@ -75,7 +73,6 @@ min-width:100%;
 height:100%;
 object-fit:cover;
 scroll-snap-align:center;
-border-radius:10px;
 }
 
 .price{
@@ -102,6 +99,7 @@ justify-content:center;
 gap:8px;
 }
 
+/* ADMIN */
 .admin{
 display:none;
 position:fixed;
@@ -190,6 +188,7 @@ LUXURY HEAVEN
 
 <h3>ADMIN PANEL</h3>
 
+<!-- CATEGORY -->
 <h4>Add Category</h4>
 <input id="newCat" placeholder="Category name">
 <button class="btn" onclick="addCategory()">Add Category</button>
@@ -200,6 +199,7 @@ LUXURY HEAVEN
 
 <hr>
 
+<!-- PRODUCT -->
 <h4>Add Product</h4>
 <input id="pname" placeholder="Product name">
 <input id="price" placeholder="Price">
@@ -207,14 +207,25 @@ LUXURY HEAVEN
 
 <button class="btn" onclick="uploadImages()">Upload Images</button>
 <div class="preview" id="preview"></div>
-
 <button class="btn" onclick="saveProduct()">Save Product</button>
 
 <hr>
 
+<!-- DELETE PRODUCT -->
 <h4>Delete Products</h4>
 <select id="deleteCatSelect" onchange="loadDeleteProducts()"></select>
 <div id="deleteProductBox"></div>
+
+<hr>
+
+<!-- TESTIMONIAL FIX -->
+<h4>Testimonials</h4>
+<button class="btn" onclick="uploadTestimonial()">Upload Testimonial</button>
+<div id="testimonialBox"></div>
+
+<hr>
+
+<button class="del-btn" onclick="closeAdmin()">Close</button>
 
 </div>
 
@@ -236,7 +247,7 @@ appId: "1:468659293220:web:507832347dc70ab78ddcb1"
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-let categories=[],products=[];
+let categories=[],products=[],testimonials=[];
 let uploadedImages=[];
 let active="ABOUT";
 
@@ -265,6 +276,7 @@ async function loadAll(){
 
 categories=[];
 products=[];
+testimonials=[];
 
 let c=await getDocs(collection(db,"categories"));
 c.forEach(d=>categories.push({id:d.id,...d.data()}));
@@ -272,10 +284,14 @@ c.forEach(d=>categories.push({id:d.id,...d.data()}));
 let p=await getDocs(collection(db,"products"));
 p.forEach(d=>products.push({id:d.id,...d.data(),images:Array.isArray(d.data().images)?d.data().images:[]}));
 
-fillAdminDropdowns(); // ✅ FIX HERE
+let t=await getDocs(collection(db,"testimonials"));
+t.forEach(d=>testimonials.push({id:d.id,...d.data()}));
+
+fillAdminDropdowns();
+renderTestimonials();
 }
 
-/* CATEGORY BAR */
+/* CATEGORY */
 function renderCategories(){
 let bar=document.getElementById("categoryBar");
 bar.innerHTML="";
@@ -344,7 +360,7 @@ BUY NOW
 });
 }
 
-/* ADMIN DROPDOWNS FIX 🔥 */
+/* DROPDOWNS FIX */
 function fillAdminDropdowns(){
 
 pcat.innerHTML="";
@@ -358,21 +374,54 @@ deleteCatSelect.innerHTML+=`<option value="${c.name}">${c.name}</option>`;
 });
 }
 
-/* CATEGORY */
+/* TESTIMONIALS */
+function renderTestimonials(){
+let box=document.getElementById("testimonialBox");
+box.innerHTML="";
+
+testimonials.forEach(t=>{
+box.innerHTML+=`
+<div class="delete-card">
+<img src="${t.image}">
+<button class="del-btn" onclick="deleteTestimonial('${t.id}')">Delete</button>
+</div>`;
+});
+}
+
+/* UPLOAD TESTIMONIAL */
+window.uploadTestimonial=()=>{
+cloudinary.openUploadWidget({
+cloudName:"db92r6j9z",
+uploadPreset:"ummuhalti",
+multiple:false
+},async(e,r)=>{
+if(!e&&r.event==="success"){
+await addDoc(collection(db,"testimonials"),{
+image:r.info.secure_url,
+date:Date.now()
+});
+await loadAll();
+}
+});
+};
+
+/* DELETE TESTIMONIAL */
+window.deleteTestimonial=async(id)=>{
+await deleteDoc(doc(db,"testimonials",id));
+await loadAll();
+};
+
+/* CATEGORY + PRODUCT */
 window.addCategory=async()=>{
 await addDoc(collection(db,"categories"),{name:newCat.value});
-newCat.value="";
-await loadAll();
-renderCategories();
+location.reload();
 };
 
 window.deleteCategory=async()=>{
 await deleteDoc(doc(db,"categories",delCat.value));
-await loadAll();
-renderCategories();
+location.reload();
 };
 
-/* PRODUCT */
 window.saveProduct=async()=>{
 await addDoc(collection(db,"products"),{
 name:pname.value,
@@ -381,10 +430,10 @@ category:pcat.value,
 images:uploadedImages,
 date:Date.now()
 });
-await loadAll();
+location.reload();
 };
 
-/* CLOUDINARY */
+/* CLOUDINARY PRODUCT */
 window.uploadImages=()=>{
 uploadedImages=[];
 cloudinary.openUploadWidget({
