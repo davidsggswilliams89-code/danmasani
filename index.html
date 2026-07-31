@@ -5,14 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
   <script src="https://widget.cloudinary.com/v2.0/global/all.js"></script> 
   <style>        
-body{
+
+   body{
   margin:0;
   font-family:Arial;
   background:#cfd4da;
   padding-top:80px;
 }    
     
-    /* HEADER */  
+ /* HEADER */  
 .top-marquee{  
 background:#111;  
 position:fixed;  
@@ -23,7 +24,9 @@ display:flex;
 align-items:center;  
 overflow:hidden;  
 z-index:3000;  
-}  /* LOGO */
+}
+    
+    /* LOGO */
 .logo{
 height:45px;
 margin:0;
@@ -52,6 +55,7 @@ margin-left:120px;
 0%{transform:translateX(100%);}
 100%{transform:translateX(-100%);}
 }
+/******** ADMIN PANEL ********/
 
 .admin{
   display:none;
@@ -60,57 +64,68 @@ margin-left:120px;
   left:0;
   width:100%;
   height:100%;
-  background:white;
+  background:#fff;
   z-index:5000;
-  padding:15px 15px 15px 0px;
-  overflow:auto;
+  padding:10px;
+  overflow-y:auto;
   flex-direction:column;
   align-items:center;
 }
-    
-/* FIXED COLUMN WIDTH */
-.admin .form-group,
-.admin h3,
-.admin input,
-.admin select,
-.admin .btn{
-width:100%;
-max-width:320px;
+
+.admin h3{
+  width:100%;
+  max-width:320px;
+  margin:6px 0 4px;
+  font-size:16px;
 }
 
-.admin .btn{
-width:100%;
-max-width:320px;
-padding:8px;
-font-size:13px;
-border-radius:8px;
-margin:6px 0;
-text-align:center;
+.admin hr{
+  width:100%;
+  max-width:320px;
+  margin:6px 0;
+  border:0;
+  border-top:1px solid #ddd;
+}
+
+.admin .form-group{
+  width:100%;
+  max-width:320px;
+  margin:3px 0;
+}
+
+.admin label{
+  display:block;
+  width:100%;
+  font-size:13px;
+  font-weight:bold;
+  color:#222;
+  margin-bottom:2px;
 }
 
 .admin input,
 .admin select{
-width:100%;
-max-width:320px;
-padding:8px;
-font-size:14px;
-border-radius:8px;
-margin-bottom:1px;
+  width:100%;
+  max-width:320px;
+  padding:8px;
+  font-size:13px;
+  border:1px solid #ccc;
+  border-radius:8px;
+  margin:2px 0;
+  box-sizing:border-box;
 }
 
-.admin label{
-display:block;
-text-align:left;
-font-size:13px;
-font-weight:bold;
-margin:1px 0;
-width:100%;
-max-width:320px;
+.admin .btn{
+  width:100%;
+  max-width:320px;
+  padding:9px;
+  margin:4px 0;
+  font-size:13px;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+  text-align:center;
 }
 
-.admin .form-group{
-margin:1px 0;
-}
 
 /* ADMIN ICON */
 .admin-icon{
@@ -126,7 +141,6 @@ color:white;
 cursor:pointer;
 z-index:10;
 }
-
 /* CATEGORY */
 .category-bar{
   position:fixed;
@@ -189,7 +203,6 @@ padding:4px 6px;
 border-radius:5px;
 z-index:10;
 }
-
 /* CAROUSEL */
 .carousel{
   display:flex;
@@ -247,7 +260,6 @@ height:18px;
 object-fit:contain;
 }
 .carousel::-webkit-scrollbar{display:none;}
-
 /* DOTS */
 .dots{text-align:center;margin-top:5px;}
 .dot{
@@ -320,7 +332,6 @@ padding:8px;
 margin:5px 0;
 border-radius:6px;
 }
-
 .delete-btn{
 background:red;
 color:white;
@@ -373,38 +384,11 @@ border-radius:5px;
 div::-webkit-scrollbar{
 display:none;
 }
-.admin .form-group{
-width:100%;
-max-width:300px;
-margin:10px auto;
-}
-
-.admin .form-group{
-  width:100%;
-  max-width:320px;
-  margin:8px 0;
-}
-
-.admin .form-group label{
-font-size:13px;
-font-weight:bold;
-margin-bottom:4px;
-color:#222;
-}
-
-.admin .form-group input,
-.admin .form-group select{
-width:100%;
-padding:8px;
-font-size:13px;
-border-radius:8px;
-border:1px solid #ccc;
-}
 
 </style>      
 </head> 
-  <body> 
- 
+  <body>  
+
     
  <!-- HEADER -->  
  <div class="top-marquee">        
