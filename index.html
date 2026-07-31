@@ -1175,37 +1175,28 @@ async function loadProductsFromFirebase(){
   const querySnapshot = await fb.getDocs(fb.collection(db, "products"));
 
   const ONE_WEEK = 7 * 24 * 60 * 60 * 1000;
-const now = Date.now();
+  const now = Date.now();
 
-for (const docItem of querySnapshot.docs) {
-  const data = docItem.data();
+  for (const docItem of querySnapshot.docs) {
+    const data = docItem.data();
 
-  console.log("Product:", data.name);
-  console.log("Saved date:", data.date);
-  console.log("Current date:", now);
-  console.log("Age in days:", (now - data.date) / 86400000);
+    // Delete products older than one week
+    if (data.date && (now - data.date >= ONE_WEEK)) {
+      await fb.deleteDoc(fb.doc(db, "products", docItem.id));
+      continue;
+    }
 
-  // Disable deletion for now
-  /*
-  if (data.date && (now - data.date >= ONE_WEEK)) {
-    await fb.deleteDoc(fb.doc(db, "products", docItem.id));
-    continue;
+    products.push({
+      id: docItem.id,
+      ...data
+    });
   }
-  */
 
-  products.push({
-    id: docItem.id,
-    ...data
-  });
-}
-
-  // NEWEST FIRST
+  // Show newest first
   products.sort((a,b)=> b.date - a.date);
 
-console.log("Products loaded:", products);
-
-restoreActiveView();
-loadDelete();
+  restoreActiveView();
+  loadDelete();
 }
 
 function loadTestimonialAdmin(){
