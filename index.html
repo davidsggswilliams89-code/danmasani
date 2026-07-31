@@ -1175,35 +1175,29 @@ async function loadProductsFromFirebase(){
   const querySnapshot = await fb.getDocs(fb.collection(db, "products"));
 
   const ONE_WEEK = 7 * 24 * 60 * 60 * 1000;
-  const now = Date.now();
+const now = Date.now();
 
-  for (const docItem of querySnapshot.docs){
+for (const docItem of querySnapshot.docs) {
+  const data = docItem.data();
 
-    const data = docItem.data();
+  console.log("Product:", data.name);
+  console.log("Saved date:", data.date);
+  console.log("Current date:", now);
+  console.log("Age in days:", (now - data.date) / 86400000);
 
-    // Delete products older than 7 days
-if (typeof data.date === "number") {
-
-  const age = now - data.date;
-
-  console.log({
-    name: data.name,
-    savedDate: data.date,
-    now: now,
-    ageInDays: age / (1000 * 60 * 60 * 24)
-  });
-
-  // Don't delete anything yet
-  // if (age >= ONE_WEEK) {
-  //   await fb.deleteDoc(fb.doc(db, "products", docItem.id));
-  //   continue;
-  // }
-}
-    products.push({
-      id: docItem.id,
-      ...data
-    });
+  // Disable deletion for now
+  /*
+  if (data.date && (now - data.date >= ONE_WEEK)) {
+    await fb.deleteDoc(fb.doc(db, "products", docItem.id));
+    continue;
   }
+  */
+
+  products.push({
+    id: docItem.id,
+    ...data
+  });
+}
 
   // NEWEST FIRST
   products.sort((a,b)=> b.date - a.date);
