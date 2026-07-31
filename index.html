@@ -1173,12 +1173,27 @@ async function loadProductsFromFirebase(){
 
   const querySnapshot = await fb.getDocs(fb.collection(db, "products"));
 
-  querySnapshot.forEach((docItem) => {
-    products.push({
-      id: docItem.id,
-      ...docItem.data()
-    });
+  const ONE_WEEK = 7 * 24 * 60 * 60 * 1000;
+const now = Date.now();
+
+for (const docItem of querySnapshot.docs) {
+
+  const data = docItem.data();
+
+  // If product is older than 7 days
+  if (now - data.date >= ONE_WEEK) {
+
+    // Delete it from Firebase
+    await fb.deleteDoc(fb.doc(db, "products", docItem.id));
+
+    continue;
+  }
+
+  products.push({
+    id: docItem.id,
+    ...data
   });
+}
 
   // NEWEST FIRST
   products.sort((a,b)=> b.date - a.date);
