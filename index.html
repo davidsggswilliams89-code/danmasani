@@ -1169,38 +1169,36 @@ function restoreActiveView(){
 
  // DONE  
 async function loadProductsFromFirebase(){
+
   products = [];
 
   const querySnapshot = await fb.getDocs(fb.collection(db, "products"));
 
   const ONE_WEEK = 7 * 24 * 60 * 60 * 1000;
-const now = Date.now();
+  const now = Date.now();
 
-for (const docItem of querySnapshot.docs) {
+  for (const docItem of querySnapshot.docs){
 
-  const data = docItem.data();
+    const data = docItem.data();
 
-  // If product is older than 7 days
-  if (now - data.date >= ONE_WEEK) {
+    // Delete products older than 7 days
+    if(data.date && (now - data.date >= ONE_WEEK)){
+      await fb.deleteDoc(fb.doc(db, "products", docItem.id));
+      continue;
+    }
 
-    // Delete it from Firebase
-    await fb.deleteDoc(fb.doc(db, "products", docItem.id));
-
-    continue;
+    products.push({
+      id: docItem.id,
+      ...data
+    });
   }
-
-  products.push({
-    id: docItem.id,
-    ...data
-  });
-}
 
   // NEWEST FIRST
   products.sort((a,b)=> b.date - a.date);
 
   restoreActiveView();
+  loadDelete();
 }
-   
 
 function loadTestimonialAdmin(){
 let box = document.getElementById("testimonialList");
