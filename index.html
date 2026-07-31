@@ -1196,8 +1196,10 @@ async function loadProductsFromFirebase(){
   // NEWEST FIRST
   products.sort((a,b)=> b.date - a.date);
 
-  restoreActiveView();
-  loadDelete();
+console.log("Products loaded:", products);
+
+restoreActiveView();
+loadDelete();
 }
 
 function loadTestimonialAdmin(){
