@@ -1182,11 +1182,13 @@ async function loadProductsFromFirebase(){
     const data = docItem.data();
 
     // Delete products older than 7 days
-    if(data.date && (now - data.date >= ONE_WEEK)){
-      await fb.deleteDoc(fb.doc(db, "products", docItem.id));
-      continue;
-    }
-
+    // TEMPORARILY DISABLE AUTO DELETE
+/*
+if(data.date && (now - data.date >= ONE_WEEK)){
+  await fb.deleteDoc(fb.doc(db, "products", docItem.id));
+  continue;
+}
+*/
     products.push({
       id: docItem.id,
       ...data
